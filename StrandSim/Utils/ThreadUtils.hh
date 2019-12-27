@@ -176,7 +176,7 @@ namespace strandsim
 #if (defined(NDEBUG) || DEBUG_PARALLEL) && !NO_PARALLEL && defined(_OPENMP)
 #pragma omp parallel for
 #endif
-        for ( unsigned i = 0; i < N; ++i )
+        for ( int i = 0; i < N; ++i )
         {
             obj( vec[i] );
         }
@@ -191,12 +191,12 @@ namespace strandsim
 #endif
 	}
 	
-	template<typename Index, typename Callable>
-	void for_each(Index start, Index end, Callable func) {
+	template<typename Callable>
+	void for_each(int start, int end, Callable func) {
 #if (defined(NDEBUG) || DEBUG_PARALLEL) && !NO_PARALLEL && defined(_OPENMP)
 #pragma omp parallel for
 #endif
-        for(Index i = start; i < end; ++i) {
+        for(int i = start; i < end; ++i) {
             func(i);
         }
 	}

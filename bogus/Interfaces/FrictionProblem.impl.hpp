@@ -61,7 +61,7 @@ static double solve( const DualFrictionProblem< Dimension >& dual,
         ? gs.solve( typename DualFrictionProblem< Dimension >::SOCLawType
                    ( dual.W.rowsOfBlocks(), dual.mu.data() ), dual.b, r_map )
         : gs.solve( typename DualFrictionProblem< Dimension >::CoulombLawType
-                   ( dual.W.rowsOfBlocks(), dual.mu.data() ), dual.b, r_map ) ;
+                   ( dual.W.rowsOfBlocks(), dual.mu.data() ), dual.b, r_map ) ;	//<-this one
     }
 
 	if( dual.permuted() )

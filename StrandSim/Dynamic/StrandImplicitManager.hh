@@ -186,7 +186,7 @@ private:
     
     void printMemStats();
 
-    //! Map between a index in the simulation to an index in a colliding groyup
+    //! Map between a index in the simulation to an index in a colliding group
     typedef std::map<unsigned, unsigned> IndicesMap;
     //! Colliding group: set of strands and contacts that should be solved together
     typedef std::pair<IndicesMap, ProximityCollisions> CollidingGroup;

@@ -387,14 +387,20 @@ namespace strandsim
 
 		tt.restart("findCollisions");
 		EdgeFaceIntersection::s_doProximityDetection = true;
+		// ignoreContinuousTime = false : CCD of vertex-face and edge-face (CCD of edge and 3 edges of the face)
+		//     -> add VertexFaceCollision and EdgeFaceCollision to m_continuousTimeCollisions
+		// ignoreProximity = false : edge-face intersection test (s_doProximityDetection = true) using position before unconstraint update
+		//     -> add EdgeFaceIntersection to m_proximityCollisions
 		m_collisionDetector->findCollisions(false, false); // set whether cd should do ctc for hairs, etc
 		m_cdTimings.findCollisionsBVH = tt.elapsed();
 
 		// We do CT collisions first in order to guess meshes normals signs as soon as possible
 		//tt.restart( "continuous" );
 		tt.restart("narrowPhase");
+		// compact m_continuousTimeCollisions in ProximityCollision, and add these collisions to m_externalContacts
 		doContinuousTimeDetection(dt);
 		//tt.restart( "proximity" );
+		// compact m_proximityCollisions in ProximityCollision, and add these collisions to m_externalContacts
 		doProximityMeshHairDetection(dt);
 		m_cdTimings.narrowPhase = tt.elapsed();
 
@@ -521,6 +527,7 @@ namespace strandsim
 				collision.objects.second.vertex = vfCollision->face()->uniqueId();
 				collision.objects.second.freeVel = vfCollision->meshVelocity(dt) + offset;
 
+				// add collision to m_externalContacts, set object.first(freeVel = 0)
 				if (addExternalContact(strIdx, edgeIdx, 0, collision))
 				{
 					++nInt;
@@ -602,6 +609,10 @@ namespace strandsim
 
 	void StrandImplicitManager::setupHairHairCollisions(Scalar dt)
 	{
+		// hair proximity test based on spacial hash map
+		// movable hair pair stored in m_mutualContacts
+		// movable hair and freezed hair pair stored in m_externalContacts
+
 		// do hair-hair setup basics and proceed to proximity collisions if requested
 		Timer tt("HashMap", false, "update");
 		//LoggingTimer<InfoStream> tt( "HashMap", "update" );
@@ -726,6 +737,9 @@ namespace strandsim
 						Scalar power;
 						bool do_soc_solve = false;
 						Scalar rel_vel(0.);
+						// return false when sP intersects with sQ || they lay in the same line
+						// compute interpolote rate s, t, distance(d) and normal
+						// do_soc_solve = true when they are approaching
 						if (!analyseRoughRodRodCollision(m_collisionDatabase, sP, sQ, iP, iQ, contact_angle, normal, s, t, d, adhesion_force, yield, eta, power, rel_vel, do_soc_solve))
 						{
 							continue;
@@ -767,6 +781,9 @@ namespace strandsim
 						mutualContact.objects.second.vertex = iQ;
 						mutualContact.objects.second.abscissa = t;
 						mutualContact.objects.second.freeVel.setZero();
+
+						// if accept both and approching: add to m_mutualContacts
+						// if only accept one and approching: add to m_externalContacts
 
 						if (acceptFirst && acceptSecond)
 						{
@@ -1164,9 +1181,16 @@ namespace strandsim
 		DebugStream(g_log, "") << " Postprocessing collisions ";
 
 		// here we create the "penalty" collisions
+		// 1. prune mutual contact
+		//     a. random prune based on distance gauss and sort with distance
+		//     b. accept the first maxNumCollisionsPerEdge collision 
+		// 2. convert some contact to external contact (m_nonSPD ??)
+		// 3. construct collision group by bfs
+		// -> result stored in m_collidingGroups and m_collidingGroupsIdx
 		computeCollidingGroups(m_mutualContacts, dt, false);
 		computeCollidingGroups(m_elasticMutualContacts, dt, true);
 
+		// construct 18 cells for every edge and extract one contact per cell based on their reletive velocity
 		if (m_params.m_pruneExternalCollisions)
 		{
 			pruneExternalCollisions(m_externalContacts);
@@ -1936,6 +1960,10 @@ namespace strandsim
 			if (assembleBogusFrictionProblem(collisionGroup, mecheProblem, externalContacts, globalIds, colPointers, vels, worldImpulses, impulses, adhesions, filters, startDofs, nDofs, numSubSystems, herschelBulkleyProblem, ignoreMutualCollision))
 			{
 				res = solveBogusFrictionProblem(mecheProblem, globalIds, asFailSafe, herschelBulkleyProblem, !herschelBulkleyProblem && !m_params.m_useApproxRodElasticFriction, vels, worldImpulses, impulses, numSubSystems);
+				// accumulate worldImpulse to rhs
+				// set new velocity
+				// update currentStates with FutureStates
+				// use FTL or if stretch energy is larger than threshold, set m_lastStepWasRejected = true
 				numNewtonIters = postProcessBogusFrictionProblem(updateVelocity, collisionGroup, mecheProblem, globalIds, colPointers, vels, worldImpulses, impulses, startDofs, nDofs, newtonResiduals, total_num_substeps, total_substep_id);
 			}
 		}
@@ -2283,6 +2311,7 @@ namespace strandsim
 		}
 
 		// Extract connected subgraphs from the global constraint graph
+		// std::vector<int> collidingGroupsIdx: Index of colliding group in which each strand should be. Can be -1.
 		auto bfsGraph = [&](std::vector<int>& collidingGroupsIdx, std::vector<CollidingGroup>& collidingGroups) {
 			for (unsigned s1 = 0; s1 < objsGroups.size(); ++s1)
 			{

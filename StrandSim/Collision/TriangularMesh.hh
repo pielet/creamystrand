@@ -24,7 +24,7 @@ namespace strandsim
     {
         
         int idx[3];
-        int boundaryEdges ;
+        int boundaryEdges ;     // bit representation: 000 - none, 100 - edge2 on boundary
         
         TriangularFace()
         {

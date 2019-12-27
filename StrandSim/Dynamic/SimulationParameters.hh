@@ -25,14 +25,15 @@ struct SimulationParameters
 	int m_rodSubSteps;
 
     // Number of substeps
-//    int m_solver_steps_per_frame;
+    // int m_solver_steps_per_frame;
 
     int m_statGathering;
     
     bool m_simulationManager_limitedMemory;
 
     unsigned m_maxNewtonIterations ;
-    //    int m_maxLineSearchIterations;
+    // int m_maxLineSearchIterations;
+
     /**
      * Rod-rod collisions
      */
@@ -53,6 +54,7 @@ struct SimulationParameters
     double m_stochasticPruning ;
 
     double m_airDrag ;
+    
     /**
      * Inextensibility 
      */

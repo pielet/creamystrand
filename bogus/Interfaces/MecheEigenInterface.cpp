@@ -407,7 +407,7 @@ namespace bogus
 				// Proper solving
 
 				m_timer.reset();
-				if (options.algorithm == ProjectedGradient) {
+				if (options.algorithm == ProjectedGradient) {	// default
 
 					DualFrictionProblem< 3u >::ProjectedGradientType pg;
 					if (options.tolerance != 0.) pg.setTol(options.tolerance);
@@ -496,7 +496,7 @@ namespace bogus
 #ifndef BOGUS_DONT_PARALLELIZE
 #pragma omp parallel for
 #endif
-		for (unsigned int i = 0; i < n; ++i)
+		for (int i = 0; i < n; ++i)
 		{
 			const double maxImpulseNorm = m_primal->filter[i];
 

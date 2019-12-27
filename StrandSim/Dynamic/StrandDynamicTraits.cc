@@ -52,7 +52,7 @@ namespace strandsim {
 	
 	void StrandDynamicTraits::resizeSelf()
 	{
-		const unsigned ndofs = m_strand.getCurrentDegreesOfFreedom().rows() ;
+		const unsigned ndofs = m_strand.getCurrentDegreesOfFreedom().rows();
 		
 		m_DOFmasses.resize( ndofs );
 		m_flowMasses.resize( m_strand.getNumEdges() );

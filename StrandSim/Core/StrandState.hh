@@ -198,8 +198,8 @@ namespace strandsim
 		
 		//! Computes H and uFree such that v = H q + uFree
 		/*! where v is the world velocitiy of the point at (edge, alpha)
-		 and q the non-fixed degrees of freedom .
-		 Allocates H if pH ( pointer to H ) is NULL
+		 *  and q the non-fixed degrees of freedom.
+		 *  Allocates H if pH ( pointer to H ) is NULL
 		 */
 		void computeDeformationGradient( const unsigned edge, const Scalar alpha,
 										const VecXx &velocities, SparseRowMatx* &pH ) const;

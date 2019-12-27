@@ -28,7 +28,7 @@
 #include <string>
 /*
  A dynamic step can trigger a succession of failsafes.
- He re is a summary of the process
+ Here is a summary of the process
  
  - startSubstep()
  
