@@ -150,9 +150,9 @@ void XMLReader::setupStrands()
 {
     int mg_part;
     int mg_df;
-    loadParticles(m_scene_node, mg_part);
+    loadParticles(m_scene_node, mg_part);   // load hair particles (from partical nodes or from .obj file)
     loadBucketInfo(m_scene_node);
-    loadSolidObject(m_scene_node, mg_df, m_dt);
+    loadSolidObject(m_scene_node, mg_df, m_dt); // load distancefield
 
     loadStrandParameters(m_scene_node, m_dt);
 

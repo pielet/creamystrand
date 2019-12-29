@@ -478,6 +478,7 @@ int main( int argc, char** argv )
         return -1;
     }
     
+    // load simulation parameters (default values)
     g_ps->setup(g_current_frame, g_current_checkpoint);
     
     const int step = floor( g_ps->getTime() / g_ps->getDt() + 0.5 );

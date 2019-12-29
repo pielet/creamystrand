@@ -13,7 +13,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 //#include <boost/thread/lock_guard.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 #include <iosfwd>
 #include <memory>
 #include <unordered_set>
