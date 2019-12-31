@@ -150,16 +150,16 @@ void XMLReader::setupStrands()
 {
     int mg_part;
     int mg_df;
-    loadParticles(m_scene_node, mg_part);   // collect particles (from partical nodes or from .obj file)
+    loadParticles(m_scene_node, mg_part);   // load <particle> and v in <hairobj> (from partical nodes or from .obj file)
     loadBucketInfo(m_scene_node);
     loadSolidObject(m_scene_node, mg_df, m_dt); // load distancefield
 
     loadStrandParameters(m_scene_node, m_dt);
 
     initGroups(std::max(mg_part, mg_df) + 1);
-    loadHairs(m_scene_node);
-    loadHairPose(m_scene_node);
-    initParticleFaceMapping();
+    loadHairs(m_scene_node);    // load <hair> and l in <hairobj>
+    loadHairPose(m_scene_node);     // load <pose>
+    initParticleFaceMapping();      // assign closest face index (only aviable to sequence distance field onjects) to fixed vertex
     
     loadCollisionFree(m_scene_node);
 
@@ -1196,7 +1196,7 @@ bool XMLReader::executeScript(int total_substep_id, const Scalar substep_dt)
     executeHairPose();
     
     for(int i = 0; i < num_scripts; ++i) {
-        m_scripts[i].stepScript(substep_dt, current_time);
+        m_scripts[i].stepScript(substep_dt, current_time);  // update future_* in DFO
     }
 
     for(DistanceFieldObject& obj : m_sources)
@@ -1228,7 +1228,7 @@ bool XMLReader::executeScript(int total_substep_id, const Scalar substep_dt)
         const std::vector< int >& field_indices = m_group_fields[i];
         for(int fidx : field_indices)
         {
-            m_fields[fidx].advance(substep_dt, total_substep_id);
+            m_fields[fidx].advance(substep_dt, total_substep_id);   // apply new position
             m_fields[fidx].step_flow_dynamics(substep_dt);
         }
         
@@ -1251,7 +1251,7 @@ bool XMLReader::executeScript(int total_substep_id, const Scalar substep_dt)
                     m_fields[fidx].mesh_controller->getCurrentMesh()->getRigidTransform(face, center, translate, rot);
                     transformRodRootVtx(*(m_rodDatum[p.first]), rot, center, translate, s, p.second);
                 } else {
-                    transformRodRootVtx(*(m_rodDatum[p.first]), q_diff, t_prev, t_diff, s_diff, p.second);
+                    transformRodRootVtx(*(m_rodDatum[p.first]), q_diff, t_prev, t_diff, s_diff, p.second);  // update fixed particles in hair
                 }
             }
         }

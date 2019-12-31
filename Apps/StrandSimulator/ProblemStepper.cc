@@ -80,9 +80,9 @@ ProblemStepper::~ProblemStepper()
 void ProblemStepper::setup(int& current_frame, int& current_check_point)
 {
     //std::cout << "Set up!\n";
-    setSimulationParameters();
-    setupStrands();
-    setupMeshes();
+    setSimulationParameters();  // load <SimulationParameters>
+    setupStrands();     // load remained parameters in xml
+    setupMeshes();  // do nothing
     
     if( m_isSimulated )
         m_stepper = new StrandImplicitManager( m_strands, m_collision_free, m_meshScripting_controllers, m_fluidScripting_controllers, m_constraintScripting_controllers, m_t, m_dt, m_simulation_params, this );
