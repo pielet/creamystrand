@@ -32,6 +32,8 @@
 #ifndef BOGUS_MECHE_INTERFACE_HPP
 #define BOGUS_MECHE_INTERFACE_HPP
 
+#define BOGUS_VERBOSE
+
 namespace bogus
 {
     
