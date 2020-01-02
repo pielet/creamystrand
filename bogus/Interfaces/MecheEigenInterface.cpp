@@ -433,6 +433,7 @@ namespace bogus
 					if (options.maxIters != 0) gs.setMaxIters(options.maxIters);
 					if (options.gsSkipIters >= 0) gs.setSkipIters(options.gsSkipIters);
 
+					gs.setEvalEvery(1);
 					gs.setMaxThreads(options.maxThreads);
 					gs.setAutoRegularization(options.gsRegularization);
 					gs.useInfinityNorm(options.useInfinityNorm);
