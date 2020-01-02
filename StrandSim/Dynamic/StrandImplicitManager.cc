@@ -1900,9 +1900,9 @@ namespace strandsim
 		options.maxIters = m_params.m_gaussSeidelIterations;
 		options.cadouxIters = 0;
 		options.tolerance = m_params.m_gaussSeidelTolerance;
-		options.useInfinityNorm = false;
+		options.useInfinityNorm = false;	// if ture, use max res, else use average res
 		options.algorithm = m_params.m_bogusAlgorithm;
-		options.ignoreVelocity = false;
+		options.ignoreVelocity = false;		// calculate reletive velocity (u)
 
 		options.gsRegularization = 0.0;
 
