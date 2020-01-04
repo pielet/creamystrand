@@ -77,13 +77,12 @@ namespace strandsim
 		, m_hashMap(NULL)
 		, m_statExternalContacts(0)
 		, m_statMutualCollisions(0)
-		, m_statTotalSubsteps(0)
+		, m_statTotalCollisions(0)
 		, m_num_nonlinear_iters(0)
 		, m_num_contact_solves(0)
 		, m_max_nonlinear_iters(0)
 		, m_max_perstep_nonlinear_iters(0)
 		, m_num_ct_hair_hair_col(0)
-		, m_unconstrained_NewtonItrs(0)
 		, m_mem_usage_accu(0)
 		, m_mem_usage_divisor(0)
 		, m_substep_callback(sub_callback)
@@ -194,6 +193,8 @@ namespace strandsim
 			(*strand)->dynamics().clearDebugDrawing();
 
 		m_max_perstep_nonlinear_iters = 0; //reset
+		m_statExternalContacts = 0;
+		m_statMutualCollisions = 0;
 
 		if (m_params.m_solveLiquids) {
 			for (std::vector< std::shared_ptr<FluidScriptingController> >::size_type i = 0;
@@ -209,7 +210,7 @@ namespace strandsim
 		}
 
 		step(total_num_substeps, total_substep_id);
-		if (m_substep_callback) m_substep_callback->executeCallback();
+		if (m_substep_callback) m_substep_callback->executeCallback();	// update drawing data
 
 		if (m_params.m_solveLiquids) {
 			for (std::vector< std::shared_ptr<FluidScriptingController> >::size_type i = 0;
@@ -223,19 +224,22 @@ namespace strandsim
 			}
 		}
 
+		m_statTotalCollisions += m_statExternalContacts + m_statMutualCollisions;
+		InfoStream(g_log, "Contact")
+			<< "external: " << m_statExternalContacts
+			<< " mutual: " << m_statMutualCollisions
+			<< " total: " << m_statExternalContacts + m_statMutualCollisions
+			<< " overall: " << m_statTotalCollisions;
+
 		InfoStream(g_log, "Timing") << "Last frame (ms):";
 		print(m_timings.back());
 		InfoStream(g_log, "Timing") << "Average after " << m_timings.size() << " frames (ms):";
 		print(m_timings);
 
-		m_statTotalSubsteps += 1;
-
-		std::cout << "[Average number of contacts: external "
-			<< (m_statExternalContacts) / ((double)m_statTotalSubsteps) << "; mutual "
-			<< (m_statMutualCollisions) / ((double)m_statTotalSubsteps) << "; total "
-			<< (m_statExternalContacts + m_statMutualCollisions) / ((double)m_statTotalSubsteps)
-			<< ". Total contacts overall  " << (m_statExternalContacts + m_statMutualCollisions) << "]" << std::endl;
-
+		if (m_params.m_statGathering)
+		{
+			print<InfoStream>(m_cdTimings);
+		}
 
 		if (m_num_contact_solves > 0)
 		{
@@ -334,11 +338,6 @@ namespace strandsim
 		m_elasticMutualContacts.clear();
 
 		m_time += m_dt;
-
-		if (m_params.m_statGathering)
-		{
-			printProblemStats(timings);
-		}
 
 		print<CopiousStream>(timings);
 		print<CopiousStream>(m_stats);
@@ -547,7 +546,6 @@ namespace strandsim
 				}
 			}
 		}
-		// std::cout << "m_num_ct_hair_hair_col: " <<  m_num_ct_hair_hair_col  << " / " << collisionsList.size() << std::endl;
 
 		DebugStream(g_log, "") << "We found " << nInt << " and " << m_num_ct_hair_hair_col << " continuous-time mesh/hair and hair/hair intersections";
 	}
@@ -645,7 +643,7 @@ namespace strandsim
 
 		m_hashMap->batchUpdate(m_strands, maxNumVert);
 
-		m_cdTimings.upateHashMap = tt.elapsed();
+		m_cdTimings.updateHashMap = tt.elapsed();
 
 		tt.restart("process");
 		//tt.restart( "compute" );
@@ -962,8 +960,6 @@ namespace strandsim
 
 				std::vector< int > all_done(m_strands.size(), false);
 
-				// m_substep_callback->projectConstraint(m_steppers);
-
 				int iter = 0;
 				while (true) {
 #pragma omp parallel for
@@ -1048,8 +1044,6 @@ namespace strandsim
 	{
 		DebugStream(g_log, "") << "Dynamics";
 
-		m_unconstrained_NewtonItrs = 0;
-
 		std::vector< Scalar > residuals(m_strands.size(), 1e+99);
 
 		//        std::cout << "[step_dynamics: 0]" << std::endl;
@@ -1085,8 +1079,6 @@ namespace strandsim
 				//                std::cout << "[step_dynamics: 1]" << std::endl;
 
 				std::vector< int > all_done(m_strands.size(), false);
-
-				// m_substep_callback->projectConstraint(m_steppers);
 
 				int iter = 0;
 				while (true) {
@@ -1222,7 +1214,7 @@ namespace strandsim
 		}
 		CopiousStream(g_log, "") << "Number of external contacts: " << nExternalContacts;
 		CopiousStream(g_log, "") << "Number of elastic external contacts: " << nElasticExternalContacts;
-		m_statExternalContacts += nExternalContacts;
+		m_statExternalContacts = nExternalContacts;
 
 #pragma omp parallel for
 		for (int i = 0; i < (int)m_collidingGroups.size(); i++)
@@ -2500,7 +2492,7 @@ namespace strandsim
 	{
 		StreamT(g_log, "Timing") << "PR: " << timings.prepare << " HH: " << timings.hairHairCollisions
 			<< " DY: " << timings.dynamics << " MH: " << timings.meshHairCollisions << " PC: "
-			<< timings.processCollisions << " SV: " << timings.solve;
+			<< timings.processCollisions << " SC: " << timings.solve;
 
 		StreamT(g_log, "Timing") << "Total: " << timings.sum();
 	}
@@ -2513,11 +2505,18 @@ namespace strandsim
 			<< " MT: " << stats.maxTime;
 	}
 
-	void StrandImplicitManager::SolverStats::reset()
+	template<typename StreamT>
+	void StrandImplicitManager::print(const StrandImplicitManager::CDTimings& timings) const
 	{
-		totConstraints = maxConstraints = maxObjects = 0;
-		maxError = maxTime = 0.;
+		StreamT(g_log, "CD breakdown timing")
+			<< "updateHashMap: " << timings.updateHashMap
+			<< " HH: " << timings.processHashMap
+			<< " buildBVH: " << timings.buildBVH
+			<< " HM: " << timings.findCollisionsBVH
+			<< " assemble: " << timings.narrowPhase
+			<< " total: " << timings.sum();
 	}
+
 
 	StrandImplicitManager::SubStepTimings operator+(const StrandImplicitManager::SubStepTimings& lhs,
 		const StrandImplicitManager::SubStepTimings& rhs)
@@ -2568,28 +2567,6 @@ namespace strandsim
 			std::copy((*strand)->getRestTwists().begin(), (*strand)->getRestTwists().end(),
 				std::ostream_iterator<Scalar>(out, " "));
 			out << '\n';
-		}
-	}
-
-	void StrandImplicitManager::printProblemStats(const StrandImplicitManager::SubStepTimings& timings)
-	{
-		std::cout << "# step timing: \n" << "# prep  cd  unconstrained_dynamics  process_contacts  contact_solve  total: \n";
-		std::cout << timings.prepare << "  " << timings.hairHairCollisions + timings.meshHairCollisions << "  " << timings.dynamics
-			<< "  " << timings.processCollisions << "  " << timings.solve << "  " << timings.sum() << "\n";
-		std::cout << "# number unconstrained Newton Itrs in step: \n" << m_unconstrained_NewtonItrs << std::endl;
-		std::cout << "# CD breakdown timing: \n" << "# buildBVH  findCollisionsBVH  narrowPhase  upateHashMap  processHashMap  total: \n";
-		std::cout << m_cdTimings.buildBVH << "  " <<
-			m_cdTimings.findCollisionsBVH << "  " << m_cdTimings.narrowPhase << "  " << m_cdTimings.upateHashMap
-			<< "  " << m_cdTimings.processHashMap << "  " << m_cdTimings.buildBVH + m_cdTimings.findCollisionsBVH + m_cdTimings.narrowPhase
-			+ m_cdTimings.upateHashMap + m_cdTimings.processHashMap << "\n";
-		if (m_params.m_statGathering > 1)
-		{
-			// std::cout << "# number contact problems in step: \n" << m_contactProblemsStats.size() << std::endl;
-			std::cout << "# num_contacts  total_num_dofs  num_bodies  nnz  total_gs_iters  total_hessian_updates  total_newton_iters  time: \n";
-			// for( auto cps_itr = m_contactProblemsStats.begin() ; cps_itr != m_contactProblemsStats.end() ; ++cps_itr )
-			// {
-			//     cps_itr->print();
-			// }
 		}
 	}
 

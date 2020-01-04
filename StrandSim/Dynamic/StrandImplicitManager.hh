@@ -73,14 +73,14 @@ public:
     struct CDTimings
     {
         CDTimings() :
-        buildBVH( 0. ), findCollisionsBVH( 0. ), narrowPhase( 0. ), upateHashMap ( 0. ), processHashMap( 0. )
+        buildBVH( 0. ), findCollisionsBVH( 0. ), narrowPhase( 0. ), updateHashMap ( 0. ), processHashMap( 0. )
         {
         }
         
         double buildBVH;            
         double findCollisionsBVH;  
         double narrowPhase;              
-        double upateHashMap;
+        double updateHashMap;
         double processHashMap;                 
         
         void reset()
@@ -88,8 +88,12 @@ public:
             buildBVH = 0.;
             findCollisionsBVH = 0.;
             narrowPhase = 0. ;
-            upateHashMap = 0. ;
+            updateHashMap = 0. ;
             processHashMap = 0. ;
+        }
+
+        double sum() const {
+            return buildBVH + findCollisionsBVH + narrowPhase + updateHashMap + processHashMap;
         }
     };
 
@@ -102,7 +106,11 @@ public:
         double maxError;
         double maxTime;
 
-        void reset();
+        void reset()
+        {
+            totConstraints = maxConstraints = maxObjects = 0;
+            maxError = maxTime = 0.;
+        }
     };
 
     typedef std::vector<SubStepTimings> StepTimings;
@@ -183,6 +191,8 @@ private:
     void print( const SubStepTimings& timings ) const;
     template<typename StreamT>
     void print( const SolverStats& stats ) const;
+    template<typename StreamT>
+    void print( const CDTimings& timings ) const;
     
     void printMemStats();
 
@@ -324,11 +334,9 @@ private:
     
     Scalar m_mem_usage_accu;
     Scalar m_mem_usage_divisor;
-    void printProblemStats( const StrandImplicitManager::SubStepTimings &timings );
-    unsigned m_statExternalContacts, m_statMutualCollisions, m_statTotalSubsteps;
+    unsigned m_statExternalContacts, m_statMutualCollisions, m_statTotalCollisions;
     unsigned m_num_nonlinear_iters, m_num_contact_solves, m_max_nonlinear_iters, m_max_perstep_nonlinear_iters;
     int m_num_ct_hair_hair_col;
-    int m_unconstrained_NewtonItrs;
     CDTimings m_cdTimings;
 };
 
