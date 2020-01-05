@@ -244,6 +244,7 @@ namespace strandsim
 		}
 
 		m_cdTimings.reset();
+		m_solverStat.reset();
 	}
 
 	bool StrandImplicitManager::isCollisionInvariantCT(Scalar dt)
@@ -338,10 +339,10 @@ namespace strandsim
 		if (m_params.m_statGathering)
 		{
 			printProblemStats(timings);
+			print<InfoStream>(m_solverStat);
 		}
 
 		print<CopiousStream>(timings);
-		print<CopiousStream>(m_stats);
 
 		InfoStream(g_log, "") << "Database size: " << m_collisionDatabase.computeSizeInBytes();
 		m_timings.back().push_back(timings);
@@ -1312,7 +1313,6 @@ namespace strandsim
 			return;
 
 		DebugStream(g_log, "") << " Solving ";
-		m_stats.reset();
 		// m_contactProblemsStats.clear(); //DK: [stats]
 
 		// Dynamics solve
@@ -1393,7 +1393,6 @@ namespace strandsim
 	void StrandImplicitManager::step_solveCollisions(int total_num_substeps, int total_substep_id)
 	{
 		DebugStream(g_log, "") << " Solving ";
-		m_stats.reset();
 		// m_contactProblemsStats.clear(); //DK: [stats]
 
 		// Dynamics solve
@@ -1525,7 +1524,7 @@ namespace strandsim
 		std::vector<ProximityCollision*>& colPointers, VecXx& vels, VecXx& worldImpulses, VecXx& impulses, VecXx& adhesions, VecXx& filters,
 		VecXu& startDofs, VecXu& nDofs, int& numSubSys, bool herschelBulkleyProblem, bool ignoreMutualCollision)
 	{
-		//        std::cout << "[assemble 0]" << std::endl;
+		Timer tt("solver", false, "assemble");
 
 		unsigned nContacts = ignoreMutualCollision ? 0 : collisionGroup.second.size();
 
@@ -1543,7 +1542,6 @@ namespace strandsim
 		unsigned dofCount = 0;
 		unsigned subCount = 0;
 
-		//        std::cout << "[assemble 1]" << std::endl;
 		for (IndicesMap::const_iterator it = collisionGroup.first.begin(); it != collisionGroup.first.end(); ++it)
 		{ // Computes the number of DOFs per strand and the total number of contacts
 			startDofs[subCount] = dofCount;
@@ -1607,7 +1605,6 @@ namespace strandsim
 		unsigned objectId = 0, collisionId = 0, currDof = 0;
 		bool oneNonSPD = false;
 
-		//        std::cout << "[assemble 3]" << std::endl;
 		// Setting up objects and adding external constraints
 		for (IndicesMap::const_iterator it = collisionGroup.first.begin();
 			it != collisionGroup.first.end(); ++it)
@@ -1662,7 +1659,6 @@ namespace strandsim
 			}
 		}
 
-		//        std::cout << "[assemble 4]" << std::endl;
 		if (!ignoreMutualCollision) {
 #pragma omp parallel for
 			for (int i = 0; i < (int)collisionGroup.second.size(); ++i)
@@ -1690,12 +1686,11 @@ namespace strandsim
 			}
 			assert(collisionId + collisionGroup.second.size() == nContacts);
 		}
-		//        std::cout << "[assemble 5]" << std::endl;
 
+		m_solverStat.m_assembleTime += tt.elapsed();
 		mecheProblem.fromPrimal(nSubsystems, nndofs, MassMat, forces, adhesions, filters,
 			nContacts, mu, yields, etas, powers, E, u_frees, &ObjA[0], &ObjB[0], H_0, H_1, m_params.m_useImpulseMethod);
 
-		//        std::cout << "[assemble 6]" << std::endl;
 		return true;
 	}
 
@@ -1964,8 +1959,13 @@ namespace strandsim
 				// set new velocity
 				// update currentStates with FutureStates
 				// use FTL or if stretch energy is larger than threshold, set m_lastStepWasRejected = true
+				// update collision database
+				Timer tt("solver", false, "pose precess");
 				numNewtonIters = postProcessBogusFrictionProblem(updateVelocity, collisionGroup, mecheProblem, globalIds, colPointers, vels, worldImpulses, impulses, startDofs, nDofs, newtonResiduals, total_num_substeps, total_substep_id);
+				m_solverStat.m_poseProcessTime += tt.elapsed();
 			}
+
+			m_solverStat.addStat(mecheProblem, collisionGroup);
 		}
 
 		/* If either the solver result was really bad or one strand was stretching,
@@ -2506,17 +2506,20 @@ namespace strandsim
 	}
 
 	template<typename StreamT>
-	void StrandImplicitManager::print(const StrandImplicitManager::SolverStats& stats) const
+	void StrandImplicitManager::print(const StrandImplicitManager::SolverStat& stat) const
 	{
-		StreamT(g_log, "Solver Stats") << " TC: " << stats.totConstraints << " MC: "
-			<< stats.maxConstraints << " MO: " << stats.maxObjects << " ME: " << stats.maxError
-			<< " MT: " << stats.maxTime;
-	}
-
-	void StrandImplicitManager::SolverStats::reset()
-	{
-		totConstraints = maxConstraints = maxObjects = 0;
-		maxError = maxTime = 0.;
+		StreamT(g_log, "Solver breakdown timing") << " Ass: " << stat.m_assembleTime << " PrimalCopy: " << stat.m_primalCopyTime
+			<< " Minv: " << stat.m_MinvTime << " ComputeDual: " << stat.m_computeDualTime
+			<< " Solve: " << stat.m_solveTime << " PostProc: " << stat.m_poseProcessTime;
+		
+		for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
+			std::cout << "Collision group " << i << " (strands: " << stat.m_collisionSize[i].first 
+				<< " contacts: " << stat.m_collisionSize[i].second << "):\n";
+			int iter = 0;
+			for (auto it = stat.m_solverStat[i].begin(); it != stat.m_solverStat[i].end(); ++it) {
+				std::cout << "\tIter: " << iter++ << " err: " << it->first << " time: " << it->second << '\n';
+			}
+		}
 	}
 
 	StrandImplicitManager::SubStepTimings operator+(const StrandImplicitManager::SubStepTimings& lhs,
