@@ -40,7 +40,7 @@ public:
 #ifdef WIN32
 		LARGE_INTEGER stop;
 		::QueryPerformanceCounter(&stop);
-		return (( stop.QuadPart - m_start.QuadPart) / m_freq);
+		return (( stop.QuadPart - m_start.QuadPart) / m_freq) * 1e3;
 #else
 		struct timeval stop ;
 		gettimeofday( &stop, 0 ) ;

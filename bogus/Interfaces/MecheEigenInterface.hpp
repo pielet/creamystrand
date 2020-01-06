@@ -45,15 +45,6 @@ namespace bogus
     {
     public:
         typedef std::vector<std::pair<double, double> > IterateStat;
-        
-        // Timing
-        double m_primalCopyTime;
-        double m_MinvTime;
-        double m_computeDualTime;
-        double m_solveTime;
-
-        // Solver residuals and breakdown time
-        IterateStat m_stat;
 
         enum Algorithm {
             GaussSeidel = 0,
@@ -177,8 +168,12 @@ namespace bogus
         double *w (){ return m_w  ; }
         double *mu(){ return m_mu ; }
         
-        //! Time spent in last solver call. In seconds.
-        double lastSolveTime() const { return m_solveTime ; }
+        double primalCopyTime() const { return m_primalCopyTime; }
+        double MinvTime() const { return m_MinvTime; }
+        double computeDualTime() const { return m_computeDualTime; }
+        double solveTime() const { return m_solveTime ; }
+
+        IterateStat iterateStat() const { return m_stat; }
         
     protected:
         
@@ -189,6 +184,15 @@ namespace bogus
         
         Signal< unsigned, double, double > m_callback;
         Timer m_timer ;
+
+        // Timing
+        double m_primalCopyTime;
+        double m_MinvTime;
+        double m_computeDualTime;
+        double m_solveTime;
+
+        // Solver residuals and breakdown time
+        IterateStat m_stat;
         
     private:
         // Non copyable, non assignable

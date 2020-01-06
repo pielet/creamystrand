@@ -481,8 +481,8 @@ namespace strandsim
         depl = ( PC - QC );
         
         const Scalar n2depl = depl.squaredNorm();
-        if ( isSmall( n2depl ) )
-            return false;
+        // if ( isSmall( n2depl ) )
+        //     return false;
         
         depl /= std::sqrt( n2depl );
         
@@ -515,8 +515,8 @@ namespace strandsim
 		}
 		
 		// volume on bridge
-		if ( sqDist > max_dist * max_dist )
-			return false;
+		//if ( sqDist > max_dist * max_dist )
+		//	return false;
 		
         if(aPQ < 1e-12 || relative_vel < -1e-4) {
             // dry or approaching, use solid to determine whether we should enforce the constraint
