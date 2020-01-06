@@ -97,22 +97,6 @@ public:
         }
     };
 
-    //! Statistics for on simulation timestep
-    struct SolverStats
-    {
-        unsigned totConstraints;
-        unsigned maxConstraints;
-        unsigned maxObjects;
-        double maxError;
-        double maxTime;
-
-        void reset()
-        {
-            totConstraints = maxConstraints = maxObjects = 0;
-            maxError = maxTime = 0.;
-        }
-    };
-
     typedef std::vector<SubStepTimings> StepTimings;
     typedef std::list<StepTimings> Timings;
 
@@ -186,20 +170,67 @@ public:
 		}
 	}
 private:
-
-    template<typename StreamT>
-    void print( const SubStepTimings& timings ) const;
-    template<typename StreamT>
-    void print( const SolverStats& stats ) const;
-    template<typename StreamT>
-    void print( const CDTimings& timings ) const;
-    
     void printMemStats();
 
     //! Map between a index in the simulation to an index in a colliding group
     typedef std::map<unsigned, unsigned> IndicesMap;
     //! Colliding group: set of strands and contacts that should be solved together
     typedef std::pair<IndicesMap, ProximityCollisions> CollidingGroup;
+
+    //! collision solver timings & residuals -- in milliseconds
+    struct SolverStat
+    {
+        SolverStat():
+        m_assembleTime(0.), m_primalCopyTime(0.), m_MinvTime(0.), m_computeDualTime(0.), m_solveTime(0.),
+        m_poseProcessTime(0.)
+        {}
+
+        double sum() const
+        {
+            return m_assembleTime + m_primalCopyTime + m_MinvTime + m_computeDualTime + m_solveTime + m_poseProcessTime;
+        }
+
+        void reset()
+        {
+            m_assembleTime = 0;
+            m_primalCopyTime = 0;
+            m_MinvTime = 0;
+            m_computeDualTime = 0;
+            m_solveTime = 0;
+            m_poseProcessTime = 0;
+
+            m_collisionSize.clear();
+            m_solverStat.clear();
+        }
+
+        void addStat(const bogus::MecheFrictionProblem& meche, const CollidingGroup& cg)
+        {
+            m_primalCopyTime += meche.primalCopyTime();
+            m_MinvTime += meche.MinvTime();
+            m_computeDualTime += meche.computeDualTime();
+            m_solveTime += meche.solveTime();
+
+            m_collisionSize.push_back(std::make_pair(cg.first.size(), cg.second.size()));
+            m_solverStat.push_back(meche.iterateStat());
+        }
+
+        double m_assembleTime;
+        double m_primalCopyTime;
+        double m_MinvTime;
+        double m_computeDualTime;
+        double m_solveTime;
+        double m_poseProcessTime;
+
+        std::vector<std::pair<int, int> > m_collisionSize;
+        std::vector<bogus::MecheFrictionProblem::IterateStat> m_solverStat;
+    };
+    
+    template<typename StreamT>
+    void print( const SubStepTimings& timings ) const;
+    template<typename StreamT>
+    void print(const CDTimings& timings) const;
+    template<typename StreamT>
+    void print( const SolverStat& stat ) const;
 
     //! Prepares the substep, executes the externals objects controllers
     void step_prepare( Scalar dt );
@@ -329,8 +360,8 @@ private:
 
 	SubStepCallback* m_substep_callback;
     // Stat gathering 
+    SolverStat m_solverStat;
     Timings m_timings;
-    SolverStats m_stats;
     
     Scalar m_mem_usage_accu;
     Scalar m_mem_usage_divisor;

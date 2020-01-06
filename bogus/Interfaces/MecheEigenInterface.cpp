@@ -62,7 +62,10 @@ namespace bogus
 	MecheFrictionProblem::MecheFrictionProblem()
 		: m_primal(BOGUS_NULL_PTR(PrimalFrictionProblem<3u>)),
 		m_dual(BOGUS_NULL_PTR(DualFrictionProblem<3u>)),
-		m_lastSolveTime(0),
+		m_primalCopyTime(0),
+        m_MinvTime(0),
+        m_computeDualTime(0),
+        m_solveTime(0),
 		m_f(BOGUS_NULL_PTR(double)),
 		m_w(BOGUS_NULL_PTR(double)),
 		m_mu(BOGUS_NULL_PTR(double)),
@@ -99,7 +102,7 @@ namespace bogus
 				<< std::endl;
 		}
 #endif
-		m_callback.trigger(GSIter, err, m_timer.elapsed());
+		m_stat.push_back(std::make_pair(err, m_timer.elapsed()));
 	}
 
 	void MecheFrictionProblem::reset()
@@ -107,7 +110,6 @@ namespace bogus
 		destroy();
 
 		m_primal = new PrimalFrictionProblem<3u>();
-		m_lastSolveTime = 0;
 	}
 
 	void MecheFrictionProblem::fromPrimal(
@@ -136,6 +138,8 @@ namespace bogus
 		// Copy M
 		// We don't actually need it after having computed a factorization of M, but we keep it around
 		// in case we want to use dumpToFile()
+		m_timer.reset();
+
 		if (diagonalProblem) {
 			m_primal->DiagM.reserve(NObj);
 			m_primal->DiagM.setRows(ndof);
@@ -232,12 +236,17 @@ namespace bogus
 		m_primal->powers = powers_in;
 		m_primal->filter = filter_in;
 
+		m_primalCopyTime = m_timer.elapsed();
+		m_timer.reset();
+
 		if (diagonalProblem) {
 			m_primal->computeDiagMInv();
 		}
 		else {
 			m_primal->computeMInv();
 		}
+
+		m_MinvTime = m_timer.elapsed();
 	}
 
 	unsigned MecheFrictionProblem::nDegreesOfFreedom() const
@@ -322,7 +331,6 @@ namespace bogus
 		// r to local coords
 		Eigen::VectorXd r_loc = m_primal->E.transpose() * r + m_primal->rc; ;
 
-
 		double res;
 
 		if (options.algorithm == ADMM || options.algorithm == DualAMA)
@@ -367,6 +375,8 @@ namespace bogus
 
 			if (options.algorithm == MatrixFreeGaussSeidel)
 			{
+				m_timer.reset();
+
 				if (diagonalProblem) {
 					typename PrimalFrictionProblem< 3u >::DiagProductGaussSeidelType gs;
 					if (options.tolerance != 0.) gs.setTol(options.tolerance);
@@ -401,7 +411,9 @@ namespace bogus
 				// If dual has not been computed yet
 				if (!m_dual)
 				{
+					m_timer.reset();
 					computeDual(problemRegularization, diagonalProblem);
+					m_computeDualTime = m_timer.elapsed();
 				}
 
 				// Proper solving
@@ -466,7 +478,8 @@ namespace bogus
 			}
 		}
 
-		m_lastSolveTime = m_timer.elapsed();
+		m_solveTime = m_timer.elapsed();
+
 #ifdef BOGUS_VERBOSE
 		if (m_out && n != 0)
 		{

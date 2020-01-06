@@ -34,7 +34,7 @@ public:
 		reset() ;
 	}
 
-	//! Resturns the elapsed time, in seconds, since the last call to reset()
+	//! Resturns the elapsed time, in milliseconds, since the last call to reset()
 	double elapsed()
 	{
 #ifdef WIN32
@@ -44,8 +44,8 @@ public:
 #else
 		struct timeval stop ;
 		gettimeofday( &stop, 0 ) ;
-		return stop.tv_sec - m_start.tv_sec
-				+ 1.e-6 * ( stop.tv_usec - m_start.tv_usec ) ;
+		return 1.e3 * (stop.tv_sec - m_start.tv_sec)
+				+ 1.e-3 * ( stop.tv_usec - m_start.tv_usec ) ;
 #endif
 	}
 

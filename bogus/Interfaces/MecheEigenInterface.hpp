@@ -19,6 +19,7 @@
  */
 
 #include <iosfwd>
+#include <vector>
 
 #include "../Core/Utils/Signal.hpp"
 #include "../Core/Utils/Timer.hpp"
@@ -43,7 +44,17 @@ namespace bogus
     class MecheFrictionProblem
     {
     public:
+        typedef std::vector<std::pair<double, double> > IterateStat;
         
+        // Timing
+        double m_primalCopyTime;
+        double m_MinvTime;
+        double m_computeDualTime;
+        double m_solveTime;
+
+        // Solver residuals and breakdown time
+        IterateStat m_stat;
+
         enum Algorithm {
             GaussSeidel = 0,
             ProjectedGradient = 1,
@@ -167,7 +178,7 @@ namespace bogus
         double *mu(){ return m_mu ; }
         
         //! Time spent in last solver call. In seconds.
-        double lastSolveTime() const { return m_lastSolveTime ; }
+        double lastSolveTime() const { return m_solveTime ; }
         
     protected:
         
@@ -176,9 +187,7 @@ namespace bogus
         PrimalFrictionProblem<3u> * m_primal ;
         DualFrictionProblem<3u>  * m_dual ;
         
-        double m_lastSolveTime ;
-        
-        Signal< unsigned, double, double > m_callback ;
+        Signal< unsigned, double, double > m_callback;
         Timer m_timer ;
         
     private:
