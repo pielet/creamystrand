@@ -210,8 +210,7 @@ bool EdgeFaceCollision::analyse()
 
         Vec3x cp, cq;
         Scalar t;
-        const double sqrdist = ClosestPtSegmentSegment( p0col, p1col, q0col, q1col, m_s, t, cp,
-                cq );
+        const double sqrdist = ClosestPtSegmentSegment( p0col, p1col, q0col, q1col, m_s, t, cp, cq );
 
         // Compute the barycentric coordinates of the hit, even though it's on the side of the triangle
         m_u = m_v = m_w = 0;
@@ -258,7 +257,6 @@ bool EdgeFaceCollision::analyse()
 //            m_normal = ( q1col - q0col ).cross( p1col - p0col );
             m_normal = ( pq1 - pq0 ).cross( pp1 - pp0 );
             double nnorm = m_normal.norm();
-
 
             // If the edges happen to be parallel
             if ( nnorm * nnorm <= SQ_TOLERANCE )

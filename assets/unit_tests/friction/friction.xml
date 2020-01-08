@@ -1,7 +1,6 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
-
-
+           
   <duration time="0.3"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
@@ -47,7 +46,7 @@
   <SimulationParameters>
     <logLevel value="5"/>
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="600"/>
+    <gaussSeidelIterations value="200"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="40"/>
     <hairMeshFrictionCoefficient value="0.0"/>
@@ -65,14 +64,14 @@
     <hairHairFrictionCoefficient value="0.16"/>
     <substeps value="1"/>
     <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
+    <useCTRodRodCollisions value="1"/>
     <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
     <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
-    <bogusAlgorithm value="projectedgradient"/>
+    <bogusAlgorithm value="gaussseidel"/>
   </SimulationParameters>
 
   <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">

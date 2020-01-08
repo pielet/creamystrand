@@ -35,11 +35,14 @@ public:
     void updateBoundingBoxes();
     void updateBoundingBox( BVHNodeType& node );
 
-    void findCollisions( bool ignoreContinuousTime = false, 
+    void findCollisions( bool ignoreCTRodRod = false,
+                         bool ignoreContinuousTime = false, 
                          bool ignoreProximity = false );
 
     void clear();
     bool empty();
+
+    friend std::ostream& operator<<(std::ostream& os, const CollisionDetector& cd);
 
     const std::list<CollisionBase*>& getContinuousTimeCollisions() const
     {
@@ -81,9 +84,14 @@ protected:
     std::list<CollisionBase*> m_proximityCollisions;
 
     int m_broadPhaseHitCounter;
+    bool m_ignoreCTRodRod;
     bool m_ignoreContinuousTime;
     bool m_ignoreProximity;
     static Scalar s_maxSizeForElementBBox;
+
+    unsigned m_numEdgeEdgeColiision;
+    unsigned m_numEdgeFaceCollision;
+    unsigned m_numEdgeFaceIntersection;
 
     ElementProxySortedAABBFunctor * m_sortedAABBFunctor;
     typedef SpatialHashMap<const ElementProxySortedAABBFunctor, unsigned, true> SpatialHashMapT;

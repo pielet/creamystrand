@@ -218,16 +218,16 @@ double ClosestPtSegmentSegment( const Vec3x& p1, const Vec3x& q1, const Vec3x& p
 
             // If segments not parallel, compute closest point on L1 to L2, and
             // clamp to segment S1. Else pick arbitrary s (here 0)
-            if ( denom != 0.0 )
+            if ( denom >= EPSILON )
             {
                 s = clamp( ( b * f - c * e ) / denom, 0.0, 1.0 );
+                // Compute point on L2 closest to S1(s) using
+                // t = Dot((P1+D1*s)-P2,D2) / Dot(D2,D2) = (b*s + f) / e
+                t = (b * s + f) / e;
             }
-            else
-                s = 0.0;
-
-            // Compute point on L2 closest to S1(s) using
-            // t = Dot((P1+D1*s)-P2,D2) / Dot(D2,D2) = (b*s + f) / e
-            t = ( b * s + f ) / e;
+            else {
+                s = t = 0.0;
+            }
 
             // If t in [0,1] done. Else clamp t, recompute s for the new value
             // of t using s = Dot((P2+D2*t)-P1,D1) / Dot(D1,D1)= (t*b - c) / a

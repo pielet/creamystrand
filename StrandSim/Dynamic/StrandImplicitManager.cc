@@ -20,6 +20,7 @@
 #include "../Collision/ElementProxy.hh"
 #include "../Collision/EdgeFaceIntersection.hh"
 #include "../Collision/ContinuousTimeCollision.hh"
+#include "../Collision/EdgeEdgeCollision.hh"
 #include "../Collision/VertexFaceCollision.hh"
 #include "../Collision/EdgeFaceCollision.hh"
 #include "../Collision/CollisionUtils.hh"
@@ -286,10 +287,12 @@ namespace strandsim
 		m_mutualContacts.clear();
 		m_elasticMutualContacts.clear();
 
-		std::cout << "[Setup Hair-Hair Collisions]" << std::endl;
-		timer.restart();
-		setupHairHairCollisions(m_dt);
-		timings.hairHairCollisions = timer.elapsed();
+		if (!m_params.m_useCTRodRodCollisions) {
+			std::cout << "[Setup Hair-Hair Collisions]" << std::endl;
+			timer.restart();
+			setupHairHairCollisions(m_dt);
+			timings.hairHairCollisions = timer.elapsed();
+		}
 
 		std::cout << "[Step Dynamics]" << std::endl;
 		timer.restart();
@@ -297,7 +300,7 @@ namespace strandsim
 		timings.dynamics = timer.elapsed();
 
 
-		std::cout << "[Setup Mesh-Hair Collisions]" << std::endl;
+		std::cout << "[Setup Continous-Time Collisions]" << std::endl;
 		timer.restart();
 		setupMeshHairCollisions(m_dt);
 		timings.meshHairCollisions = timer.elapsed();
@@ -379,8 +382,7 @@ namespace strandsim
 			return;
 
 		Timer tt("MeshHair", false, "controllers");
-		//LoggingTimer<InfoStream> tt( "MeshHair", "controllers" );
-		DebugStream(g_log, "") << "StrandImplicitManager::setup mesh/hair collisions";
+		DebugStream(g_log, "") << "StrandImplicitManager::setup continuous collision detection";
 
 		tt.restart("buildBVH");
 		m_collisionDetector->buildBVH(false);
@@ -388,12 +390,15 @@ namespace strandsim
 
 		tt.restart("findCollisions");
 		EdgeFaceIntersection::s_doProximityDetection = true;
+		// ignoreCTRodRod = false : CCD of edges among hairs
+		//     -> add EdgeEdgeCollision to m_continuousTimeCollisions
 		// ignoreContinuousTime = false : CCD of vertex-face and edge-face (CCD of edge and 3 edges of the face)
 		//     -> add VertexFaceCollision and EdgeFaceCollision to m_continuousTimeCollisions
 		// ignoreProximity = false : edge-face intersection test (s_doProximityDetection = true) using position before unconstraint update
 		//     -> add EdgeFaceIntersection to m_proximityCollisions
-		m_collisionDetector->findCollisions(false, false); // set whether cd should do ctc for hairs, etc
+		m_collisionDetector->findCollisions(!m_params.m_useCTRodRodCollisions, false, false); // set whether cd should do ctc for hairs, etc
 		m_cdTimings.findCollisionsBVH = tt.elapsed();
+		DebugStream(g_log, "") << "CollisionDetector Stat: " << *m_collisionDetector;
 
 		// We do CT collisions first in order to guess meshes normals signs as soon as possible
 		//tt.restart( "continuous" );
@@ -458,8 +463,6 @@ namespace strandsim
 
 	void StrandImplicitManager::doContinuousTimeDetection(Scalar dt)
 	{
-		m_num_ct_hair_hair_col = 0;
-
 		EdgeFaceIntersection::s_doProximityDetection = false;
 
 		std::list<CollisionBase*>& collisionsList = m_collisionDetector->getContinuousTimeCollisions();
@@ -475,7 +478,8 @@ namespace strandsim
 		// In order to eliminate duplicates
 		collisionsList.sort(compareCT);
 
-		unsigned nInt = 0;
+		m_num_ct_hair_hair_col = 0;
+		unsigned nExt = 0, nExtElastic = 0;
 
 		CollisionBase* previous = NULL;
 		for (auto collIt = collisionsList.begin(); collIt != collisionsList.end(); ++collIt)
@@ -491,65 +495,137 @@ namespace strandsim
 				continue;
 
 			ProximityCollision collision;
-			ElasticStrand* const strand = ctCollision->getFirstStrand();
-			const unsigned edgeIdx = ctCollision->getFirstVertex();
 
 			collision.m_originalCTCollision = ctCollision;
 			collision.normal = ctCollision->normal();
 
-			if (FaceCollision * fCollision = dynamic_cast<FaceCollision*>(ctCollision)) // Assignment =
+			EdgeEdgeCollision* eeCollision = dynamic_cast<EdgeEdgeCollision*>(ctCollision);
+
+			if (m_params.m_useCTRodRodCollisions && eeCollision)
 			{
-				collision.mu = sqrt(
-					fCollision->faceFrictionCoefficient()
-					* strand->collisionParameters().frictionCoefficient(edgeIdx));
+				ElasticStrand* sP = eeCollision->getFirstStrand();
+				ElasticStrand* sQ = eeCollision->getSecondStrand();
+				int iP = eeCollision->getFirstVertex();
+				int iQ = eeCollision->getSecondVertex();
+				const CollisionParameters& cpP = sP->collisionParameters();
+				const CollisionParameters& cpQ = sQ->collisionParameters();
 
-				// we assume all face collision are solid touching
-				collision.do_soc_solve = fCollision->doSOCSolve();
-				collision.adhesion = fCollision->faceAdhesionForce() * dt;
-				collision.yield = fCollision->faceYield() * dt;
-				collision.eta = fCollision->faceEta() * dt;
-				collision.power = fCollision->facePower();
-			}
-			else
-			{
-				continue;
-			}
+				bool acceptFirst = cpP.reactsToSelfCollisions() && (!(sP->isVertexFreezed(iP) || sP->isVertexGoaled(iP)) || (iP < sP->getNumVertices() - 2 && !(sP->isVertexFreezed(iP + 1) || sP->isVertexGoaled(iP + 1))));
+				bool acceptSecond = cpQ.reactsToSelfCollisions() && (!(sQ->isVertexFreezed(iQ) || sQ->isVertexGoaled(iQ)) || (iQ < sP->getNumVertices() - 2 && !(sQ->isVertexFreezed(iQ + 1) || sQ->isVertexGoaled(iQ + 1))));
 
-			collision.objects.second.globalIndex = -1;
-
-			const unsigned strIdx = strand->getGlobalIndex();
-			const Vec3x offset = ctCollision->offset() / dt;
-
-			if (VertexFaceCollision * vfCollision = dynamic_cast<VertexFaceCollision*>(ctCollision)) // Assignment =
-			{
-				if (strand->isVertexFreezed(edgeIdx) || strand->isVertexGoaled(edgeIdx))
+				// && -> Discard collisions on root immunity length
+				// || -> make them as external objects
+				if (!acceptFirst && !acceptSecond)
 					continue;
-
-				collision.objects.second.vertex = vfCollision->face()->uniqueId();
-				collision.objects.second.freeVel = vfCollision->meshVelocity(dt) + offset;
-
-				// add collision to m_externalContacts, set object.first(freeVel = 0)
-				if (addExternalContact(strIdx, edgeIdx, 0, collision))
+				if (cpP.usesFakeLayering() && cpQ.usesFakeLayering())
 				{
-					++nInt;
+					if (!(acceptFirst && acceptSecond))
+						continue;
 				}
-			}
-			else if (EdgeFaceCollision * efCollision = dynamic_cast<EdgeFaceCollision*>(ctCollision)) // Assignment =
-			{
-				if ((strand->isVertexFreezed(edgeIdx) && strand->isVertexFreezed(edgeIdx + 1)) || (strand->isVertexGoaled(edgeIdx) && strand->isVertexGoaled(edgeIdx + 1)))
-					continue;
 
-				collision.objects.second.vertex = efCollision->faceEdgeId();
-				collision.objects.second.freeVel = efCollision->meshVelocity(dt) + offset;
+				collision.do_soc_solve = eeCollision->doSOCSolve();
+				collision.mu = sqrt(cpP.frictionCoefficient(iP) * cpQ.frictionCoefficient(iQ));
+				collision.adhesion = 0.;
+				collision.yield = 0.;
+				collision.eta = 0.;
+				collision.power = 1.0;
 
-				if (addExternalContact(strIdx, edgeIdx, efCollision->abscissa(), collision))
+				collision.objects.first.globalIndex = sP->getGlobalIndex();
+				collision.objects.first.vertex = iP;
+				collision.objects.first.abscissa = eeCollision->getFirstAbscissa();
+				collision.objects.first.freeVel.setZero();
+
+				collision.objects.second.globalIndex = sQ->getGlobalIndex();
+				collision.objects.second.vertex = iQ;
+				collision.objects.second.abscissa = eeCollision->getSecondAbscissa();
+				collision.objects.second.freeVel.setZero();
+
+				// if accept both and approching: add to m_mutualContacts
+				// if only accept one and approching: add to m_externalContacts
+
+				if (acceptFirst && acceptSecond)
 				{
-					++nInt;
+					collision.swapIfNecessary();
+#pragma omp critical
+					{
+						if (collision.do_soc_solve)
+							m_mutualContacts.push_back(collision);
+
+						if (!m_params.m_skipFlowFrictions)
+							m_elasticMutualContacts.push_back(collision);
+
+						++m_num_ct_hair_hair_col;
+					}
+				}
+				else
+				{
+					if (collision.do_soc_solve) {
+						++nExt;
+						makeExternalContact(collision, acceptFirst);
+					}
+
+					if (!m_params.m_skipFlowFrictions) {
+						++nExtElastic;
+						makeElasticExternalContact(collision, acceptFirst);
+					}
+				}
+
+			}
+			else {
+
+				ElasticStrand* const strand = ctCollision->getFirstStrand();
+				const unsigned edgeIdx = ctCollision->getFirstVertex();
+
+				if (FaceCollision* fCollision = dynamic_cast<FaceCollision*>(ctCollision)) // Assignment =
+				{
+					collision.mu = sqrt(
+						fCollision->faceFrictionCoefficient()
+						* strand->collisionParameters().frictionCoefficient(edgeIdx));
+
+					// we assume all face collision are solid touching
+					collision.do_soc_solve = fCollision->doSOCSolve();
+					collision.adhesion = fCollision->faceAdhesionForce() * dt;
+					collision.yield = fCollision->faceYield() * dt;
+					collision.eta = fCollision->faceEta() * dt;
+					collision.power = fCollision->facePower();
+				}
+
+				collision.objects.second.globalIndex = -1;
+
+				const unsigned strIdx = strand->getGlobalIndex();
+				const Vec3x offset = ctCollision->offset() / dt;
+
+				if (VertexFaceCollision* vfCollision = dynamic_cast<VertexFaceCollision*>(ctCollision)) // Assignment =
+				{
+					if (strand->isVertexFreezed(edgeIdx) || strand->isVertexGoaled(edgeIdx))
+						continue;
+
+					collision.objects.second.vertex = vfCollision->face()->uniqueId();
+					collision.objects.second.freeVel = vfCollision->meshVelocity(dt) + offset;
+
+					// add collision to m_externalContacts, set object.first(freeVel = 0)
+					if (addExternalContact(strIdx, edgeIdx, 0, collision))
+					{
+						++nExt;
+					}
+				}
+				else if (EdgeFaceCollision* efCollision = dynamic_cast<EdgeFaceCollision*>(ctCollision)) // Assignment =
+				{
+					if ((strand->isVertexFreezed(edgeIdx) && strand->isVertexFreezed(edgeIdx + 1)) || (strand->isVertexGoaled(edgeIdx) && strand->isVertexGoaled(edgeIdx + 1)))
+						continue;
+
+					collision.objects.second.vertex = efCollision->faceEdgeId();
+					collision.objects.second.freeVel = efCollision->meshVelocity(dt) + offset;
+
+					if (addExternalContact(strIdx, edgeIdx, efCollision->abscissa(), collision))
+					{
+						++nExt;
+					}
 				}
 			}
 		}
-
-		DebugStream(g_log, "") << "We found " << nInt << " and " << m_num_ct_hair_hair_col << " continuous-time mesh/hair and hair/hair intersections";
+		
+		DebugStream(g_log, "") << "We found " << nExt << " and " << m_num_ct_hair_hair_col << " continuous-time mesh/hair and hair/hair collisions";
 	}
 
 	bool StrandImplicitManager::addExternalContact(const unsigned strIdx, const unsigned edgeIdx,
@@ -1111,7 +1187,7 @@ namespace strandsim
 				for (int i = 0; i < (int)m_strands.size(); i++)
 				{
 					if (!passed[i])
-						passed[i] = m_steppers[i]->postSolveNonlinear();
+						passed[i] = m_steppers[i]->postSolveNonlinear();	// fail-safe
 				}
 
 				// check if all passed
@@ -1180,7 +1256,7 @@ namespace strandsim
 		//     b. accept the first maxNumCollisionsPerEdge collision 
 		// 2. convert some contact to external contact (m_nonSPD ??)
 		// 3. construct collision group by bfs
-		// -> result stored in m_collidingGroups and m_collidingGroupsIdx
+		// -> result stored in m_collidingGroups(m_elasticCollidingGroups) and m_collidingGroupsIdx(m_elasticCollidingGroupsIdx)
 		computeCollidingGroups(m_mutualContacts, dt, false);
 		computeCollidingGroups(m_elasticMutualContacts, dt, true);
 
@@ -1216,7 +1292,7 @@ namespace strandsim
 		}
 		CopiousStream(g_log, "") << "Number of external contacts: " << nExternalContacts;
 		CopiousStream(g_log, "") << "Number of elastic external contacts: " << nElasticExternalContacts;
-		m_statExternalContacts = nExternalContacts;
+		m_statExternalContacts = nExternalContacts + nElasticExternalContacts;
 
 #pragma omp parallel for
 		for (int i = 0; i < (int)m_collidingGroups.size(); i++)
@@ -1235,6 +1311,7 @@ namespace strandsim
 		for (std::vector<CollidingGroup>::size_type i = 0; i < m_collidingGroups.size(); i++)
 		{
 			CollidingGroup& cg = m_collidingGroups[i];
+			m_statMutualCollisions += cg.second.size();
 
 			if (cg.first.size() >= maxObjForOuterParallelism)
 			{
@@ -1263,6 +1340,7 @@ namespace strandsim
 		for (std::vector<CollidingGroup>::size_type i = 0; i < m_elasticCollidingGroups.size(); i++)
 		{
 			CollidingGroup& cg = m_elasticCollidingGroups[i];
+			m_statMutualCollisions += cg.second.size();
 
 			if (cg.first.size() >= maxObjForOuterParallelism)
 			{
@@ -2288,7 +2366,6 @@ namespace strandsim
 		}
 
 		CopiousStream(g_log, "") << "Number of mutual collisions: " << mutualCollisions.size();
-		m_statMutualCollisions += mutualCollisions.size();
 
 		// For each strand, list all other contacting ones
 
@@ -2503,9 +2580,9 @@ namespace strandsim
 	{
 		StreamT(g_log, "CD breakdown timing")
 			<< "updateHashMap: " << timings.updateHashMap
-			<< " HH: " << timings.processHashMap
+			<< " HH Proxmity: " << timings.processHashMap
 			<< " buildBVH: " << timings.buildBVH
-			<< " HM: " << timings.findCollisionsBVH
+			<< " CCD: " << timings.findCollisionsBVH
 			<< " assemble: " << timings.narrowPhase
 			<< " total: " << timings.sum();
 	}

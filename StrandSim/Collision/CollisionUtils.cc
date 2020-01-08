@@ -481,8 +481,8 @@ namespace strandsim
         depl = ( PC - QC );
         
         const Scalar n2depl = depl.squaredNorm();
-        // if ( isSmall( n2depl ) )
-        //     return false;
+        if ( isSmall( n2depl ) )
+            return false;
         
         depl /= std::sqrt( n2depl );
         

@@ -12,6 +12,7 @@ set( Sources
   Collision/ProximityCollision.cc
   Collision/TriangularMesh.cc
   Collision/VertexFaceCollision.cc
+  Collision/EdgeEdgeCollision.cc
   Control/Capsule.cc
   Control/Icosphere.cc
   Control/ObjParser.cc
@@ -80,6 +81,7 @@ set( Headers
   Collision/ProximityCollision.hh
   Collision/TriangularMesh.hh
   Collision/VertexFaceCollision.hh
+  Collision/EdgeEdgeCollision.hh
   Control/Capsule.hh
   Control/Icosphere.hh
   Control/ObjParser.hh

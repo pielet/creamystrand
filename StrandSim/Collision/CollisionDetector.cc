@@ -9,6 +9,7 @@
 #include "CollisionDetector.hh"
 #include "ElementProxy.hh"
 #include "ContinuousTimeCollision.hh"
+#include "EdgeEdgeCollision.hh"
 #include "VertexFaceCollision.hh"
 #include "EdgeFaceCollision.hh"
 #include "EdgeFaceIntersection.hh"
@@ -23,7 +24,9 @@ Scalar CollisionDetector::s_maxSizeForElementBBox = 1e2;
 
 CollisionDetector::CollisionDetector( std::vector<ElementProxy*>& elements ) :
         m_elementProxies( elements ), m_bvh(), m_broadPhaseHitCounter( 0 ),
-        m_ignoreContinuousTime( false ), m_ignoreProximity( false ), m_sortedAABBFunctor( NULL ), m_hashMap( NULL )
+        m_ignoreCTRodRod(false), m_ignoreContinuousTime( false ), m_ignoreProximity( false ),
+        m_sortedAABBFunctor( NULL ), m_hashMap( NULL ),
+        m_numEdgeEdgeColiision(0), m_numEdgeFaceCollision(0), m_numEdgeFaceIntersection(0)
 {
 }
 
@@ -47,7 +50,6 @@ void CollisionDetector::buildBVH( bool statique )
         const BBoxType& elemBBox = elem->getBoundingBox();
         const Scalar elemBBoxSize = elemBBox.maxDim();
 
-
         if ( elemBBoxSize > s_maxSizeForElementBBox )
         {
             WarningStream( g_log, "" ) << "Element " << *elem << " has large bounding box: "
@@ -69,9 +71,11 @@ void CollisionDetector::buildBVH( bool statique )
     DebugStream( g_log, "" ) << "CollisionDetector::buildBVH(): largest element BBox size = "
             << largestElemBBoxSize;
 
+    // reset FaceProxies' AABB if the cells it occupies do not intersect with EdgeProxis' AABB
+    // input: HashMap's cell size
     filterWithSpatialHashMap( largestElemBBoxSize );
 
-    ElementProxyBBoxFunctor bboxfunctor( m_elementProxies );
+    ElementProxyBBoxFunctor bboxfunctor( m_elementProxies );    // put ElementProxy with valid AABB ahead of list
     BVHBuilder<ElementProxyBBoxFunctor> bvh_builder;
     bvh_builder.build( bboxfunctor, &m_bvh );
 }
@@ -117,10 +121,11 @@ void CollisionDetector::updateBoundingBox( BVHNodeType& node )
     }
 }
 
-void CollisionDetector::findCollisions( bool ignoreContinuousTime, bool ignoreProximity )
+void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreContinuousTime, bool ignoreProximity )
 {
     assert( empty() );
 
+    m_ignoreCTRodRod = ignoreCTRodRod;
     m_ignoreContinuousTime = ignoreContinuousTime;
     m_ignoreProximity = ignoreProximity;
 
@@ -383,6 +388,10 @@ void CollisionDetector::clear()
 
     m_continuousTimeCollisions.clear();
     m_proximityCollisions.clear();
+
+    m_numEdgeEdgeColiision = 0;
+    m_numEdgeFaceCollision = 0;
+    m_numEdgeFaceIntersection = 0;
 }
 
 bool CollisionDetector::empty()
@@ -391,15 +400,20 @@ bool CollisionDetector::empty()
 }
 
 template<>
-bool CollisionDetector::appendCollision<ContinuousTimeCollision>( ElementProxy* elem_a,
-        ElementProxy* elem_b )
+bool CollisionDetector::appendCollision<ContinuousTimeCollision>( ElementProxy* elem_a, ElementProxy* elem_b )
 {
     EdgeProxy* const edge_a = dynamic_cast<EdgeProxy*>( elem_a );
     EdgeProxy* const edge_b = dynamic_cast<EdgeProxy*>( elem_b );
 
     if ( edge_a && edge_b )
     {
-        return false;
+        if (!m_ignoreCTRodRod) {
+            if (edge_a->getStrandPointer() == edge_b->getStrandPointer() &&
+                (edge_a->getVertexIndex() == edge_b->getVertexIndex() + 1 || edge_a->getVertexIndex() + 1 == edge_b->getVertexIndex()))
+                return false;
+            else 
+                return appendCollision(edge_a, edge_b);
+        }
     }
     else if ( edge_a )
     {
@@ -412,6 +426,18 @@ bool CollisionDetector::appendCollision<ContinuousTimeCollision>( ElementProxy* 
         return triangle_a && appendCollision( edge_b, triangle_a );
     }
 
+    return false;
+}
+
+bool CollisionDetector::appendCollision(EdgeProxy* edge_a, EdgeProxy* edge_b)
+{
+    EdgeEdgeCollision ee(edge_a->getStrandPointer(), edge_a->getVertexIndex(),
+        edge_b->getStrandPointer(), edge_b->getVertexIndex());
+    if (ee.analyse()) {
+        m_continuousTimeCollisions.push_back(new EdgeEdgeCollision(ee));
+        ++m_numEdgeEdgeColiision;
+        return true;
+    }
     return false;
 }
 
@@ -428,7 +454,6 @@ bool CollisionDetector::appendCollision( EdgeProxy* edge_a, const FaceProxy* tri
                 ( edge_a->getStrandPointer(), edge_a->getVertexIndex() + 1, triangle_b ) ;
         if( vf1.analyse() )
             potentialCollisions.push_back( new VertexFaceCollision( vf1 ) ) ;
-
 
         VertexFaceCollision vf2
                 ( edge_a->getStrandPointer(), edge_a->getVertexIndex(), triangle_b ) ;
@@ -454,6 +479,7 @@ bool CollisionDetector::appendCollision( EdgeProxy* edge_a, const FaceProxy* tri
 
     if( atLeastOnePositive )
     {
+        ++m_numEdgeFaceCollision;
 #pragma omp critical (pushCTCollision)
         {
             m_continuousTimeCollisions.insert( m_continuousTimeCollisions.end(),
@@ -499,6 +525,7 @@ bool CollisionDetector::appendIntersection( EdgeProxy* edge_a, const FaceProxy* 
 
     if ( intersection.analyse() )
     {
+        ++m_numEdgeFaceIntersection;
         EdgeFaceIntersection * pInt = new EdgeFaceIntersection( intersection ) ;
 #pragma omp critical (pushProxCollision)
         {
@@ -624,6 +651,14 @@ void CollisionDetector::filterWithSpatialHashMap( const Scalar largestBBox )
 //    m_hashMap->clear() ;
     delete m_hashMap;
     m_hashMap = NULL;
+}
+
+std::ostream& operator<<(std::ostream& os, const CollisionDetector& cd)
+{
+    os << "ee collision: " << cd.m_numEdgeEdgeColiision << " ef collsion: " << cd.m_numEdgeFaceCollision
+        << " ef intersection: " << cd.m_numEdgeFaceIntersection;
+
+    return os;
 }
 
 } /* namespace strandsim */

@@ -3,7 +3,7 @@
 
 
   <duration time="0.5"/>
-  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.033" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -47,7 +47,7 @@
   <SimulationParameters>
     <logLevel value="5"/>
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="600"/>
+    <gaussSeidelIterations value="200"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="40"/>
     <hairMeshFrictionCoefficient value="0.0"/>
@@ -65,7 +65,7 @@
     <hairHairFrictionCoefficient value="0.16"/>
     <substeps value="1"/>
     <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
+    <useCTRodRodCollisions value="1"/>
     <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>

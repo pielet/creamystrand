@@ -7,6 +7,7 @@
  */
 
 #include "ContinuousTimeCollision.hh"
+#include "EdgeEdgeCollision.hh"
 #include "VertexFaceCollision.hh"
 #include "EdgeFaceCollision.hh"
 #include "ElementProxy.hh"
@@ -33,18 +34,29 @@ bool compareTimes( const CollisionBase* cb1, const CollisionBase* cb2 )
 
 bool compareCT( const CollisionBase* ct1, const CollisionBase* ct2 )
 {
+    // ee < vf < ef
+    {
+        const EdgeEdgeCollision* ee1 = dynamic_cast<const EdgeEdgeCollision*>(ct1);
+        const EdgeEdgeCollision* ee2 = dynamic_cast<const EdgeEdgeCollision*>(ct2);
+
+        if (ee1 != NULL && ee1 == NULL)
+            return true;
+
+        if (ee1 == NULL && ee2 != NULL)
+            return false;
+
+        if (ee1 != NULL && ee1 != NULL)
+            return compare(ee1, ee2);
+    }
 
     {
         const VertexFaceCollision* vf1 = dynamic_cast<const VertexFaceCollision*>( ct1 );
         const VertexFaceCollision* vf2 = dynamic_cast<const VertexFaceCollision*>( ct2 );
 
-        if ( vf1 != NULL && vf2 == NULL
-        )
+        if ( vf1 != NULL && vf2 == NULL )
             return true;
 
-        if ( vf1 == NULL && vf2 != NULL
-
-        )
+        if ( vf1 == NULL && vf2 != NULL )
             return false;
 
         if ( vf1 != NULL && vf2 != NULL)
@@ -57,12 +69,10 @@ bool compareCT( const CollisionBase* ct1, const CollisionBase* ct2 )
         const EdgeFaceCollision* ef1 = dynamic_cast<const EdgeFaceCollision*>( ct1 );
         const EdgeFaceCollision* ef2 = dynamic_cast<const EdgeFaceCollision*>( ct2 );
 
-        if ( ef1 != NULL && ef2 == NULL
-        )
+        if ( ef1 != NULL && ef2 == NULL )
             return true;
 
-        if ( ef1 == NULL && ef2 != NULL
-        )
+        if ( ef1 == NULL && ef2 != NULL )
             return false;
 
         if ( ef1 != NULL && ef2 != NULL)
