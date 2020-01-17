@@ -12,6 +12,7 @@
 #include "../Core/StepperBase.hh"
 #include "../Utils/SymmetricBandMatrixSolver.hh"
 #include "../Collision/ProximityCollision.hh"
+#include "../Utils/LoggingTimer.hh"
 
 #include <memory>
 #include <vector>
@@ -274,8 +275,54 @@ public:
     Scalar maxAdditionalImpulseNorm(int& idx);
     
     Scalar getStretchMultiplier() const;
+
     void solveLinear();
+
+    void getTimings(double& pre, double& rhs, double& timesM, double& F, double& composeRhs, double& lhs, double& J, double& addM, double& store, double& solve, double& post) const;
 private:
+
+    struct NewtonTimings
+    {
+        NewtonTimings() :
+            m_prepare(0), m_computeLHS(0), m_computeRHS(0), m_storeAndFab(0), m_solve(0), m_post(0),
+            m_multiplyByMassMatrix(0), m_computeFutureForces(0), m_composeRHS(0), m_computeJ(0), m_addM(0)
+        {
+        }
+
+        void reset()
+        {
+            m_prepare = 0;
+
+            m_computeLHS = 0;
+            m_multiplyByMassMatrix = 0;
+            m_computeFutureForces = 0;
+            m_composeRHS = 0;
+
+            m_computeRHS = 0;
+            m_computeJ = 0;
+            m_addM = 0;
+
+            m_storeAndFab = 0;
+            m_solve = 0;
+            m_post = 0;
+        }
+
+
+        double m_prepare;
+
+        double m_computeRHS;
+        double m_multiplyByMassMatrix = 0;
+        double m_computeFutureForces = 0;
+        double m_composeRHS = 0;
+
+        double m_computeLHS;
+        double m_computeJ;
+        double m_addM;
+
+        double m_storeAndFab;
+        double m_solve;
+        double m_post;
+    };
 
 
     //! Computes linearized dynamics
@@ -330,6 +377,9 @@ private:
 
     //! Returns the value of the stretch energy divided  by the length of the rods times its stiffness
     Scalar getLineicStretch();
+
+    Timer m_timer;
+    NewtonTimings m_timings;
 
     Scalar m_dt;
 	Scalar m_fraction;

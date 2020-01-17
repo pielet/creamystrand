@@ -18,6 +18,8 @@
 #include "../Utils/TimeUtils.hh"
 #include "../Dynamic/StrandDynamicTraits.hh"
 
+#define USE_OPENMP
+
 namespace strandsim
 {
 Scalar CollisionDetector::s_maxSizeForElementBBox = 1e2;
@@ -144,21 +146,28 @@ void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreContinuou
     // If tree has depth 1, detect collisions at this level.
     if ( h.IsLeaf() || g.IsLeaf() )
     {
+#ifdef USE_OPENMP
 #pragma omp parallel sections
         {
 #pragma omp section
             {
-                computeCollisions( h, h );
+                computeCollisions(h, h);
             }
 #pragma omp section
             {
-                computeCollisions( h, g );
+                computeCollisions(h, g);
             }
 #pragma omp section
             {
-                computeCollisions( g, g );
+                computeCollisions(g, g);
             }
         }
+#else
+        computeCollisions(h, h);
+        computeCollisions(h, g);
+        computeCollisions(g, g);
+#endif // USE_OPENMP
+
         return;
     }
 
@@ -170,49 +179,64 @@ void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreContinuou
     // If tree has depth 2, detect collisions at this level.
     if ( hh.IsLeaf() || hg.IsLeaf() || gh.IsLeaf() || gg.IsLeaf() )
     {
+#ifdef USE_OPENMP
 #pragma omp parallel sections
         {
 #pragma omp section
             {
-                computeCollisions( hh, hh );
+                computeCollisions(hh, hh);
             }
 #pragma omp section
             {
-                computeCollisions( hh, hg );
+                computeCollisions(hh, hg);
             }
 #pragma omp section
             {
-                computeCollisions( hh, gh );
+                computeCollisions(hh, gh);
             }
 #pragma omp section
             {
-                computeCollisions( hh, gg );
+                computeCollisions(hh, gg);
             }
 #pragma omp section
             {
-                computeCollisions( hg, hg );
+                computeCollisions(hg, hg);
             }
 #pragma omp section
             {
-                computeCollisions( hg, gh );
+                computeCollisions(hg, gh);
             }
 #pragma omp section
             {
-                computeCollisions( hg, gg );
+                computeCollisions(hg, gg);
             }
 #pragma omp section
             {
-                computeCollisions( gh, gh );
+                computeCollisions(gh, gh);
             }
 #pragma omp section
             {
-                computeCollisions( gh, gg );
+                computeCollisions(gh, gg);
             }
 #pragma omp section
             {
-                computeCollisions( gg, gg );
+                computeCollisions(gg, gg);
             }
         }
+#else
+        computeCollisions(hh, hh);
+        computeCollisions(hh, hg);
+        computeCollisions(hh, gh);
+        computeCollisions(hh, gg);
+        computeCollisions(hg, hg);
+        computeCollisions(hg, gh);
+        computeCollisions(hg, gg);
+        computeCollisions(gh, gh);
+        computeCollisions(gh, gg);
+        computeCollisions(gg, gg);
+
+#endif // USE_OPENMP
+
         return;
     }
 
@@ -226,153 +250,193 @@ void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreContinuou
     const BVHNodeType& ggh = m_bvh.GetNode( gg.ChildIndex() );
     const BVHNodeType& ggg = m_bvh.GetNode( gg.ChildIndex() + 1 );
 
+#ifdef USE_OPENMP
 #pragma omp parallel sections
     {
 #pragma omp section
         {
-            computeCollisions( hhh, hhh );
+            computeCollisions(hhh, hhh);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, hhg );
+            computeCollisions(hhh, hhg);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, hgh );
+            computeCollisions(hhh, hgh);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, hgg );
+            computeCollisions(hhh, hgg);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, ghh );
+            computeCollisions(hhh, ghh);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, ghg );
+            computeCollisions(hhh, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, ggh );
+            computeCollisions(hhh, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( hhh, ggg );
+            computeCollisions(hhh, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, hhg );
+            computeCollisions(hhg, hhg);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, hgh );
+            computeCollisions(hhg, hgh);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, hgg );
+            computeCollisions(hhg, hgg);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, ghh );
+            computeCollisions(hhg, ghh);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, ghg );
+            computeCollisions(hhg, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, ggh );
+            computeCollisions(hhg, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( hhg, ggg );
+            computeCollisions(hhg, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, hgh );
+            computeCollisions(hgh, hgh);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, hgg );
+            computeCollisions(hgh, hgg);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, ghh );
+            computeCollisions(hgh, ghh);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, ghg );
+            computeCollisions(hgh, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, ggh );
+            computeCollisions(hgh, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( hgh, ggg );
+            computeCollisions(hgh, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( hgg, hgg );
+            computeCollisions(hgg, hgg);
         }
 #pragma omp section
         {
-            computeCollisions( hgg, ghh );
+            computeCollisions(hgg, ghh);
         }
 #pragma omp section
         {
-            computeCollisions( hgg, ghg );
+            computeCollisions(hgg, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( hgg, ggh );
+            computeCollisions(hgg, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( hgg, ggg );
+            computeCollisions(hgg, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( ghh, ghh );
+            computeCollisions(ghh, ghh);
         }
 #pragma omp section
         {
-            computeCollisions( ghh, ghg );
+            computeCollisions(ghh, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( ghh, ggh );
+            computeCollisions(ghh, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( ghh, ggg );
+            computeCollisions(ghh, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( ghg, ghg );
+            computeCollisions(ghg, ghg);
         }
 #pragma omp section
         {
-            computeCollisions( ghg, ggh );
+            computeCollisions(ghg, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( ghg, ggg );
+            computeCollisions(ghg, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( ggh, ggh );
+            computeCollisions(ggh, ggh);
         }
 #pragma omp section
         {
-            computeCollisions( ggh, ggg );
+            computeCollisions(ggh, ggg);
         }
 #pragma omp section
         {
-            computeCollisions( ggg, ggg );
+            computeCollisions(ggg, ggg);
         }
     }
+#else
+        computeCollisions(hhh, hhh);
+        computeCollisions(hhh, hhg);
+        computeCollisions(hhh, hgh);
+        computeCollisions(hhh, hgg);
+        computeCollisions(hhh, ghh);
+        computeCollisions(hhh, ghg);
+        computeCollisions(hhh, ggh);
+        computeCollisions(hhh, ggg);
+        computeCollisions(hhg, hhg);
+        computeCollisions(hhg, hgh);
+        computeCollisions(hhg, hgg);
+        computeCollisions(hhg, ghh);
+        computeCollisions(hhg, ghg);
+        computeCollisions(hhg, ggh);
+        computeCollisions(hhg, ggg);
+        computeCollisions(hgh, hgh);
+        computeCollisions(hgh, hgg);
+        computeCollisions(hgh, ghh);
+        computeCollisions(hgh, ghg);
+        computeCollisions(hgh, ggh);
+        computeCollisions(hgh, ggg);
+        computeCollisions(hgg, hgg);
+        computeCollisions(hgg, ghh);
+        computeCollisions(hgg, ghg);
+        computeCollisions(hgg, ggh);
+        computeCollisions(hgg, ggg);
+        computeCollisions(ghh, ghh);
+        computeCollisions(ghh, ghg);
+        computeCollisions(ghh, ggh);
+        computeCollisions(ghh, ggg);
+        computeCollisions(ghg, ghg);
+        computeCollisions(ghg, ggh);
+        computeCollisions(ghg, ggg);
+        computeCollisions(ggh, ggh);
+        computeCollisions(ggh, ggg);
+        computeCollisions(ggg, ggg);
+
+#endif // USE_OPENMP
 }
 
 void CollisionDetector::clear()
@@ -479,7 +543,7 @@ bool CollisionDetector::appendCollision( EdgeProxy* edge_a, const FaceProxy* tri
 
     if( atLeastOnePositive )
     {
-        ++m_numEdgeFaceCollision;
+        m_numEdgeFaceCollision += potentialCollisions.size();
 #pragma omp critical (pushCTCollision)
         {
             m_continuousTimeCollisions.insert( m_continuousTimeCollisions.end(),

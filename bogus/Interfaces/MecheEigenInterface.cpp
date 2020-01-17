@@ -115,6 +115,7 @@ namespace bogus
 	void MecheFrictionProblem::fromPrimal(
 		const int NObj, //!< number of subsystems
 		const std::vector<unsigned> ndof, //!< array of size \a NObj, the number of degree of freedom of each subsystem
+		const Eigen::VectorXd dof_in, //!< array of current hair dof in world space
 		const std::vector < strandsim::SymmetricBandMatrixSolver<double, 10>* > MassMat, //!< the square ndof[i] long mass matrix of each subsystem
 		const Eigen::VectorXd f_in, //!< the constant term in \f$ M v + f= {}^t \! H (r - r_c) \f$
 		const Eigen::VectorXd rc_in, //!< the adhesion term in \f$ M v + f= {}^t \! H (r - r_c) \f$
@@ -227,6 +228,7 @@ namespace bogus
 
 		m_primal->H.finalize();
 
+		m_primal->dof = dof_in;
 		m_primal->f = f_in;
 		m_primal->rc = rc_in;
 		m_primal->w = w_in;

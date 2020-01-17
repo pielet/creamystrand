@@ -2,7 +2,7 @@
   <description text="A ball rises out of mud and flips its hairs to throw off the mud."/>
 
   <duration time="4.0"/>
-  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.01" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -53,7 +53,7 @@
 
   <SimulationParameters>
     <airDrag value="0.0003"/> 
-    <gaussSeidelIterations value="75"/>
+    <gaussSeidelIterations value="1000"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="1000"/>
     <hairMeshFrictionCoefficient value="1.0"/>
@@ -61,22 +61,13 @@
     <percentCTRodRodCollisionsAccept value="100"/>
     <pruneExternalCollisions value="1"/>
     <pruneSelfCollisions value="1"/>
-    <rodSubSteps value="1"/>
     <simulationManagerLimitedMemory value="0"/>
-    <skipFlowFrictions value="1"/>
-    <skipRodMeshCollisions value="0"/>
-    <skipRodRodCollisions value="0"/>
-    <statGathering value="0"/>
-    <stochasticPruningFraction value="0.8"/>
-    <hairHairFrictionCoefficient value="0.16"/>
-    <substeps value="1"/>
-    <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
+    <statGathering value="1"/>
+    <hairHairFrictionCoefficient value="0.3"/>
+    <useCTRodRodCollisions value="1"/>
     <useImpulseMethod value="0"/>
-    <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
-    <useSoftAttachConstraints value="0"/>
-    <usePreFilterGeometry value="0"/>
+    <solveLiquids value="0"/>
   </SimulationParameters>
 
   <particle x="4.5504 -3 2.50876" v="0.0 0.0 0.0" fixed="1"/>
@@ -46178,6 +46169,6 @@
   <distancefield usage="solid" type="cylinder" cx="20.26" cy="-10.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="0.375" corner="0.125" halflength="10.25" group="2" sampled="0"/>   --> 
   <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="6.0" group="0" sampled="0"/>   
   <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="40.0" group="1" sampled="0" inverted="1"/>   
-  <distancefield usage="source" type="box" cx="0.0" cy="-25.84722" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="43" ey="17.23148" ez="37.0787"/>
+  <!--<distancefield usage="source" type="box" cx="0.0" cy="-25.84722" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="43" ey="17.23148" ez="37.0787"/>-->
   <!-- <distancefield usage="source" type="box" cx="17.38" cy="-11.6916" cz="9.69154" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="1.0" ey="1.0" ez="1.0"/> -->
 </scene>  

@@ -214,13 +214,13 @@ namespace strandsim {
             }
 		}
 		
-        m_strand.accumulateJ< FluidPressureForce > ( futureState ) ;
+        /*m_strand.accumulateJ< FluidPressureForce > ( futureState ) ;
         if(dump_data) {
 #pragma omp critical
             {
                 dump_stream << "[" << m_strand.getGlobalIndex() << "] FJ10 = " << futureJ << std::endl;
             }
-        }
+        }*/
         
 		m_strand.accumulateRuntimeForces( RuntimeForceBase::J, futureState );
 		
@@ -373,13 +373,13 @@ namespace strandsim {
         }
         // check_isnan("force_9", futureF);
         
-        m_strand.accumulateF< FluidPressureForce > ( futureState ) ;
+        /*m_strand.accumulateF< FluidPressureForce > ( futureState ) ;
         if(dump_data) {
 #pragma omp critical
             {
                 dump_stream << "[" << m_strand.getGlobalIndex() << "] FF12 = " << futureF.transpose() << std::endl;
             }
-        }
+        }*/
         // check_isnan("force_10", futureF);
         
 		m_strand.accumulateRuntimeForces( RuntimeForceBase::EF, futureState );

@@ -239,9 +239,9 @@ namespace strandsim
 
 		if (m_params.m_statGathering)
 		{
+			printNewtonSolverBreakdownTiming<InfoStream>();
 			print<InfoStream>(m_cdTimings);
 			print<InfoStream>(m_solverStat);
-
 		}
 
 		if (m_num_contact_solves > 0)
@@ -276,7 +276,6 @@ namespace strandsim
 		Timer timer("step", false);
 		step_prepare(m_dt);
 		timings.prepare = timer.elapsed();
-
 
 		m_collidingGroups.clear();
 		m_collidingGroupsIdx.assign(m_strands.size(), -1);
@@ -390,6 +389,9 @@ namespace strandsim
 
 		tt.restart("findCollisions");
 		EdgeFaceIntersection::s_doProximityDetection = true;
+		// TODO:
+		// split hair/hair and hair/mesh CCD - build different BVH (avoid compare between them)
+
 		// ignoreCTRodRod = false : CCD of edges among hairs
 		//     -> add EdgeEdgeCollision to m_continuousTimeCollisions
 		// ignoreContinuousTime = false : CCD of vertex-face and edge-face (CCD of edge and 3 edges of the face)
@@ -419,9 +421,10 @@ namespace strandsim
 	{
 		std::list<CollisionBase*>& collisionsList = m_collisionDetector->getProximityCollisions();
 
+		TraceStream(g_log, "") << "doProximityMeshHairDetection: before pruning: " << collisionsList.size();
+
 		unsigned nInt = 0;
-		for (auto intersection = collisionsList.begin(); intersection != collisionsList.end();
-			++intersection)
+		for (auto intersection = collisionsList.begin(); intersection != collisionsList.end(); ++intersection)
 		{
 			if (EdgeFaceIntersection * efi = dynamic_cast<EdgeFaceIntersection*>(*intersection))
 			{
@@ -467,7 +470,7 @@ namespace strandsim
 
 		std::list<CollisionBase*>& collisionsList = m_collisionDetector->getContinuousTimeCollisions();
 
-		TraceStream(g_log, "") << "Narrow phase before pruning: " << collisionsList.size() << " hits";
+		TraceStream(g_log, "") << "doContinuousTimeDetection: before pruning: " << collisionsList.size() << " hits";
 
 		if (collisionsList.empty())
 		{
@@ -476,19 +479,19 @@ namespace strandsim
 		}
 
 		// In order to eliminate duplicates
-		collisionsList.sort(compareCT);
+		// collisionsList.sort(compareCT);
 
 		m_num_ct_hair_hair_col = 0;
 		unsigned nExt = 0, nExtElastic = 0;
 
-		CollisionBase* previous = NULL;
+		//CollisionBase* previous = NULL;
 		for (auto collIt = collisionsList.begin(); collIt != collisionsList.end(); ++collIt)
 		{
-			if (previous && !compareCT(previous, *collIt)) // Therefore they are equal
-			{
-				continue;
-			}
-			previous = *collIt;
+			//if (previous && !compareCT(previous, *collIt)) // Therefore they are equal
+			//{
+			//	continue;
+			//}
+			//previous = *collIt;
 
 			ContinuousTimeCollision* const ctCollision = dynamic_cast<ContinuousTimeCollision*>(*collIt);
 			if (!ctCollision)
@@ -631,9 +634,9 @@ namespace strandsim
 	bool StrandImplicitManager::addExternalContact(const unsigned strIdx, const unsigned edgeIdx,
 		const Scalar abscissa, const ProximityCollision& externalContact)
 	{
-		TraceStream(g_log, "") << edgeIdx << " / " << abscissa << " / "
-			<< externalContact.objects.second.freeVel << " / " << externalContact.normal << " / "
-			<< externalContact.m_originalCTCollision;
+		//TraceStream(g_log, "") << edgeIdx << " / " << abscissa << " / "
+		//	<< externalContact.objects.second.freeVel << " / " << externalContact.normal << " / "
+		//	<< externalContact.m_originalCTCollision;
 
 		auto acceptCollision = [&](int sIdxP, int iP) {
 			auto itr_cf = m_collision_free.find(std::pair<int, int>(sIdxP, iP));
@@ -1124,7 +1127,6 @@ namespace strandsim
 
 		std::vector< Scalar > residuals(m_strands.size(), 1e+99);
 
-		//        std::cout << "[step_dynamics: 0]" << std::endl;
 		// Dynamics system assembly
 #pragma omp parallel for
 		for (int i = 0; i < (int)m_strands.size(); i++)
@@ -1153,8 +1155,6 @@ namespace strandsim
 						m_steppers[i]->prepareSolveNonlinear();
 					}
 				}
-
-				//                std::cout << "[step_dynamics: 1]" << std::endl;
 
 				std::vector< int > all_done(m_strands.size(), false);
 
@@ -1625,8 +1625,8 @@ namespace strandsim
 			++subCount;
 		}
 		unsigned nExternalContact = nContacts - nMutualContacts;
+		colPointers.resize(nContacts, NULL);
 
-		//        std::cout << "[assemble 2]" << std::endl;
 #pragma omp parallel for
 		for (int i = 0; i < (int)globalIds.size(); ++i)
 		{ // Prepare (rewind) the steppers
@@ -1634,12 +1634,11 @@ namespace strandsim
 			stepper->rewind();
 		}
 
-		colPointers.resize(nContacts, NULL);
-
 		std::vector < strandsim::SymmetricBandMatrixSolver<double, 10>* > MassMat;
 		MassMat.resize(nSubsystems);
 
 		VecXx forces(dofCount);
+		VecXx dof(dofCount);
 
 		vels.resize(dofCount);
 		worldImpulses.resize(dofCount);
@@ -1677,14 +1676,15 @@ namespace strandsim
 		bool oneNonSPD = false;
 
 		// Setting up objects and adding external constraints
-		for (IndicesMap::const_iterator it = collisionGroup.first.begin();
-			it != collisionGroup.first.end(); ++it)
+		for (IndicesMap::const_iterator it = collisionGroup.first.begin(); it != collisionGroup.first.end(); ++it)
 		{
 			const unsigned sIdx = it->first;
 			ImplicitStepper& stepper = *m_steppers[sIdx];
 
 			if (stepper.notSPD())
 				oneNonSPD = true;
+
+			dof.segment(currDof, stepper.m_strand.getCurrentDegreesOfFreedom().size()) = stepper.m_strand.getCurrentDegreesOfFreedom();
 
 			if (!m_params.m_useImpulseMethod)
 			{
@@ -1759,7 +1759,7 @@ namespace strandsim
 		}
 
 		m_solverStat.m_assembleTime += tt.elapsed();
-		mecheProblem.fromPrimal(nSubsystems, nndofs, MassMat, forces, adhesions, filters,
+		mecheProblem.fromPrimal(nSubsystems, nndofs, dof / m_dt, MassMat, forces, adhesions, filters,
 			nContacts, mu, yields, etas, powers, E, u_frees, &ObjA[0], &ObjB[0], H_0, H_1, m_params.m_useImpulseMethod);
 
 		return true;
@@ -2594,15 +2594,32 @@ namespace strandsim
 			<< " Minv: " << stat.m_MinvTime << " ComputeDual: " << stat.m_computeDualTime
 			<< " Solve: " << stat.m_solveTime << " PostProc: " << stat.m_poseProcessTime
 			<< " Total: " << stat.sum();
-		
-		for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
+
+		/*for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
 			std::cout << "Collision group " << i << " (strands: " << stat.m_collisionSize[i].first 
 				<< " contacts: " << stat.m_collisionSize[i].second << "):\n";
 			int iter = 0;
 			for (auto it = stat.m_solverStat[i].begin(); it != stat.m_solverStat[i].end(); ++it) {
 				std::cout << "\tIter: " << iter++ << " err: " << it->first << " time: " << it->second << '\n';
 			}
+		}*/
+	}
+
+	template<typename StreamT>
+	void StrandImplicitManager::printNewtonSolverBreakdownTiming() const
+	{
+		double pre = 0, LHS = 0, RHS = 0, store = 0, solve = 0, post = 0;
+		double timesM = 0, F = 0, composeRhs = 0, addM = 0, J = 0;
+
+		for (int i = 0; i < (int)m_strands.size(); i++) {
+			m_steppers[i]->getTimings(pre, RHS, timesM, F, composeRhs, LHS, J, addM, store, solve, post);
 		}
+
+		StreamT(g_log, "Newton breakdown timing") << "pre: " << pre 
+			<< " RHS: " << RHS << " (timesM: " << timesM << " F: " << F << " add together: " << composeRhs
+			<< ") LHS: " << LHS << " (J: " << J << " addM: " << addM 
+			<< ") store&fab: " << store << " solve: " << solve << " post: " << post 
+			<< " total: " << pre + RHS + LHS + store + solve + post;
 	}
 
 

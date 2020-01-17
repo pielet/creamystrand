@@ -1,7 +1,6 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
 
-
   <duration time="0.5"/>
   <integrator type="linearized-implicit-euler" dt="0.033" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
@@ -72,7 +71,7 @@
     <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
-    <bogusAlgorithm value="gaussseidel"/>
+    <bogusAlgorithm value="projectedgradient"/>
   </SimulationParameters>
 
   <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="3" group="0"/>
@@ -161,7 +160,7 @@
   <hair params="0" start="40" count="40"/>
 
   <!--<script type="translate" x="-5.0" y="0" z="0" w="0" start="0" end="0.3" group="0"/>-->
-  <script type="translate" x="0" y="0" z="-5.0" w="0.0" start="0" end="0.3" group="1"/>
+  <script type="translate" x="0" y="0" z="-10.0" w="0.0" start="0" end="0.3" group="1"/>
 
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1">
   </distancefield>

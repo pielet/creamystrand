@@ -75,6 +75,9 @@ struct PrimalFrictionProblem
 	//! H -- deformation gradient \f$ \frac{\partial u}{\partial v} \f$ ( generalized coordinates <-> contact basis coordinates )
 	HType H;
 
+	//! Current DOF in world space
+	Eigen::VectorXd dof;
+
     //! Adhesion impulses ( with unit force * time, in generalized coordinate )
     Eigen::VectorXd rc;
     //! External forces

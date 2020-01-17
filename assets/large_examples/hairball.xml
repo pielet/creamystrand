@@ -1,0 +1,86 @@
+<scene>
+  <description text="A moving hair ball"/>
+           
+  <duration time="4.0"/>
+  <integrator type="linearized-implicit-euler" dt="0.01" criterion="1e-9" maxiters="1000"/>
+  <collision type="continuous-time"/>
+
+  <simplegravity fx="0.0" fy="-981.0"/>
+
+  <bucketinfo size="8.0" numcells="4"/>
+
+  <liquidinfo>
+    <surfTensionCoeff value="20.6"/>
+    <affineStretchDamping value="0.004"/>
+    <affineRotateDamping value="0.004"/>
+    <liquidDensity value="0.2"/>
+    <implicitElasticity value="1"/>
+    <liquidBoundaryFriction value="0.99"/>
+    <shearPcgCriterion value="1e-6"/>
+  </liquidinfo>
+
+  <StrandParameters>
+    <radius value="0.005"/>
+    <youngsModulus value="3.727e10"/>
+    <poissonRatio value="0.36" />
+    <collisionMultiplier value="1.0"/>
+    <attachMultiplier value="1.0" />
+    <density value="1.32" /> 
+    <viscosity value="3.727e8" />
+    <baseRotation value="0.0"/>
+    <accumulateWithViscous value="1"/>
+    <accumulateViscousOnlyForBendingModes value="0"/>
+    <frictionAngle value="40.0"/>
+    <stretchMultiplier value="0.005"/>
+    <minBendingAngle value="45.0"/>
+  </StrandParameters>
+
+  <CollisionParameters>
+    <constantCollisionRadius value="1"/>
+    <externalCollisionsRadius value="0.0055"/>
+    <selfCollisionsRadius value="0.0055"/>
+    <impulseMaxNorm value="0"/>
+    <maxNumCollisionsPerEdge value="6"/>
+  </CollisionParameters>
+
+  <SimulationParameters>
+    <logLevel value="1"/>
+    <airDrag value="0.0005"/> 
+    <gaussSeidelIterations value="1000"/>
+    <gaussSeidelTolerance value="1e-06"/> 
+    <maxNewtonIterations value="1000"/>
+    <hairMeshFrictionCoefficient value="1.0"/>
+    <numberOfThreads value="24"/>
+    <percentCTRodRodCollisionsAccept value="100"/>
+    <pruneExternalCollisions value="1"/>
+    <pruneSelfCollisions value="1"/>
+    <rodSubSteps value="1"/>
+    <simulationManagerLimitedMemory value="0"/>
+    <skipFlowFrictions value="1"/>
+    <skipRodMeshCollisions value="0"/>
+    <skipRodRodCollisions value="0"/>
+    <statGathering value="1"/>
+    <stochasticPruningFraction value="0.8"/>
+    <hairHairFrictionCoefficient value="0.16"/>
+    <substeps value="1"/>
+    <useApproxRodElasticFriction value="1"/>
+    <useCTRodRodCollisions value="0"/>
+    <useImpulseMethod value="0"/>
+    <useLengthProjection value="0"/>
+    <useNonlinearContacts value="0"/>
+    <useSoftAttachConstraints value="0"/>
+    <usePreFilterGeometry value="0"/>
+    <solveLiquids value="0"/>
+    <bogusAlgorithm value="gaussseidel"/>
+  </SimulationParameters>
+
+  <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
+    <fixed start="0" end="0" value="3"/>
+    <fixed start="1" end="1" value="1"/>
+  </hairobj>
+
+  <script type="rotate" x="1" y="0" z="0.0" w="2" start="0.5" end="4.0" group="0"/>
+  <script type="rotate" x="0" y="1" z="0.0" w="2" start="0.5" end="4.0" group="0"/>
+
+  <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="0.0" rz="0.0" rw="0.0" radius="15.0" group="0"/>
+</scene>  

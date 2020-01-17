@@ -127,8 +127,11 @@ struct PgMethod {
 			// The residual should be evaluated in prev_proj instead of x
 			// However this would been one more matrix product per iterations
 			y = Mx + b ;
-			if( test_residual(pg, law, pgIter, x, y, x_best, min_res) )
-				break ;
+			if( test_residual(pg, law, pgIter, x, y, x_best, min_res) ){
+				pg.dualityCOV(law, y, s);
+				std::cout << "APGD - " << "x: " << x.norm() << " y: " << y.norm() << " y+s:" << (y + s).norm() << " J:" << x.dot(.5 * Mx + b + s) << std::endl;
+				break;
+			}
 
 			pg.dualityCOV( law, y, s ) ;
 			y += s ;
@@ -375,8 +378,12 @@ struct PgMethod< projected_gradient::SPG > {
 		for( unsigned pgIter = 0 ; pgIter < pg.maxIters() ; ++pgIter )
 		{
 			y = Mx + b ;
-			if( test_residual(pg, law, pgIter, x, y, x_best, min_res) )
-				break ;
+			if (test_residual(pg, law, pgIter, x, y, x_best, min_res)) {
+				pg.dualityCOV(law, y, s);
+				std::cout << "SPG - " << "x: " << x.norm() << " y: " << y.norm() << " y+s:" << (y + s).norm() << " J:" << x.dot(.5 * Mx + b + s) << std::endl;
+				std::cout << "x^Ty: " << x.dot(y + s) << std::endl;
+				break;
+			}
 
 			pg.dualityCOV( law, y, s ) ;
 			y += s ;

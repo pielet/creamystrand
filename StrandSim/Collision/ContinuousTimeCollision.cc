@@ -25,8 +25,7 @@ bool compareTimes( const CollisionBase* cb1, const CollisionBase* cb2 )
     const ContinuousTimeCollision* ct1 = dynamic_cast<const ContinuousTimeCollision*>( cb1 );
     const ContinuousTimeCollision* ct2 = dynamic_cast<const ContinuousTimeCollision*>( cb2 );
 
-    if ( ct1 == NULL || ct2 == NULL
-    )
+    if ( ct1 == NULL || ct2 == NULL)
         return false;
     else
         return ct1->m_time < ct2->m_time;
@@ -39,13 +38,13 @@ bool compareCT( const CollisionBase* ct1, const CollisionBase* ct2 )
         const EdgeEdgeCollision* ee1 = dynamic_cast<const EdgeEdgeCollision*>(ct1);
         const EdgeEdgeCollision* ee2 = dynamic_cast<const EdgeEdgeCollision*>(ct2);
 
-        if (ee1 != NULL && ee1 == NULL)
+        if (ee1 != NULL && ee2 == NULL)
             return true;
 
         if (ee1 == NULL && ee2 != NULL)
             return false;
 
-        if (ee1 != NULL && ee1 != NULL)
+        if (ee1 != NULL && ee2 != NULL)
             return compare(ee1, ee2);
     }
 

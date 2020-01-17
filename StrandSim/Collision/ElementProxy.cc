@@ -23,7 +23,7 @@ std::ostream& operator<<( std::ostream& os, const ElementProxy& elem )
 
 void EdgeProxy::print( std::ostream& os ) const
 {
-    os << "edge: " << &m_strand << ' ' << m_vertexIndex << ": "
+    os << "edge: " << m_strand.getGlobalIndex() << ' ' << m_vertexIndex << ": "
             << m_strand.getVertex( m_vertexIndex ).format( EIGEN_VECTOR_IO_FORMAT ) << " --- "
             << m_strand.getVertex( m_vertexIndex + 1 ).format( EIGEN_VECTOR_IO_FORMAT );
 }

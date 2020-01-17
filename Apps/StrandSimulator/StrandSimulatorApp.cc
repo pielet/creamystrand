@@ -92,6 +92,7 @@ void output()
 {
     if( g_dumpcoord )
     {
+        TraceStream(g_log, "") << "Start output";
         int steps_per_frame = g_dumpcoord;
         const int step = floor( g_ps->getTime() / g_ps->getDt() + 0.5 );
 
@@ -396,7 +397,7 @@ int parseCommandLine( int argc, char** argv )
         g_ps = problems[idx];
         g_problem_idx = idx;
         setOptions();
-
+        
         if (file.isSet())
         {
             if (g_ps->LoadOptions(file.getValue()) == -1)
@@ -409,7 +410,7 @@ int parseCommandLine( int argc, char** argv )
             std::cout << "No XML file specified. Please specify XML file with -f" << std::endl;
             return -1;
         }
-
+        
         if (statlog.isSet())
         {
             int statLogLevel = statlog.getValue();

@@ -30,14 +30,14 @@ void DualFrictionProblem< Dimension >::computeFrom(const PrimalFrictionProblem<D
 		W = primal.H * SH.transpose();
 
 		// M^-1 f, b
-		b = primal.E.transpose() * primal.w - primal.H * (primal.DiagMInv * primal.f) - W * primal.rc;
+		b = primal.E.transpose() * primal.w - primal.H * (primal.DiagMInv * primal.f) - W * primal.rc;// +primal.H * primal.dof;
 	}
 	else {
 		//W
 		W = primal.H * (primal.MInv * primal.H.transpose());
 
 		// M^-1 f, b
-		b = primal.E.transpose() * primal.w - primal.H * (primal.MInv * primal.f) - W * primal.rc;
+		b = primal.E.transpose() * primal.w - primal.H * (primal.MInv * primal.f) - W * primal.rc;// +primal.H * primal.dof;	// H(EH), H * dof -> reletive velocity in local coord
 	}
 
 	mu = primal.mu;

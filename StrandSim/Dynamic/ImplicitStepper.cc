@@ -76,7 +76,8 @@ namespace strandsim
 		m_total_flow(0.0),
 		m_stretchMultiplier(1.0),
 		m_stretchingFailureThreshold(10.0),
-		m_costretchResidualFailureThreshold(1e-4)
+		m_costretchResidualFailureThreshold(1e-4),
+		m_timer("Newton", false)
 	{
 		const Scalar slenderness = m_strand.getTotalRestLength()
 		/ ( m_strand.getRadiusA( 0 ) * m_strand.getRadiusB( m_strand.getNumVertices() - 1 ) );
@@ -158,10 +159,12 @@ namespace strandsim
 		m_additional_impulse.setZero();
 		
 //		// check_isnan("vels", m_velocities);
+		m_timings.reset();
 	}
 	
 	void ImplicitStepper::startSubstep( int id, Scalar dt, Scalar fraction )
 	{
+		m_timer.restart();
 		// Here we init everything may change during substepping
 		this->m_dt = dt;
 		this->m_fraction = fraction;
@@ -177,6 +180,8 @@ namespace strandsim
 
         // recover stretch multiplier so that we can use default value as soon as possible
         m_stretchMultiplier = std::min(1.0, m_stretchMultiplier * 1.5);
+
+		m_timings.m_prepare += m_timer.elapsed();
 	}
 	
 	void ImplicitStepper::recoverFromBeginning()
@@ -489,26 +494,21 @@ namespace strandsim
 	{
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		
-//         // check_isnan("rhs_0", m_rhs);
-		
 		m_rhs = m_velocities - m_newVelocities ;
         
-//         // check_isnan("rhs_1", m_rhs);
-		
+		m_timer.restart();
 		dynamics.multiplyByMassMatrix( m_rhs );
-        
-//         // check_isnan("rhs_2", m_rhs);
+		m_timings.m_multiplyByMassMatrix += m_timer.elapsed();
 		
-		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, true, false, dump_data, stream );
+		m_timer.restart();
+		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, false, false, dump_data, stream );
+		m_timings.m_computeFutureForces += m_timer.elapsed();
 		
-//        m_strand.getParameters().setKs( origKs );
-		
+		m_timer.restart();
 		VecXx forces = m_strand.getFutureTotalForces() ;
-        
-//         // check_isnan("rhs_forces", forces);
-		
 		m_rhs += forces * m_dt + (m_additional_impulse + m_additional_inertia) * m_fraction;
-        
+		m_timings.m_composeRHS += m_timer.elapsed();
+
         if(dump_data) {
 #pragma omp critical
             {
@@ -571,12 +571,14 @@ namespace strandsim
 	{
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		
-		dynamics.computeFutureJacobian( !m_params.m_usePreFilterGeometry, true, false, dump_data, stream );
-		
-//        m_strand.getParameters().setKs( origKs );
-		
+		m_timer.restart();
+		dynamics.computeFutureJacobian( !m_params.m_usePreFilterGeometry, false, false, dump_data, stream );
+		m_timings.m_computeJ += m_timer.elapsed();
+
+		m_timer.restart();
 		JacobianMatrixType& J = m_strand.getTotalJacobian(); // LHS = M - h^2 J
 		J *= m_dt * m_dt;
+		m_timings.m_addM += m_timer.elapsed();
 		
 		dynamics.addMassMatrixTo( J );
         
@@ -719,6 +721,7 @@ namespace strandsim
 	
 	void ImplicitStepper::prepareDynamics()
 	{
+		m_timer.restart();
 		// rest future state and intial guess
 		m_strand.setFutureDegreesOfFreedom( m_strand.getCurrentDegreesOfFreedom() );
 		
@@ -749,10 +752,14 @@ namespace strandsim
 //		// check_isnan("newVels", m_newVelocities);
 		
         dynamics.getDisplacements().setZero()  ;
+
+		m_timings.m_prepare += m_timer.elapsed();
 	}
 	
 	bool ImplicitStepper::prepareNewtonIteration()
 	{
+		m_timer.restart();
+
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		
 		dynamics.getDisplacements() = m_dt * m_newVelocities ;
@@ -761,6 +768,9 @@ namespace strandsim
 		m_strand.setFutureDegreesOfFreedom( tentativeDofs );
         
         // check_isnan("pni_tentative", tentativeDofs);
+
+		m_timings.m_prepare += m_timer.elapsed();
+
 		return false;
 	}
 	
@@ -773,7 +783,9 @@ namespace strandsim
 		const Scalar minAlpha = .01 ; // Minimum step length
 		
 		m_prevRhs = m_rhs ;
+		Timer tt("RHS", false);
 		computeRHS();
+		m_timings.m_computeRHS += tt.elapsed();
         
         // check_isnan("ni_rhs", rhs());
 		
@@ -810,8 +822,9 @@ namespace strandsim
 		}
         
 //        std::cout << "NI[" << m_strand.getGlobalIndex() << "]: " << m_newtonIter << ", " << m_prevErr << std::endl;
-		
+		tt.restart();
 		computeLHS();
+		m_timings.m_computeLHS += tt.elapsed();
 		
 		// need to initialize them to avoid possible MKL error
 		if(!m_newtonIter) {
@@ -824,9 +837,15 @@ namespace strandsim
 		Lhs().multiply( m_rhs, 1., m_newVelocities );
 		dynamics.getScriptingController()->fixLHSAndRHS( Lhs(), m_rhs, m_dt / m_fraction );
 		
+		m_timer.restart();
 		m_linearSolver.store( Lhs() );
+		m_timings.m_storeAndFab += m_timer.elapsed();
+
 		m_notSPD = m_linearSolver.notSPD() ;
+		
+		m_timer.restart();
 		m_linearSolver.solve( newVelocities(), rhs() );
+		m_timings.m_solve += m_timer.elapsed();
         
         // check_isnan("ni_velocity", m_newVelocities);
 		
@@ -1141,7 +1160,8 @@ namespace strandsim
 	//     note that this is called by StrandImplicitManager::postProcessFrictionProblem() where the bool returned here is ignored but m_lastStepWasRejected is set which is checked in StrandImplicitManager::solveCollidingGroup() to see if failsafe is needed
 	bool ImplicitStepper::update( bool afterConstraints )
 	{
-		
+		m_timer.restart();
+
 		VecXx displacements = m_newVelocities * m_dt;
         
         // check_isnan("displacements in update", displacements);
@@ -1193,6 +1213,8 @@ namespace strandsim
 		m_strand.getFutureState().freeCachedQuantities();
         
         m_savedVelocities = m_newVelocities;
+
+		m_timings.m_post += m_timer.elapsed();
 		
 		return accept ;
 	}
@@ -1277,6 +1299,23 @@ namespace strandsim
 		return m_strand.getTotalJacobian();
 	}
 	
+	void ImplicitStepper::getTimings(double& pre, double& rhs, double& timesM, double& F, double& composeRhs, double& lhs, double& J, double& addM, double& store, double& solve, double& post) const
+	{
+		pre += m_timings.m_prepare;
+
+		lhs += m_timings.m_computeLHS;
+		J += m_timings.m_computeJ;
+		addM += m_timings.m_addM;
+
+		rhs += m_timings.m_computeRHS;
+		timesM += m_timings.m_multiplyByMassMatrix;
+		F += m_timings.m_computeFutureForces;
+		composeRhs += m_timings.m_composeRHS;
+
+		store += m_timings.m_storeAndFab;
+		solve += m_timings.m_solve;
+		post += m_timings.m_post;
+	}
 	
 } // namespace strandsim
 
