@@ -133,8 +133,8 @@ void Camera::getZClipping(Scalar& near0, Scalar& far0) const
 
 void Camera::setDefault3D(const Scalar sceneRadius)
 {
-  m_dir = Vec3d(-28, -21, -28).normalized();
-  m_eye = m_viewCenter - sceneRadius * 3.0f * m_dir;
+  m_dir = Vec3d(-50, -1, 5).normalized();
+  m_eye = m_viewCenter - sceneRadius * 1.0f * m_dir;
   //m_eye = m_viewCenter + sceneRadius * 3.0f * Vec3d(1,1,1).normalized();
   //m_eye = m_viewCenter + sceneRadius * 3.0f * Vec3d(0,0,1).normalized();
   m_up = Vec3d(0,1,0);

@@ -286,7 +286,7 @@ namespace strandsim
 		m_mutualContacts.clear();
 		m_elasticMutualContacts.clear();
 
-		if (!m_params.m_useCTRodRodCollisions) {
+		if (m_params.m_solveCollision && !m_params.m_useCTRodRodCollisions) {
 			std::cout << "[Setup Hair-Hair Collisions]" << std::endl;
 			timer.restart();
 			setupHairHairCollisions(m_dt);
@@ -298,16 +298,17 @@ namespace strandsim
 		step_dynamics(total_num_substeps, total_substep_id, m_dt);
 		timings.dynamics = timer.elapsed();
 
+		if (m_params.m_solveCollision) {
+			std::cout << "[Setup Continous-Time Collisions]" << std::endl;
+			timer.restart();
+			setupMeshHairCollisions(m_dt);
+			timings.meshHairCollisions = timer.elapsed();
 
-		std::cout << "[Setup Continous-Time Collisions]" << std::endl;
-		timer.restart();
-		setupMeshHairCollisions(m_dt);
-		timings.meshHairCollisions = timer.elapsed();
-
-		std::cout << "[Process Collisions]" << std::endl;
-		timer.restart();
-		step_processCollisions(m_dt);
-		timings.processCollisions = timer.elapsed();
+			std::cout << "[Process Collisions]" << std::endl;
+			timer.restart();
+			step_processCollisions(m_dt);
+			timings.processCollisions = timer.elapsed();
+		}
 
 		if (m_params.m_solveLiquids) {
 			// Mid Step to do Pressure Solve
@@ -332,10 +333,12 @@ namespace strandsim
 			timings.solve = timer.elapsed();
 		}
 
-		std::cout << "[Solve Collisions]" << std::endl;
-		timer.restart();
-		step_solveCollisions(total_num_substeps, total_substep_id);
-		timings.solve += timer.elapsed();
+		if (m_params.m_solveCollision) {
+			std::cout << "[Solve Collisions]" << std::endl;
+			timer.restart();
+			step_solveCollisions(total_num_substeps, total_substep_id);
+			timings.solve += timer.elapsed();
+		}
 
 		assert(m_collisionDetector->empty());
 

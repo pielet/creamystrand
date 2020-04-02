@@ -70,6 +70,7 @@ struct SimulationParameters
 
     bool m_useSoftAttachConstraints;
     bool m_solveLiquids;
+    bool m_solveCollision;
     
     unsigned m_subSteps;
 

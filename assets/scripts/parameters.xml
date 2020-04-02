@@ -77,6 +77,7 @@
 		<skipFlowFrictions value="1"/>
 		<skipRodMeshCollisions value="0"/>  <!-- continuous collision detection and intersection test -->
 		<skipRodRodCollisions value="0"/>   <!-- hair-hair proximity test -->
+		<solveCollision value="1"/>
 		<statGathering value="0"/>
 		<stochasticPruningFraction value="0.8"/>  <!-- the larger, the more likely to be pruned -->
 		<substeps value="1"/>
