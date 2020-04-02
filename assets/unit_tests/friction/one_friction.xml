@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
 
-  <duration time="5"/>
+  <duration time="4"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
