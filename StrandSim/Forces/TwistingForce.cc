@@ -12,6 +12,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "../Dynamic/StrandDynamicTraits.hh"
 #include "../Dynamic/ImplicitStepper.hh"
+#include "../Dynamic/LinearStepper.hh"
 
 namespace strandsim
 {

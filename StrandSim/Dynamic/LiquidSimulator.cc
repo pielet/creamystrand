@@ -12,6 +12,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "StrandDynamicTraits.hh"
 #include "ImplicitStepper.hh"
+#include "LinearStepper.hh"
 #include "TriangularMeshFlow.hh"
 #include "../Collision/TriangularMesh.hh"
 #include <fstream>
@@ -1208,7 +1209,7 @@ namespace strandsim
             const Vec3x e = m_strands[strand_idx]->getEdgeVector( local_idx ).normalized();
             const Scalar u_tau = (fv - u_s).dot(e);
             
-            m_strands[strand_idx]->getStepper()->setFutureFlowVelocity(local_idx, u_tau);
+            //m_strands[strand_idx]->getStepper()->setFutureFlowVelocity(local_idx, u_tau);
         });
         
         // check_isnan("flowvel_after_constraint", (int) m_strands.size(), [this] (int i) {return m_strands[i]->getStepper()->getFutureFlowVelocity();});
@@ -1261,7 +1262,8 @@ namespace strandsim
                     const Scalar w = weights(pair.second, 0);
 
                     const Scalar mass = m_strands[strand_idx]->dynamics().getFlowMasses()(local_idx);
-                    const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    //const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    const Scalar u_tau = 0.;
 
                     const VecXx& vels = m_strands[strand_idx]->getStepper()->velocities();
                     const Scalar u_s = (vels(local_idx * 4 + 0) + vels((local_idx + 1) * 4 + 0)) * 0.5;
@@ -1295,7 +1297,8 @@ namespace strandsim
                     const Scalar w = weights(pair.second, 1);
 
                     const Scalar mass = m_strands[strand_idx]->dynamics().getFlowMasses()(local_idx);
-                    const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    //const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    const Scalar u_tau = 0;
 
                     const VecXx& vels = m_strands[strand_idx]->getStepper()->velocities();
                     const Scalar u_s = (vels(local_idx * 4 + 1) + vels((local_idx + 1) * 4 + 1)) * 0.5;
@@ -1328,7 +1331,8 @@ namespace strandsim
                     const Scalar w = weights(pair.second, 2);
 
                     const Scalar mass = m_strands[strand_idx]->dynamics().getFlowMasses()(local_idx);
-                    const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    //const Scalar u_tau = m_strands[strand_idx]->getStepper()->getFutureFlowVelocity()(local_idx);
+                    const Scalar u_tau = 0.;
 
                     const VecXx& vels = m_strands[strand_idx]->getStepper()->velocities();
                     const Scalar u_s = (vels(local_idx * 4 + 2) + vels((local_idx + 1) * 4 + 2)) * 0.5;
@@ -4063,25 +4067,25 @@ namespace strandsim
             const int num_verts = m_strands[strand_idx]->getNumVertices();
             
             if(local_idx != 0) {
-                Scalar ori_vol = m_strands[strand_idx]->getCurrentSurfaceFlowVolumeAtEdge(local_idx - 1);
+               /* Scalar ori_vol = m_strands[strand_idx]->getCurrentSurfaceFlowVolumeAtEdge(local_idx - 1);
                 Scalar mom_edge = mom_rel.dot(m_strands[strand_idx]->getEdgeVector(local_idx - 1).normalized());
                 Scalar ori_mom_edge = m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx - 1) * ori_vol;
                 
                 Scalar fraction = (local_idx == num_verts - 1) ? 1.0 : 0.5;
                 Scalar new_vel_edge = (ori_mom_edge + mom_edge * fraction) / (ori_vol + actual_captured * fraction);
                 
-                m_strands[strand_idx]->getStepper()->setCurrentFlowVelocity(local_idx - 1, new_vel_edge);
+                m_strands[strand_idx]->getStepper()->setCurrentFlowVelocity(local_idx - 1, new_vel_edge);*/
             }
             
             if(local_idx != num_verts - 1) {
-                Scalar ori_vol = m_strands[strand_idx]->getCurrentSurfaceFlowVolumeAtEdge(local_idx);
+               /* Scalar ori_vol = m_strands[strand_idx]->getCurrentSurfaceFlowVolumeAtEdge(local_idx);
                 Scalar mom_edge = mom_rel.dot(m_strands[strand_idx]->getEdgeVector(local_idx).normalized());
                 Scalar ori_mom_edge = m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx) * ori_vol;
                 
                 Scalar fraction = (local_idx == 0) ? 1.0 : 0.5;
                 Scalar new_vel_edge = (ori_mom_edge + mom_edge * fraction) / (ori_vol + actual_captured * fraction);
                 
-                m_strands[strand_idx]->getStepper()->setCurrentFlowVelocity(local_idx, new_vel_edge);
+                m_strands[strand_idx]->getStepper()->setCurrentFlowVelocity(local_idx, new_vel_edge);*/
             }
         });
         
@@ -4163,11 +4167,11 @@ namespace strandsim
             Vec3x u_tau = Vec3x::Zero();
             int count = 0;
             if(local_idx > 0) {
-                u_tau += m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx - 1) * m_strands[strand_idx]->getEdgeVector(local_idx - 1).normalized();
+                //u_tau += m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx - 1) * m_strands[strand_idx]->getEdgeVector(local_idx - 1).normalized();
                 count++;
             }
             if(local_idx < num_verts - 1) {
-                u_tau += m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx) * m_strands[strand_idx]->getEdgeVector(local_idx).normalized();
+                //u_tau += m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(local_idx) * m_strands[strand_idx]->getEdgeVector(local_idx).normalized();
                 count++;
             }
             
@@ -4387,7 +4391,8 @@ namespace strandsim
 				Scalar w = reservoir[pidx & 1];
 				vol += w;
 				
-				const Scalar ut = m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(tip_edge_idx);
+				//const Scalar ut = m_strands[strand_idx]->getStepper()->getCurrentFlowVelocity()(tip_edge_idx);
+                const Scalar ut = 0;
 				const Vec3x ev = m_strands[strand_idx]->getEdgeVector(tip_edge_idx).normalized();
 				
 				vel += (m_strands[strand_idx]->dynamics().getDisplacements().segment<3>(tip_idx * 4) / m_dt + ut * ev) * w;

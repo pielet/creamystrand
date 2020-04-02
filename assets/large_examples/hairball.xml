@@ -44,11 +44,12 @@
   </CollisionParameters>
 
   <SimulationParameters>
+    <solveCollision value="0"/>
     <logLevel value="1"/>
     <airDrag value="0.0005"/> 
     <gaussSeidelIterations value="1000"/>
     <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="1000"/>
+    <maxNewtonIterations value="1"/>
     <hairMeshFrictionCoefficient value="1.0"/>
     <numberOfThreads value="24"/>
     <percentCTRodRodCollisionsAccept value="100"/>
@@ -64,17 +65,17 @@
     <hairHairFrictionCoefficient value="0.16"/>
     <substeps value="1"/>
     <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
+    <useCTRodRodCollisions value="1"/>
     <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
     <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
-    <bogusAlgorithm value="gaussseidel"/>
+    <bogusAlgorithm value="projectedgradient"/>
   </SimulationParameters>
 
-  <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
+  <hairobj filename="assets/hair_ball_1k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>

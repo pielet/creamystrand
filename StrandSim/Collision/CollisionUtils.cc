@@ -14,6 +14,7 @@
 #include "../Utils/Distances.hh"
 #include "ProximityCollision.hh"
 #include "../Dynamic/ImplicitStepper.hh"
+#include "../Dynamic/LinearStepper.hh"
 
 #include "../Utils/MathUtilities.hh"
 
@@ -424,9 +425,13 @@ namespace strandsim
         return params.externalCollisionsRadius( edge );
     }
     
-    bool analyseRoughRodRodCollision( const ProximityCollisionDatabase& database, const ElasticStrand* sP, const ElasticStrand* sQ, const int iP,
-                                     const int iQ, const Scalar& contactAngle, Vec3x &depl, Scalar &s, Scalar &t, Scalar &d, Scalar& adhesion, Scalar& tilde_yield, Scalar& tilde_eta, Scalar& tilde_power, Scalar& relative_vel, bool& do_soc_solve )
+    bool analyseRoughRodRodCollision( const ElasticStrand* sP, const ElasticStrand* sQ, const int iP, const int iQ, 
+        Vec3x &depl, Scalar &s, Scalar &t, Scalar &d, Scalar& relative_vel, bool& do_soc_solve )
     {
+        // return false when sP intersects with sQ || they lay in the same line
+        // compute interpolote rate s, t, distance(d) and normal
+        // do_soc_solve = true when their distance < collision radius
+
         const CollisionParameters &cpP = sP->collisionParameters();
         const CollisionParameters &cpQ = sQ->collisionParameters();
         
@@ -435,24 +440,8 @@ namespace strandsim
         const Vec3x &Q0 = sQ->getVertex( iQ );
         const Vec3x &Q1 = sQ->getVertex( iQ + 1 );
         
-        //                std::cout << "Possible Coll: " << sP->m_globalIndex << " / " << iP
-        //                                     << " vs " << sQ->m_globalIndex << " / " << iQ << std::endl ;
-        
-        
-        // check flow info
-        
-        // use # collisions from last step to determine how to share the flow volume
         const int iSP = sP->getGlobalIndex();
         const int iSQ = sQ->getGlobalIndex();
-        
-        int nP = std::max(1, database.numCollisions(iSP, iP));
-        int nQ = std::max(1, database.numCollisions(iSQ, iQ));
-        
-        Scalar aP0 = sP->getCurrentFlowDOFArea(iP);
-        Scalar aP1 = sP->getCurrentFlowDOFArea(iP + 1);
-        
-        Scalar aQ0 = sQ->getCurrentFlowDOFArea(iQ);
-        Scalar aQ1 = sQ->getCurrentFlowDOFArea(iQ + 1);
         
         const Scalar rP = cpP.selfCollisionsRadius( iP );
         const Scalar rQ = cpQ.selfCollisionsRadius( iQ );
@@ -465,8 +454,6 @@ namespace strandsim
         
         if(s < 0 || t < 0)
             return false; // see FIXME in DistSegmentToSegment
-        
-        Scalar max_dist;
         
         const Vec3x &u0 = sP->getStepper()->velocities().segment<3>( iP * 4 );
         const Vec3x &u1 = sP->getStepper()->velocities().segment<3>( (iP + 1) * 4 );
@@ -492,118 +479,9 @@ namespace strandsim
         
         relative_vel = (us - vt).dot(depl);
         const Scalar tangential_vel = sqrt(std::max(0., (us - vt).squaredNorm() - relative_vel * relative_vel));
-        
-        Scalar aP = (1. - s) * aP0 + s * aP1;
-        Scalar aQ = (1. - t) * aQ0 + t * aQ1;
-        
-        Scalar aP_each = aP / (Scalar) nP;
-        Scalar aQ_each = aQ / (Scalar) nQ;
-        
-        Scalar aPQ = aP_each + aQ_each;
-        
-		// separating, use wet dist to determine whether we'd enforce the constraint
-		Scalar bc0 = cyl_h_from_area(rP, rP, aP_each) + cyl_h_from_area(rQ, rQ, aQ_each) + BCRad;
-		Scalar bc1 = (1. + 0.5 * contactAngle) * sqrt(aPQ) + BCRad;
 		
-		if(database.connectedLastStep(iSP, iP, iSQ, iQ))
-		{
-			// use [Lian et al.]'s criterion
-			max_dist = std::max(bc0, bc1);
-		} else {
-			// check height only
-			max_dist = bc0;
-		}
-		
-		// volume on bridge
-		//if ( sqDist > max_dist * max_dist )
-		//	return false;
-		
-        if(aPQ < 1e-12 || relative_vel < -1e-4) {
-            // dry or approaching, use solid to determine whether we should enforce the constraint
-			do_soc_solve = sqDist <= BCRad * BCRad;
-        } else {
-			// separating, do SOC solve anyways
-			do_soc_solve = true;
-        }
-
-        // compute adhesion
-        Scalar sqDist0 = std::min((P0 - Q0).squaredNorm(), (P0 - Q1).squaredNorm());
-        Scalar sqDist1 = std::min((P1 - Q0).squaredNorm(), (P1 - Q1).squaredNorm());
-        
-        Scalar l0, l1;
-        
-        if(sqDist0 < max_dist * max_dist) {
-            l0 = 1.0;
-        } else {
-            l0 = clamp((max_dist * max_dist - sqDist) / (sqDist0 - sqDist), 0.0, 1.0);
-        }
-        
-        if(sqDist1 < max_dist * max_dist) {
-            l1 = 1.0;
-        } else {
-            l1 = clamp((max_dist * max_dist - sqDist) / (sqDist1 - sqDist), 0.0, 1.0);
-        }
-        
+		do_soc_solve = sqDist <= BCRad * BCRad;
         d = std::sqrt( sqDist );
-
-        if(aPQ < 1e-12) {
-            adhesion = 0.;
-            tilde_yield = 0.;
-            tilde_eta = 0.;
-            tilde_power = 1.0;
-        } else {
-            if(&cpP == &cpQ) {
-                const Scalar r = sqrt(((sP->getRadiusA( iP ) * sP->getRadiusB( iP ) * (1. - s) + sP->getRadiusA( iP + 1 ) * sP->getRadiusB( iP + 1 ) * s) + (sP->getRadiusA( iQ ) * sP->getRadiusB( iQ ) * (1. - t) + sP->getRadiusA( iQ + 1 ) * sP->getRadiusB( iQ + 1 ) * t)) * 0.5);
-				
-				VecXx color = sP->getFlowNewComponents( iP ) + sQ->getFlowNewComponents( iQ );
-				make_gibbs_simplex(color);
-
-                const Scalar eta = sP->getFlowConsistencyIndex(color);
-                const Scalar n = sP->getFlowBehaviorIndex(color);
-                const Scalar tilde_sigma_Y = sP->getFlowYieldStress(color) * 0.8164965809;
-                
-                const Scalar diff_vel = pow(fabs(relative_vel) / std::max(r * 2.0, d), n);
-                const Scalar diff_vel_horizontal = pow(tangential_vel / std::max(r * 2.0, d), n);
-                
-                const Scalar Ac = 0.75 * M_PI * r;
-                const Scalar elastic_force = Ac * ( eta * diff_vel + tilde_sigma_Y );
-                
-                Scalar fP = std::max(0., cpP.adhesionForce(aPQ, d, color) + elastic_force); // unit: dyn / cm
-                Scalar coeff = ((s * l0 + (1. - s) * l1) * (P0 - P1).norm() + (t * l0 + (1. - t) * l1) * (Q0 - Q1).norm()) * 0.5;
-                
-                adhesion = coeff * fP;
-
-                tilde_yield = coeff * Ac * tilde_sigma_Y;
-                tilde_eta = coeff * Ac * (eta / pow(std::max(r * 2.0, d), n));
-                tilde_power = n;
-            } else {
-                const Scalar r = sqrt(((sP->getRadiusA( iP ) * sP->getRadiusB( iP ) * (1. - s) + sP->getRadiusA( iP + 1 ) * sP->getRadiusB( iP + 1 ) * s) + (sP->getRadiusA( iQ ) * sP->getRadiusB( iQ ) * (1. - t) + sP->getRadiusA( iQ + 1 ) * sP->getRadiusB( iQ + 1 ) * t)) * 0.5);
-				
-				VecXx color = sP->getFlowNewComponents( iP ) + sQ->getFlowNewComponents( iQ );
-				make_gibbs_simplex(color);
-                
-                const Scalar eta = sP->getFlowConsistencyIndex(color);
-                const Scalar n = sP->getFlowBehaviorIndex(color);
-                const Scalar tilde_sigma_Y = sP->getFlowYieldStress(color) * 0.8164965809;
-                
-                const Scalar diff_vel = pow(fabs(relative_vel) / std::max(r * 2.0, d), n);
-                const Scalar diff_vel_horizontal = pow(tangential_vel / std::max(r * 2.0, d), n);
-                
-                const Scalar Ac = 0.75 * M_PI * r;
-                const Scalar elastic_force = Ac * ( eta * diff_vel + tilde_sigma_Y );
-                
-                Scalar fP = std::max(0., cpP.adhesionForce(aPQ, d, color) + elastic_force); // unit: dyn / cm
-                Scalar fQ = std::max(0., cpQ.adhesionForce(aPQ, d, color) + elastic_force);
-                
-                adhesion = ((s * l0 + (1. - s) * l1) * (P0 - P1).norm() * fP + (t * l0 + (1. - t) * l1) * (Q0 - Q1).norm() * fQ) * 0.5; // unit: dyn
-                
-                Scalar coeff = ((s * l0 + (1. - s) * l1) * (P0 - P1).norm() + (t * l0 + (1. - t) * l1) * (Q0 - Q1).norm()) * 0.5;
-                
-                tilde_yield = coeff * Ac * tilde_sigma_Y;
-                tilde_eta = coeff * Ac * (eta / pow(std::max(r * 2.0, d), n));
-                tilde_power = n;
-            }
-        }
         
         return true;
     }

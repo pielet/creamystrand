@@ -13,6 +13,7 @@
 #include "../Core/Definitions.hh"
 
 #include "../../bogus/Interfaces/MecheEigenInterface.hpp"
+#include "../Dynamic/LinearStepper.hh"
 
 namespace strandsim
 {
@@ -31,7 +32,6 @@ struct SimulationParameters
     
     bool m_simulationManager_limitedMemory;
 
-    unsigned m_maxNewtonIterations ;
     // int m_maxLineSearchIterations;
 
     /**
@@ -53,7 +53,13 @@ struct SimulationParameters
     bool m_pruneSelfCollisions ;
     double m_stochasticPruning ;
 
+    double m_collisionSolverTolerace;
+
     double m_airDrag ;
+
+    bool m_freezeNearbyVertex;
+    bool m_registerVelocity;
+    bool m_registerImpulse;
     
     /**
      * Inextensibility 
@@ -63,13 +69,19 @@ struct SimulationParameters
 
     bool m_useDeterministicSolver;
 
-    unsigned m_gaussSeidelIterations;
-    double m_gaussSeidelTolerance;
     bool m_useNonlinearContacts;
     bool m_useAdditionalExternalFailSafe;
 
     bool m_useSoftAttachConstraints;
     bool m_solveLiquids;
+    bool m_solveCollision;
+
+    /**
+     * Linear Solver for one Newton step
+     */
+    unsigned m_linearSolverIterations;
+    double m_linearSolverTolerance;
+    LinearStepper::SolverType m_solverType;
     
     unsigned m_subSteps;
 

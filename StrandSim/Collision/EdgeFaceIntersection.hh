@@ -61,27 +61,6 @@ public:
     {
         return m_triangle ;
     }
-    
-    Scalar faceAdhesionForce() const
-    {
-        return m_adhesive_force;
-    }
-    
-    Scalar faceYield() const
-    {
-        return m_yield;
-    }
-    
-    Scalar faceEta() const
-    {
-        return m_eta;
-    }
-    
-    Scalar facePower() const
-    {
-        return m_power;
-    }
-    
     bool doSOCSolve() const
     {
         return true;
@@ -103,18 +82,14 @@ protected:
     const FaceProxy* const m_triangle;
     Scalar m_s/*, u, v, w*/;
     Scalar m_distance ;
-    Scalar m_adhesive_force;
-    Scalar m_yield;
-    Scalar m_eta;
-    Scalar m_power;
     bool m_isBoundaryedgeCollision ;
 
     Vec3x m_normal;
 private:
-    bool barycentricCoordinatesIfCloser( const Scalar radius, const Scalar A0, const Scalar A1, const Scalar theta,
-                                         const Scalar s0, const Vec3x& p0, const Vec3x &p1,
+    bool barycentricCoordinatesIfCloser( const Scalar radius, Scalar s0, 
+                                         const Vec3x& p0, const Vec3x &p1,
                                          const Vec3x &q0, const Vec3x &q1, const Vec3x &q2,
-                                         Scalar &dist, Scalar &s, Scalar &u, Scalar &v, Scalar &w, Scalar& al, Scalar& A_adh, Scalar& d_adh );
+                                         Scalar &dist, Scalar &s, Scalar &u, Scalar &v, Scalar &w );
 };
 
 } /* namespace strandsim */

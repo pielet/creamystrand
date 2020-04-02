@@ -196,6 +196,7 @@ namespace strandsim
 		m_strand.dynamics().acceptGuess();
 	}
 	
+	/*
 	void ImplicitStepper::solveLinearFlow()
 	{
 		m_strand.dynamics().computeFlowMasses();
@@ -255,6 +256,7 @@ namespace strandsim
         
          // check_isnan("solve_linear_flow", m_flow_newVelocities);
 	}
+	*/
 	
 	void ImplicitStepper::computeGradAtVertex(const VecXx& edge_vars, VecXx& vertex_grads)
 	{
@@ -297,7 +299,8 @@ namespace strandsim
         
 //        std::cout << "reservoir: " << reservoir << std::endl;
 	}
-	
+
+	/*
     void ImplicitStepper::stepFlowAdvForce()
     {
         // ignore if no fluid is simulated
@@ -307,7 +310,8 @@ namespace strandsim
         // integrate force to velocity
         solveLinearFlow();
     }
-    
+    */
+
     void ImplicitStepper::updateAdditionalInertia()
     {
         // NOTE: this must be called after backtracking!
@@ -776,8 +780,6 @@ namespace strandsim
 	
 	bool ImplicitStepper::performNewtonIteration()
 	{
-		if(m_newtonIter >= m_params.m_maxNewtonIterations)
-			return true;
 		
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		const Scalar minAlpha = .01 ; // Minimum step length
@@ -820,6 +822,9 @@ namespace strandsim
 			
 			m_prevErr = err ;
 		}
+
+		if (m_newtonIter >= m_params.m_linearSolverIterations)
+			return true;
         
 //        std::cout << "NI[" << m_strand.getGlobalIndex() << "]: " << m_newtonIter << ", " << m_prevErr << std::endl;
 		tt.restart();
@@ -836,7 +841,7 @@ namespace strandsim
 		
 		Lhs().multiply( m_rhs, 1., m_newVelocities );
 		dynamics.getScriptingController()->fixLHSAndRHS( Lhs(), m_rhs, m_dt / m_fraction );
-		
+
 		m_timer.restart();
 		m_linearSolver.store( Lhs() );
 		m_timings.m_storeAndFab += m_timer.elapsed();
@@ -1049,7 +1054,7 @@ namespace strandsim
 	
 	bool ImplicitStepper::postSolveNonlinear()
 	{
-		if( m_newtonIter == m_params.m_maxNewtonIterations )
+		if( m_newtonIter == m_params.m_linearSolverIterations )
 		{
             // Failed. We need to rollback with lower stretch multiplier
 //            m_stretchMultiplier *= 0.5;

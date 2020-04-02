@@ -26,28 +26,21 @@ GravitationForce::~GravitationForce()
 Scalar GravitationForce::localEnergy( const ElasticStrand& strand, const StrandState& geometry,
         const IndexType vtx )
 {
-	const Scalar m_tau = strand.getFutureSurfaceFlowMass(vtx);
-    return -(strand.m_vertexMasses[vtx] + m_tau) * geometry.getVertex( vtx ).dot( s_gravity );
+    return -strand.m_vertexMasses[vtx] * geometry.getVertex( vtx ).dot( s_gravity );
 }
 
 template<>
 void GravitationForce::computeLocal<Scalar>( Scalar& localE, const ElasticStrand& strand,
         const StrandState& geometry, const IndexType vtx )
 {
-	const Scalar m_tau = strand.getFutureSurfaceFlowMass(vtx);
-    localE = -(strand.m_vertexMasses[vtx] + m_tau) * geometry.getVertex( vtx ).dot( s_gravity );
+    localE = -strand.m_vertexMasses[vtx] * geometry.getVertex( vtx ).dot( s_gravity );
 }
 
 template<>
 void GravitationForce::computeLocal<Vec3x>( Vec3x& localF, const ElasticStrand& strand,
         const StrandState& geometry, const IndexType vtx )
 {
-	const Scalar m_tau = strand.getFutureSurfaceFlowMass(vtx);
-    localF = (strand.m_vertexMasses[vtx] + m_tau) * s_gravity;
-//#pragma omp critical
-//	{
-//		std::cout << "[vtx: " << vtx << " " << m_tau << std::endl;
-//	}
+    localF = strand.m_vertexMasses[vtx] * s_gravity;
 }
 
 template<>

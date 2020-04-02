@@ -332,6 +332,7 @@ namespace strandsim
 		invalidatePhysics();
 	}
 	
+	/*
 	Scalar ElasticStrand::getFutureSurfaceFlowMassAtEdge( IndexType i ) const
 	{
         const auto controller = m_parent->getFluidScriptingController();
@@ -346,6 +347,7 @@ namespace strandsim
         return density * getFutureSurfaceFlowVolumeAtEdge(i);
 	}
     
+
     Scalar ElasticStrand::getCurrentSurfaceFlowMassAtEdge( IndexType i ) const
     {
         const auto controller = m_parent->getFluidScriptingController();
@@ -359,7 +361,8 @@ namespace strandsim
         const Scalar density = controller->getDensity(color);
         return density * getCurrentSurfaceFlowVolumeAtEdge(i);
     }
-	
+	*/
+
     Scalar ElasticStrand::getFutureSurfaceFlowVolumeAtEdge( IndexType i ) const
     {
         if(!m_parent) return 0.0;
@@ -376,6 +379,7 @@ namespace strandsim
         return area * m_restLengths[ i ];
     }
 	
+	/*
 	Scalar ElasticStrand::getCurrentSurfaceFlowMass( const IndexType i ) const
 	{
 		if(!m_parent) return 0.0;
@@ -410,7 +414,8 @@ namespace strandsim
 		
 		return mass;
 	}
-	
+	*/
+
 	void ElasticStrand::setEdgeRestLength( const IndexType vtx, const Scalar newrestlength )
 	{
 		assert( vtx < m_numEdges );
@@ -425,13 +430,14 @@ namespace strandsim
 		
 	}
 	
+	/*
 	VecXx ElasticStrand::getFlowNewComponents( int pidx ) const
 	{
 		const int num_components = m_stepper->flowNewComponents().size() / m_numVertices;
 		
 		return m_stepper->flowNewComponents().segment( pidx * num_components, num_components );
 	}
-	
+	*/
 	void ElasticStrand::setEdgesRestLength( const Scalar newRestLength )
 	{
 		for ( IndexType vtx = 0; vtx < m_numEdges; ++vtx )

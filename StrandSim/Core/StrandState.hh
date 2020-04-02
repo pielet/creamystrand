@@ -203,6 +203,8 @@ namespace strandsim
 		 */
 		void computeDeformationGradient( const unsigned edge, const Scalar alpha,
 										const VecXx &velocities, SparseRowMatx* &pH ) const;
+
+		void computeDeformationGradient(const unsigned edge, const Scalar alpha, SparseRowMatx*& pH) const;
 		
 		const Vec3x getReferenceFrame1( const IndexType vtx ) const
 		{

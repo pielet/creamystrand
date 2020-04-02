@@ -148,6 +148,25 @@ namespace strandsim
 		return ( ( m_totalForce.norm() / m_numVertices <= lTwoTol )
 				|| ( m_totalForce.lpNorm<Eigen::Infinity>() <= lInfTol ) );
 	}
+
+	void StrandState::computeDeformationGradient(const unsigned edge, const Scalar alpha, SparseRowMatx*& pH) const
+	{
+		if (!pH) {
+			pH = new SparseRowMatx(3, 7);
+		}
+
+		SparseRowMatx& H = *pH;
+		H.reserve(alpha > 0. ? 6 : 3);
+
+		for (int i = 0; i < 3; ++i) {
+			H.startVec(i);
+			H.insertBackByOuterInner(i, i) = 1. - alpha;
+			if (alpha > 0.) {
+				H.insertBackByOuterInner(i, i + 4) = alpha;
+			}
+		}
+		H.finalize();
+	}
 	
 	void StrandState::computeDeformationGradient( const unsigned edge, const Scalar alpha,
 												 const VecXx &velocities, SparseRowMatx* &pH ) const

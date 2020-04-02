@@ -14,8 +14,9 @@
 #include "StrandImplicitManager.hh"
 #include "MeshScriptingController.hh"
 #include "FluidScriptingController.hh"
-#include "ImplicitStepper.hh"
+#include "LinearStepper.hh"
 #include "StrandDynamicTraits.hh"
+#include "DOFScriptingController.hh"
 #include "../Collision/CollisionDetector.hh"
 #include "../Collision/ElementProxy.hh"
 #include "../Collision/EdgeFaceIntersection.hh"
@@ -30,8 +31,10 @@
 #include "../Utils/LoggingTimer.hh"
 #include "../Utils/Memory.hh"
 #include "../Utils/MemUtilities.hh"
+#include "../Utils/MathUtilities.hh"
 
 #include "../../bogus/Interfaces/MecheEigenInterface.hpp"
+#include "../../bogus/Interfaces/OneCollisionProblem.hpp"
 
 #include <boost/lexical_cast.hpp>
 
@@ -127,7 +130,7 @@ namespace strandsim
 			ElasticStrand* strand = m_strands[i];
 			strand->clearSharedRuntimeForces();
 
-			ImplicitStepper* stepper = new ImplicitStepper(*strand, m_params);
+			LinearStepper* stepper = new LinearStepper(*strand, m_params);
 			m_steppers.push_back(stepper);
 			strand->setStepper(stepper);
 
@@ -197,40 +200,16 @@ namespace strandsim
 		m_statExternalContacts = 0;
 		m_statMutualCollisions = 0;
 
-		if (m_params.m_solveLiquids) {
-			for (std::vector< std::shared_ptr<FluidScriptingController> >::size_type i = 0;
-				i < m_fluidScriptingControllers.size(); ++i)
-			{
-				if (m_fluidScriptingControllers[i])
-				{
-					m_fluidScriptingControllers[i]->setDt(m_dt);
-					m_fluidScriptingControllers[i]->setTime(m_time);
-					m_fluidScriptingControllers[i]->executePreStep();
-				}
-			}
-		}
-
-		step(total_num_substeps, total_substep_id);
+		//step(total_num_substeps, total_substep_id);
+		step();
 		if (m_substep_callback) m_substep_callback->executeCallback();	// update drawing data
 
-		if (m_params.m_solveLiquids) {
-			for (std::vector< std::shared_ptr<FluidScriptingController> >::size_type i = 0;
-				i < m_fluidScriptingControllers.size(); ++i)
-			{
-				if (m_fluidScriptingControllers[i])
-				{
-					m_fluidScriptingControllers[i]->executePostStep();
-					m_fluidScriptingControllers[i]->printTimingStats();
-				}
-			}
-		}
-
-		m_statTotalCollisions += m_statExternalContacts + m_statMutualCollisions;
+		/*m_statTotalCollisions += m_statExternalContacts + m_statMutualCollisions;
 		InfoStream(g_log, "Contact")
 			<< "external: " << m_statExternalContacts
 			<< " mutual: " << m_statMutualCollisions
 			<< " total: " << m_statExternalContacts + m_statMutualCollisions
-			<< " overall: " << m_statTotalCollisions;
+			<< " overall: " << m_statTotalCollisions;*/
 
 		InfoStream(g_log, "Timing") << "Last frame (ms):";
 		print(m_timings.back());
@@ -239,7 +218,7 @@ namespace strandsim
 
 		if (m_params.m_statGathering)
 		{
-			printNewtonSolverBreakdownTiming<InfoStream>();
+			//printNewtonSolverBreakdownTiming<InfoStream>();
 			print<InfoStream>(m_cdTimings);
 			print<InfoStream>(m_solverStat);
 		}
@@ -267,90 +246,72 @@ namespace strandsim
 		return m_fluidScriptingControllers[0]->cfl();
 	}
 
-	void StrandImplicitManager::step(int total_num_substeps, int total_substep_id)
-	{
-		MemoryDiff<DebugStream> mem("step");
-		SubStepTimings timings;
+	//void StrandImplicitManager::step(int total_num_substeps, int total_substep_id)
+	//{
+	//	MemoryDiff<DebugStream> mem("step");
+	//	SubStepTimings timings;
 
-		std::cout << "[Prepare Simulation Step]" << std::endl;
-		Timer timer("step", false);
-		step_prepare(m_dt);
-		timings.prepare = timer.elapsed();
+	//	std::cout << "[Prepare Simulation Step]" << std::endl;
+	//	Timer timer("step", false);
+	//	step_prepare(m_dt);
+	//	timings.prepare = timer.elapsed();
 
-		m_collidingGroups.clear();
-		m_collidingGroupsIdx.assign(m_strands.size(), -1);
+	//	m_collidingGroups.clear();
+	//	m_collidingGroupsIdx.assign(m_strands.size(), -1);
 
-		m_elasticCollidingGroups.clear();
-		m_elasticCollidingGroupsIdx.assign(m_strands.size(), -1);
+	//	if (m_params.m_solveCollision && !m_params.m_useCTRodRodCollisions) {
+	//		std::cout << "[Setup Hair-Hair Collisions]" << std::endl;
+	//		timer.restart();
+	//		setupHairHairCollisions(m_dt);
+	//		timings.hairHairCollisions = timer.elapsed();
+	//	}
 
-		m_mutualContacts.clear();
-		m_elasticMutualContacts.clear();
+	//	std::cout << "[Step Dynamics]" << std::endl;
+	//	timer.restart();
+	//	switch (m_params.m_solverType)
+	//	{
+	//	case 0:
+	//		step_dynamics(total_num_substeps, total_substep_id, m_dt); break;
+	//	case 1:
+	//		step_dynamics_Jacobi(m_dt); break;
+	//	case 2:
+	//		step_dynamics_Gauss(m_dt); break;
+	//	case 3:
+	//		step_dynamics_CG(m_dt); break;
+	//	}
+	//	timings.dynamics = timer.elapsed();
 
-		if (!m_params.m_useCTRodRodCollisions) {
-			std::cout << "[Setup Hair-Hair Collisions]" << std::endl;
-			timer.restart();
-			setupHairHairCollisions(m_dt);
-			timings.hairHairCollisions = timer.elapsed();
-		}
+	//	if (m_params.m_solveCollision) {
+	//		std::cout << "[Setup Continous-Time Collisions]" << std::endl;
+	//		timer.restart();
+	//		setupMeshHairCollisions(m_dt);
+	//		timings.meshHairCollisions = timer.elapsed();
 
-		std::cout << "[Step Dynamics]" << std::endl;
-		timer.restart();
-		step_dynamics(total_num_substeps, total_substep_id, m_dt);
-		timings.dynamics = timer.elapsed();
+	//		std::cout << "[Process Collisions]" << std::endl;
+	//		timer.restart();
+	//		step_processCollisions(m_dt);
+	//		timings.processCollisions = timer.elapsed();
 
+	//		std::cout << "[Solve Collisions]" << std::endl;
+	//		timer.restart();
+	//		step_solveCollisions(total_num_substeps, total_substep_id);
+	//		timings.solve += timer.elapsed();
+	//	}
 
-		std::cout << "[Setup Continous-Time Collisions]" << std::endl;
-		timer.restart();
-		setupMeshHairCollisions(m_dt);
-		timings.meshHairCollisions = timer.elapsed();
+	//	assert(m_collisionDetector->empty());
 
-		std::cout << "[Process Collisions]" << std::endl;
-		timer.restart();
-		step_processCollisions(m_dt);
-		timings.processCollisions = timer.elapsed();
+	//	m_mutualContacts.clear();
+	//	m_elasticMutualContacts.clear();
 
-		if (m_params.m_solveLiquids) {
-			// Mid Step to do Pressure Solve
-			for (std::vector< std::shared_ptr<FluidScriptingController> >::size_type i = 0;
-				i < m_fluidScriptingControllers.size(); ++i)
-			{
-				if (m_fluidScriptingControllers[i])
-				{
-					m_fluidScriptingControllers[i]->executeMidStep();
-				}
-			}
+	//	m_time += m_dt;
 
-			// Solve Strands again with pressure, collision and updated flow mass
-			std::cout << "[Re-step Dynamics]" << std::endl;
-			timer.restart();
-			redo_step_dynamics(total_num_substeps, total_substep_id, m_dt);
-			timings.dynamics += timer.elapsed();
+	//	print<CopiousStream>(timings);
 
-			std::cout << "[Solve Flow Frictions]" << std::endl;
-			timer.restart();
-			step_solveFlowFrictions(total_num_substeps, total_substep_id);
-			timings.solve = timer.elapsed();
-		}
+	//	InfoStream(g_log, "") << "Database size: " << m_collisionDatabase.computeSizeInBytes();
+	//	m_timings.back().push_back(timings);
 
-		std::cout << "[Solve Collisions]" << std::endl;
-		timer.restart();
-		step_solveCollisions(total_num_substeps, total_substep_id);
-		timings.solve += timer.elapsed();
-
-		assert(m_collisionDetector->empty());
-
-		m_mutualContacts.clear();
-		m_elasticMutualContacts.clear();
-
-		m_time += m_dt;
-
-		print<CopiousStream>(timings);
-
-		InfoStream(g_log, "") << "Database size: " << m_collisionDatabase.computeSizeInBytes();
-		m_timings.back().push_back(timings);
-
-		printMemStats();
-	}
+	//	printMemStats();
+	//}
 
 	void StrandImplicitManager::printMemStats()
 	{
@@ -445,10 +406,6 @@ namespace strandsim
 						edgeIdx));
 				// we assume all edge-face are solid touching
 				edgeFaceCollision.do_soc_solve = efi->doSOCSolve();
-				edgeFaceCollision.adhesion = efi->faceAdhesionForce() * dt;
-				edgeFaceCollision.yield = efi->faceYield() * dt;
-				edgeFaceCollision.eta = efi->faceEta() * dt;
-				edgeFaceCollision.power = efi->facePower();
 
 				edgeFaceCollision.objects.second.globalIndex = -1;
 				edgeFaceCollision.objects.second.vertex = efi->getFaceId();
@@ -528,10 +485,6 @@ namespace strandsim
 
 				collision.do_soc_solve = eeCollision->doSOCSolve();
 				collision.mu = sqrt(cpP.frictionCoefficient(iP) * cpQ.frictionCoefficient(iQ));
-				collision.adhesion = 0.;
-				collision.yield = 0.;
-				collision.eta = 0.;
-				collision.power = 1.0;
 
 				collision.objects.first.globalIndex = sP->getGlobalIndex();
 				collision.objects.first.vertex = iP;
@@ -554,9 +507,6 @@ namespace strandsim
 						if (collision.do_soc_solve)
 							m_mutualContacts.push_back(collision);
 
-						if (!m_params.m_skipFlowFrictions)
-							m_elasticMutualContacts.push_back(collision);
-
 						++m_num_ct_hair_hair_col;
 					}
 				}
@@ -565,11 +515,6 @@ namespace strandsim
 					if (collision.do_soc_solve) {
 						++nExt;
 						makeExternalContact(collision, acceptFirst);
-					}
-
-					if (!m_params.m_skipFlowFrictions) {
-						++nExtElastic;
-						makeElasticExternalContact(collision, acceptFirst);
 					}
 				}
 
@@ -587,10 +532,6 @@ namespace strandsim
 
 					// we assume all face collision are solid touching
 					collision.do_soc_solve = fCollision->doSOCSolve();
-					collision.adhesion = fCollision->faceAdhesionForce() * dt;
-					collision.yield = fCollision->faceYield() * dt;
-					collision.eta = fCollision->faceEta() * dt;
-					collision.power = fCollision->facePower();
 				}
 
 				collision.objects.second.globalIndex = -1;
@@ -810,16 +751,10 @@ namespace strandsim
 
 						Vec3x normal;
 						Scalar s, t, d;
-						Scalar adhesion_force;
-						Scalar yield;
-						Scalar eta;
-						Scalar power;
 						bool do_soc_solve = false;
 						Scalar rel_vel(0.);
-						// return false when sP intersects with sQ || they lay in the same line
-						// compute interpolote rate s, t, distance(d) and normal
-						// do_soc_solve = true when they are approaching
-						if (!analyseRoughRodRodCollision(m_collisionDatabase, sP, sQ, iP, iQ, contact_angle, normal, s, t, d, adhesion_force, yield, eta, power, rel_vel, do_soc_solve))
+						
+						if (!analyseRoughRodRodCollision(sP, sQ, iP, iQ, normal, s, t, d, rel_vel, do_soc_solve))
 						{
 							continue;
 						}
@@ -837,7 +772,6 @@ namespace strandsim
 								continue;
 						}
 
-
 						ProximityCollision mutualContact;
 
 						mutualContact.normal = normal;
@@ -845,11 +779,6 @@ namespace strandsim
 						mutualContact.relative_vel = rel_vel;
 						mutualContact.do_soc_solve = do_soc_solve;
 						mutualContact.mu = sqrt(cpP.frictionCoefficient(iP) * cpQ.frictionCoefficient(iQ));
-
-						mutualContact.adhesion = adhesion_force * dt;
-						mutualContact.yield = yield * dt;
-						mutualContact.eta = eta * dt;
-						mutualContact.power = power;
 
 						mutualContact.objects.first.globalIndex = sP->getGlobalIndex();
 						mutualContact.objects.first.vertex = iP;
@@ -869,8 +798,6 @@ namespace strandsim
 							mutualContact.swapIfNecessary();
 #pragma omp critical
 							{
-								// std::cout << "PX coll normal: " << mutualContact.normal << std::endl;
-								// mutualContact.print( std::cout );
 								if (mutualContact.do_soc_solve)
 									m_mutualContacts.push_back(mutualContact);
 
@@ -919,8 +846,7 @@ namespace strandsim
 		makeExternalContact(externalContact, onFirstObject, m_elasticExternalContacts);
 	}
 
-	void StrandImplicitManager::makeExternalContact(ProximityCollision& externalContact,
-		bool onFirstObject)
+	void StrandImplicitManager::makeExternalContact(ProximityCollision& externalContact, bool onFirstObject)
 	{
 		makeExternalContact(externalContact, onFirstObject, m_externalContacts);
 	}
@@ -956,12 +882,19 @@ namespace strandsim
 		}
 	}
 
+	//void StrandImplicitManager::computeDeformationGradient(ProximityCollision::Object& object) const
+	//{
+	//	m_strands[object.globalIndex]->getFutureState().computeDeformationGradient(object.vertex,
+	//		object.abscissa,
+	//		m_steppers[object.globalIndex]->velocities(),
+	//		object.defGrad);
+	//}
+
 	void StrandImplicitManager::computeDeformationGradient(ProximityCollision::Object& object) const
 	{
-		m_strands[object.globalIndex]->getFutureState().computeDeformationGradient(object.vertex,
-			object.abscissa,
-			m_steppers[object.globalIndex]->velocities(),
-			object.defGrad);
+		m_strands[object.globalIndex]->getFutureState().computeDeformationGradient(
+			object.vertex, object.abscissa, object.defGrad
+		);
 	}
 
 	void StrandImplicitManager::setupDeformationBasis(ProximityCollision& collision) const
@@ -983,31 +916,32 @@ namespace strandsim
 			computeDeformationGradient(collision.objects.second);
 		}
 	}
-
+	
 	void StrandImplicitManager::step_prepare(Scalar dt)
+	{
+		// Execute the controllers to script meshes to the future time of this step
+#pragma omp parallel for
+		for (int i = 0; i < m_meshScriptingControllers.size(); ++i)
+		{
+			DebugStream(g_log, "") << "Executing controller number " << i;
+			m_meshScriptingControllers[i]->setTime(m_time + dt);
+			m_meshScriptingControllers[i]->execute(true); // Advance the mesh; compute level set if we do rod/mesh penalties
+		}
+	}
+
+	void StrandImplicitManager::step_prepareCollision()
 	{
 		m_collisionDatabase.ageAll();
 		for (int i = 0; i < m_externalContacts.size(); ++i)
 		{
 			m_externalContacts[i].clear();
 		}
-		for (int i = 0; i < m_elasticExternalContacts.size(); ++i)
-		{
-			m_elasticExternalContacts[i].clear();
-		}
+		m_mutualContacts.clear();
 
-		// Execute the controllers to script meshes to the future time of this step
-#pragma omp parallel for
-		for (int i = 0;
-			i < m_meshScriptingControllers.size(); ++i)
-		{
-			DebugStream(g_log, "") << "Executing controller number " << i;
-			m_meshScriptingControllers[i]->setTime(m_time + dt);
-			m_meshScriptingControllers[i]->execute(true); // Advance the mesh; compute level set if we do rod/mesh penalties
-		}
-
+		m_statMutualCollisions = 0;
+		m_statExternalContacts = 0;
 	}
-
+	/*
 	void StrandImplicitManager::redo_step_dynamics(int total_num_substeps, int total_substep_id, Scalar substepDt)
 	{
 		DebugStream(g_log, "") << "Dynamics";
@@ -1121,6 +1055,67 @@ namespace strandsim
 		}
 	}
 
+
+	void StrandImplicitManager::step_dynamics_CG(Scalar dt) 
+	{
+		std::vector<Scalar> residuals(m_strands.size(), 1e+99);
+		std::vector<int> iters(m_strands.size());
+
+		//#pragma omp parallel for
+		for (int s = 0; s < (int)m_strands.size(); ++s) {
+			StrandDynamicTraits& dynamics = m_strands[s]->dynamics();
+			VecXx& vel = m_steppers[s]->velocities();
+			VecXx& newVel = m_steppers[s]->newVelocities();
+
+			// initialize
+			m_strands[s]->setFutureDegreesOfFreedom(m_strands[s]->getCurrentDegreesOfFreedom());
+			dynamics.computeViscousForceCoefficients(m_dt);
+			dynamics.computeDOFMasses();
+			dynamics.getDisplacements().setZero();
+			dynamics.getAccelerations().setZero();
+
+			// compute RHS
+			VecXx b = vel;
+			dynamics.multiplyByMassMatrix(b);
+			dynamics.computeFutureForces(!m_params.m_usePreFilterGeometry, false, false, false, std::cout);
+			b += m_strands[s]->getFutureTotalForces() * m_dt;
+
+			// compute LHS
+			dynamics.computeFutureJacobian(!m_params.m_usePreFilterGeometry, false, false, false, std::cout);
+			JacobianMatrixType& A = m_strands[s]->getTotalJacobian();
+			A *= m_dt * m_dt;
+			dynamics.addMassMatrixTo(A);
+
+			A.multiply(b, 1., vel);
+			dynamics.getScriptingController()->fixLHSAndRHS(A, b, m_dt);
+
+			SparseMatx sparseA(vel.size(), vel.size());
+			A.convertToSparseMat(sparseA);
+
+			Eigen::ConjugateGradient< SparseMatx > iterativeSolver;
+			iterativeSolver.compute(sparseA);
+			iterativeSolver.setTolerance(m_params.m_gaussSeidelTolerance);
+			iterativeSolver.setMaxIterations(m_params.m_maxNewtonIterations);
+			newVel = iterativeSolver.solve(b);
+			std::cout << "[cg total iter: " << iterativeSolver.iterations() << ", res: " << iterativeSolver.error() << "]" << std::endl;
+			
+			dynamics.getAccelerations() = (newVel - vel) / m_dt;
+			residuals[s] = iterativeSolver.error() * b.norm();
+
+			// update x_t+1
+			VecXx displacements = newVel * m_dt;
+			dynamics.getScriptingController()->enforceDisplacements(displacements);
+			m_strands[s]->setCurrentDegreesOfFreedom(m_strands[s]->getCurrentDegreesOfFreedom() + displacements);
+			m_strands[s]->getFutureState().freeCachedQuantities();
+			vel = newVel;
+
+			//residuals[s] = iterativeSolver.error() * b.norm();
+		}
+
+		// output residual
+		residualStats("step_dynamics_CG", residuals);
+	}
+
 	void StrandImplicitManager::step_dynamics(int total_num_substeps, int total_substep_id, Scalar substepDt)
 	{
 		DebugStream(g_log, "") << "Dynamics";
@@ -1132,11 +1127,6 @@ namespace strandsim
 		for (int i = 0; i < (int)m_strands.size(); i++)
 		{
 			m_steppers[i]->initStepping(substepDt);
-
-			if (m_params.m_solveLiquids) {
-				m_steppers[i]->backtrackFlowData();
-				m_steppers[i]->updateAdditionalInertia();
-			}
 		}
 
 		int hair_subSteps = std::max(1, (int)ceil((Scalar)m_params.m_rodSubSteps / (Scalar)total_num_substeps));
@@ -1160,7 +1150,7 @@ namespace strandsim
 
 				int iter = 0;
 				while (true) {
-#pragma omp parallel for
+//#pragma omp parallel for
 					for (int i = 0; i < (int)m_strands.size(); i++)
 					{
 						if (!passed[i] && !all_done[i]) {
@@ -1243,7 +1233,7 @@ namespace strandsim
 			}
 		}
 	}
-
+	*/
 	static const unsigned maxObjForOuterParallelism = 8 * omp_get_max_threads();
 
 	void StrandImplicitManager::step_processCollisions(Scalar dt)
@@ -1378,205 +1368,207 @@ namespace strandsim
 		std::cout << "[" << name << " statistics: mean " << m << ", variance " << var << ", min " << res_min << ", max " << res_max << "]" << std::endl;
 	}
 
-	void StrandImplicitManager::step_solveFlowFrictions(int total_num_substeps, int total_substep_id)
-	{
-		if (m_params.m_skipFlowFrictions)
-			return;
-
-		DebugStream(g_log, "") << " Solving ";
-		// m_contactProblemsStats.clear(); //DK: [stats]
-
-		// Dynamics solve
-
-		std::vector< Scalar > residuals(m_elasticCollidingGroups.size(), 1e+99);
-		std::vector< Scalar > newton_iters(m_elasticCollidingGroups.size(), 0.);
-		std::vector< Scalar > newton_residuals(m_strands.size(), -1.0);
-
-#pragma omp parallel for
-		for (int i = 0; i < (int)m_elasticCollidingGroups.size(); ++i)
-		{
-			if (m_elasticCollidingGroups[i].first.size() <= maxObjForOuterParallelism)
-			{
-				int iters = 0;
-				residuals[i] = solveCollidingGroup(m_elasticCollidingGroups[i], m_elasticExternalContacts, false, true, false, false, newton_residuals, iters, total_num_substeps, total_substep_id);
-				newton_iters[i] = iters;
-			}
-		}
-
-		for (int i = 0; i < (int)m_elasticCollidingGroups.size(); ++i)
-		{
-			if (m_elasticCollidingGroups[i].first.size() > maxObjForOuterParallelism)
-			{
-				int iters = 0;
-				residuals[i] = solveCollidingGroup(m_elasticCollidingGroups[i], m_elasticExternalContacts, false, true, false, false, newton_residuals, iters, total_num_substeps, total_substep_id);
-				newton_iters[i] = iters;
-			}
-		}
-
-		if (m_elasticCollidingGroups.size()) {
-			residualStats(std::string("Flow Colliding Group So-Bogus"), residuals);
-		}
-
-		std::vector< int > all_done(m_strands.size(), false);
-
-		std::vector< Scalar > residuals_single(m_strands.size(), -1.);
-		std::vector< Scalar > newton_iters_single(m_strands.size(), -1.);
-		std::vector< Scalar > newton_residuals_single(m_strands.size(), -1.0);
-
-		int count = 0;
-#pragma omp parallel for reduction(+:count)
-		for (int i = 0; i < (int)m_strands.size(); i++)
-		{
-			if (m_elasticCollidingGroupsIdx[i] == -1 && needsElasticExternalSolve(i))
-			{
-				int iters = 0;
-				residuals_single[i] = solveSingleObject(m_elasticExternalContacts, i, false, true, false, false, newton_residuals_single, iters, total_num_substeps, total_substep_id);
-				newton_iters_single[i] = iters;
-
-				count++;
-			}
-		}
-
-		if (count) {
-			residualStats(std::string("Single So-Bogus"), residuals_single);
-		}
-
-		Scalar maxWI = 0.;
-		int maxWI_idx = -1;
-		int maxWI_subidx = -1;
-
-		for (int i = 0; i < (int)m_steppers.size(); i++)
-		{
-			int subidx = -1;
-			const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
-			//            maxWI = std::max(maxWI, Wi);
-			if (Wi > maxWI) {
-				maxWI = Wi;
-				maxWI_idx = i;
-				maxWI_subidx = subidx;
-			}
-		}
-
-		std::cout << "Max WI (Elastic): " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
-	}
+//	void StrandImplicitManager::step_solveFlowFrictions(int total_num_substeps, int total_substep_id)
+//	{
+//		if (m_params.m_skipFlowFrictions)
+//			return;
+//
+//		DebugStream(g_log, "") << " Solving ";
+//		// m_contactProblemsStats.clear(); //DK: [stats]
+//
+//		// Dynamics solve
+//
+//		std::vector< Scalar > residuals(m_elasticCollidingGroups.size(), 1e+99);
+//		std::vector< Scalar > newton_iters(m_elasticCollidingGroups.size(), 0.);
+//		std::vector< Scalar > newton_residuals(m_strands.size(), -1.0);
+//
+//#pragma omp parallel for
+//		for (int i = 0; i < (int)m_elasticCollidingGroups.size(); ++i)
+//		{
+//			if (m_elasticCollidingGroups[i].first.size() <= maxObjForOuterParallelism)
+//			{
+//				int iters = 0;
+//				residuals[i] = solveCollidingGroup(m_elasticCollidingGroups[i], m_elasticExternalContacts, false, true, false, false, newton_residuals, iters, total_num_substeps, total_substep_id);
+//				newton_iters[i] = iters;
+//			}
+//		}
+//
+//		for (int i = 0; i < (int)m_elasticCollidingGroups.size(); ++i)
+//		{
+//			if (m_elasticCollidingGroups[i].first.size() > maxObjForOuterParallelism)
+//			{
+//				int iters = 0;
+//				residuals[i] = solveCollidingGroup(m_elasticCollidingGroups[i], m_elasticExternalContacts, false, true, false, false, newton_residuals, iters, total_num_substeps, total_substep_id);
+//				newton_iters[i] = iters;
+//			}
+//		}
+//
+//		if (m_elasticCollidingGroups.size()) {
+//			residualStats(std::string("Flow Colliding Group So-Bogus"), residuals);
+//		}
+//
+//		std::vector< int > all_done(m_strands.size(), false);
+//
+//		std::vector< Scalar > residuals_single(m_strands.size(), -1.);
+//		std::vector< Scalar > newton_iters_single(m_strands.size(), -1.);
+//		std::vector< Scalar > newton_residuals_single(m_strands.size(), -1.0);
+//
+//		int count = 0;
+//#pragma omp parallel for reduction(+:count)
+//		for (int i = 0; i < (int)m_strands.size(); i++)
+//		{
+//			if (m_elasticCollidingGroupsIdx[i] == -1 && needsElasticExternalSolve(i))
+//			{
+//				int iters = 0;
+//				residuals_single[i] = solveSingleObject(m_elasticExternalContacts, i, false, true, false, false, newton_residuals_single, iters, total_num_substeps, total_substep_id);
+//				newton_iters_single[i] = iters;
+//
+//				count++;
+//			}
+//		}
+//
+//		if (count) {
+//			residualStats(std::string("Single So-Bogus"), residuals_single);
+//		}
+//
+//		Scalar maxWI = 0.;
+//		int maxWI_idx = -1;
+//		int maxWI_subidx = -1;
+//
+//		for (int i = 0; i < (int)m_steppers.size(); i++)
+//		{
+//			int subidx = -1;
+//			// const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
+//			const Scalar Wi = m_steppers[i]->maxCollisionImpulseNorm(subidx);
+//			//            maxWI = std::max(maxWI, Wi);
+//			if (Wi > maxWI) {
+//				maxWI = Wi;
+//				maxWI_idx = i;
+//				maxWI_subidx = subidx;
+//			}
+//		}
+//
+//		std::cout << "Max WI (Elastic): " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
+//	}
 
 	// DK: solve all collisions and then finalize (relax theta's and accept state update).
-	void StrandImplicitManager::step_solveCollisions(int total_num_substeps, int total_substep_id)
-	{
-		DebugStream(g_log, "") << " Solving ";
-		// m_contactProblemsStats.clear(); //DK: [stats]
-
-		// Dynamics solve
-
-		std::vector< Scalar > residuals(m_collidingGroups.size(), 1e+99);
-		std::vector< Scalar > newton_iters(m_collidingGroups.size(), 0.);
-		std::vector< Scalar > newton_residuals(m_strands.size(), -1.0);
-
-#pragma omp parallel for
-		for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
-		{
-			if (m_collidingGroups[i].first.size() <= maxObjForOuterParallelism)
-			{
-				int iters = 0;
-				residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, false, newton_residuals, iters, total_num_substeps, total_substep_id);
-				newton_iters[i] = iters;
-			}
-		}
-
-		for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
-		{
-			if (m_collidingGroups[i].first.size() > maxObjForOuterParallelism)
-			{
-				int iters = 0;
-				residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, false, newton_residuals, iters, total_num_substeps, total_substep_id);
-				newton_iters[i] = iters;
-			}
-		}
-
-		if (m_params.m_useAdditionalExternalFailSafe) {
-			// redo it again without mutual collisions
-#pragma omp parallel for
-			for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
-			{
-				if (m_collidingGroups[i].first.size() <= maxObjForOuterParallelism)
-				{
-					int iters = 0;
-					residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, true, newton_residuals, iters, total_num_substeps, total_substep_id);
-					newton_iters[i] = iters;
-				}
-			}
-
-			for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
-			{
-				if (m_collidingGroups[i].first.size() > maxObjForOuterParallelism)
-				{
-					int iters = 0;
-					residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, true, newton_residuals, iters, total_num_substeps, total_substep_id);
-					newton_iters[i] = iters;
-				}
-			}
-		}
-
-		if (m_collidingGroups.size()) {
-			residualStats(std::string("Colliding Group So-Bogus"), residuals);
-			if (m_params.m_useNonlinearContacts) {
-				residualStats(std::string("Colliding Group Newton Iters"), newton_iters);
-				residualStats(std::string("Colliding Group Newton Residual"), newton_residuals);
-			}
-		}
-
-		std::vector< int > all_done(m_strands.size(), false);
-
-		std::vector< Scalar > residuals_single(m_strands.size(), -1.);
-		std::vector< Scalar > newton_iters_single(m_strands.size(), -1.);
-		std::vector< Scalar > newton_residuals_single(m_strands.size(), -1.0);
-
-		int count = 0;
-#pragma omp parallel for reduction(+:count)
-		for (int i = 0; i < (int)m_strands.size(); i++)
-		{
-			if (m_collidingGroupsIdx[i] == -1 && needsExternalSolve(i))
-			{
-				int iters = 0;
-				residuals_single[i] = solveSingleObject(m_externalContacts, i, false, false, true, false, newton_residuals_single, iters, total_num_substeps, total_substep_id);
-				newton_iters_single[i] = iters;
-
-				count++;
-			}
-		}
-
-		if (count) {
-			residualStats(std::string("Single So-Bogus"), residuals_single);
-			if (m_params.m_useNonlinearContacts) {
-				residualStats(std::string("Single Newton Iters"), newton_iters_single);
-				residualStats(std::string("Single Newton Residual"), newton_residuals_single);
-			}
-		}
-
-		Scalar maxWI = 0.;
-		int maxWI_idx = -1;
-		int maxWI_subidx = -1;
-
-		for (int i = 0; i < (int)m_steppers.size(); i++)
-		{
-			int subidx = -1;
-			const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
-			//            maxWI = std::max(maxWI, Wi);
-			if (Wi > maxWI) {
-				maxWI = Wi;
-				maxWI_idx = i;
-				maxWI_subidx = subidx;
-			}
-		}
-
-		std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
-
-#pragma omp parallel for
-		for (int i = 0; i < (int)m_strands.size(); i++)
-		{
-			m_steppers[i]->finalize();
-		}
-	}
+//	void StrandImplicitManager::step_solveCollisions(int total_num_substeps, int total_substep_id)
+//	{
+//		DebugStream(g_log, "") << " Solving ";
+//		// m_contactProblemsStats.clear(); //DK: [stats]
+//
+//		// Dynamics solve
+//
+//		std::vector< Scalar > residuals(m_collidingGroups.size(), 1e+99);
+//		std::vector< Scalar > newton_iters(m_collidingGroups.size(), 0.);
+//		std::vector< Scalar > newton_residuals(m_strands.size(), -1.0);
+//
+//#pragma omp parallel for
+//		for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
+//		{
+//			if (m_collidingGroups[i].first.size() <= maxObjForOuterParallelism)
+//			{
+//				int iters = 0;
+//				residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, false, newton_residuals, iters, total_num_substeps, total_substep_id);
+//				newton_iters[i] = iters;
+//			}
+//		}
+//
+//		for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
+//		{
+//			if (m_collidingGroups[i].first.size() > maxObjForOuterParallelism)
+//			{
+//				int iters = 0;
+//				residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, false, newton_residuals, iters, total_num_substeps, total_substep_id);
+//				newton_iters[i] = iters;
+//			}
+//		}
+//
+//		if (m_params.m_useAdditionalExternalFailSafe) {
+//			// redo it again without mutual collisions
+//#pragma omp parallel for
+//			for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
+//			{
+//				if (m_collidingGroups[i].first.size() <= maxObjForOuterParallelism)
+//				{
+//					int iters = 0;
+//					residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, true, newton_residuals, iters, total_num_substeps, total_substep_id);
+//					newton_iters[i] = iters;
+//				}
+//			}
+//
+//			for (int i = 0; i < (int)m_collidingGroups.size(); ++i)
+//			{
+//				if (m_collidingGroups[i].first.size() > maxObjForOuterParallelism)
+//				{
+//					int iters = 0;
+//					residuals[i] = solveCollidingGroup(m_collidingGroups[i], m_externalContacts, false, false, true, true, newton_residuals, iters, total_num_substeps, total_substep_id);
+//					newton_iters[i] = iters;
+//				}
+//			}
+//		}
+//
+//		if (m_collidingGroups.size()) {
+//			residualStats(std::string("Colliding Group So-Bogus"), residuals);
+//			if (m_params.m_useNonlinearContacts) {
+//				residualStats(std::string("Colliding Group Newton Iters"), newton_iters);
+//				residualStats(std::string("Colliding Group Newton Residual"), newton_residuals);
+//			}
+//		}
+//
+//		std::vector< int > all_done(m_strands.size(), false);
+//
+//		std::vector< Scalar > residuals_single(m_strands.size(), -1.);
+//		std::vector< Scalar > newton_iters_single(m_strands.size(), -1.);
+//		std::vector< Scalar > newton_residuals_single(m_strands.size(), -1.0);
+//
+//		int count = 0;
+//#pragma omp parallel for reduction(+:count)
+//		for (int i = 0; i < (int)m_strands.size(); i++)
+//		{
+//			if (m_collidingGroupsIdx[i] == -1 && needsExternalSolve(i))
+//			{
+//				int iters = 0;
+//				residuals_single[i] = solveSingleObject(m_externalContacts, i, false, false, true, false, newton_residuals_single, iters, total_num_substeps, total_substep_id);
+//				newton_iters_single[i] = iters;
+//
+//				count++;
+//			}
+//		}
+//
+//		if (count) {
+//			residualStats(std::string("Single So-Bogus"), residuals_single);
+//			if (m_params.m_useNonlinearContacts) {
+//				residualStats(std::string("Single Newton Iters"), newton_iters_single);
+//				residualStats(std::string("Single Newton Residual"), newton_residuals_single);
+//			}
+//		}
+//
+//		Scalar maxWI = 0.;
+//		int maxWI_idx = -1;
+//		int maxWI_subidx = -1;
+//
+//		for (int i = 0; i < (int)m_steppers.size(); i++)
+//		{
+//			int subidx = -1;
+//			// const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
+//			const Scalar Wi = m_steppers[i]->maxCollisionImpulseNorm(subidx);
+//			//            maxWI = std::max(maxWI, Wi);
+//			if (Wi > maxWI) {
+//				maxWI = Wi;
+//				maxWI_idx = i;
+//				maxWI_subidx = subidx;
+//			}
+//		}
+//
+//		std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
+//
+//#pragma omp parallel for
+//		for (int i = 0; i < (int)m_strands.size(); i++)
+//		{
+//			m_steppers[i]->finalize();
+//		}
+//	}
 
 	bool StrandImplicitManager::needsExternalSolve(unsigned strandIdx) const
 	{
@@ -1587,7 +1579,7 @@ namespace strandsim
 	{
 		return !m_elasticExternalContacts[strandIdx].empty();
 	}
-
+	/*
 	bool StrandImplicitManager::assembleBogusFrictionProblem(CollidingGroup& collisionGroup,
 		bogus::MecheFrictionProblem& mecheProblem,
 		std::vector<ProximityCollisions>& externalContacts,
@@ -1643,7 +1635,7 @@ namespace strandsim
 		vels.resize(dofCount);
 		worldImpulses.resize(dofCount);
 		impulses.resize(nContacts * 3);
-
+		
 		worldImpulses.setZero();
 		vels.setZero();
 		impulses.setZero();
@@ -1717,13 +1709,9 @@ namespace strandsim
 				ObjA[collisionId] = (int)it->second;
 				ObjB[collisionId] = -1;
 				filters[collisionId] = m_steppers[c.objects.first.globalIndex]->getStrand().collisionParameters().m_impulseMaxNorm * m_dt;
-				yields[collisionId] = c.yield;
-				etas[collisionId] = c.eta;
-				powers[collisionId] = c.power;
 				H_0[collisionId] = c.objects.first.defGrad;
 				H_1[collisionId] = NULL;
 				impulses.segment<3>((collisionId) * 3) = c.force;
-				adhesions.segment<3>((collisionId) * 3) = Vec3x(herschelBulkleyProblem ? 0.0 : c.adhesion, 0., 0.);
 				colPointers[collisionId++] = &c;
 				// std::cout << "Col passed into SoBogus: " << std::endl;
 				// c.print( std::cout );
@@ -1746,13 +1734,10 @@ namespace strandsim
 				ObjA[collisionId + i] = oId1;
 				ObjB[collisionId + i] = oId2;
 				filters[collisionId + i] = m_steppers[collision.objects.first.globalIndex]->getStrand().collisionParameters().m_impulseMaxNorm * m_dt;
-				yields[collisionId + i] = collision.yield;
-				etas[collisionId + i] = collision.eta;
-				powers[collisionId + i] = collision.power;
+
 				H_0[collisionId + i] = collision.objects.first.defGrad;
 				H_1[collisionId + i] = collision.objects.second.defGrad;
 				impulses.segment<3>((collisionId + i) * 3) = collision.force;
-				adhesions.segment<3>((collisionId + i) * 3) = Vec3x(herschelBulkleyProblem ? 0.0 : collision.adhesion, 0., 0.);
 				colPointers[collisionId + i] = &collision;
 			}
 			assert(collisionId + collisionGroup.second.size() == nContacts);
@@ -1957,6 +1942,7 @@ namespace strandsim
 
 		return iter;
 	}
+	
 
 	Scalar StrandImplicitManager::solveBogusFrictionProblem(bogus::MecheFrictionProblem& mecheProblem,
 		const std::vector<unsigned>& globalIds, bool asFailSafe, bool herschelBulkleyProblem, bool doFrictionShrinking, VecXx& vels, VecXx& worldImpulses, VecXx& impulses, int& numSubSys)
@@ -1989,6 +1975,7 @@ namespace strandsim
 
 		return residual;
 	}
+	
 
 	Scalar StrandImplicitManager::solveSingleObject(std::vector<ProximityCollisions>& externalContacts, unsigned objectIdx, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id)
 	{
@@ -2046,7 +2033,7 @@ namespace strandsim
 		 - Then discard all mutual contacts, solve each strand with non-linear solver
 		 - Finally solve each strand with linear solver but with length constraints
 		 - If that is still failing, trust the ImplicitStepper's reprojection
-		 */
+		 
 
 		 // DK: failsafes here:
 		bool mustRetry = false;
@@ -2110,7 +2097,7 @@ namespace strandsim
 
 		return res;
 	}
-
+	*/
 	void StrandImplicitManager::updateParameters(const SimulationParameters& params)
 	{
 
@@ -2569,7 +2556,7 @@ namespace strandsim
 	void StrandImplicitManager::print(const StrandImplicitManager::SubStepTimings& timings) const
 	{
 		StreamT(g_log, "Timing") << "PR: " << timings.prepare << " HH: " << timings.hairHairCollisions
-			<< " DY: " << timings.dynamics << " MH: " << timings.meshHairCollisions << " PC: "
+			<< " DY: " << timings.dynamics << " CD: " << timings.meshHairCollisions << " PC: "
 			<< timings.processCollisions << " SC: " << timings.solve;
 
 		StreamT(g_log, "Timing") << "Total: " << timings.sum();
@@ -2595,16 +2582,16 @@ namespace strandsim
 			<< " Solve: " << stat.m_solveTime << " PostProc: " << stat.m_poseProcessTime
 			<< " Total: " << stat.sum();
 
-		/*for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
+		for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
 			std::cout << "Collision group " << i << " (strands: " << stat.m_collisionSize[i].first 
 				<< " contacts: " << stat.m_collisionSize[i].second << "):\n";
 			int iter = 0;
 			for (auto it = stat.m_solverStat[i].begin(); it != stat.m_solverStat[i].end(); ++it) {
 				std::cout << "\tIter: " << iter++ << " err: " << it->first << " time: " << it->second << '\n';
 			}
-		}*/
+		}
 	}
-
+	/*
 	template<typename StreamT>
 	void StrandImplicitManager::printNewtonSolverBreakdownTiming() const
 	{
@@ -2621,7 +2608,7 @@ namespace strandsim
 			<< ") store&fab: " << store << " solve: " << solve << " post: " << post 
 			<< " total: " << pre + RHS + LHS + store + solve + post;
 	}
-
+	*/
 
 	StrandImplicitManager::SubStepTimings operator+(const StrandImplicitManager::SubStepTimings& lhs,
 		const StrandImplicitManager::SubStepTimings& rhs)
@@ -2675,9 +2662,269 @@ namespace strandsim
 		}
 	}
 
+	void StrandImplicitManager::step()
+	{
+		SubStepTimings timings;
+
+		std::cout << "[Prepare Simulation Step]" << std::endl;
+		Timer timer("step", false);
+		step_prepare(m_dt);
+		timings.prepare = timer.elapsed();
+
+		std::cout << "[Step Dynamics]" << std::endl;
+		timer.restart();
+#pragma omp parallel for
+		for (int i = 0; i < m_steppers.size(); ++i) {
+			m_steppers[i]->initSolver(m_dt);
+		}
+
+		std::vector<bool> passed(m_strands.size(), false);
+
+		for (int i = 0; i < m_params.m_linearSolverIterations; ++i) {
+#pragma omp parallel for
+			for (int s = 0; s < m_steppers.size(); ++s) {
+				if (!passed[i])
+					passed[i] = m_steppers[s]->solveLinear();
+			}
+
+			timings.dynamics += timer.elapsed();
+
+			if (m_params.m_solveCollision) {
+				timer.restart();
+				step_prepareCollision();
+
+				step_continousCollisionDetection();
+				timings.meshHairCollisions += timer.elapsed();
+
+				timer.restart();
+				step_processCollisions();
+				timings.processCollisions += timer.elapsed();
+
+				if (m_statTotalCollisions > 0) {
+					timer.restart();
+					step_solveCollisions();
+					timings.solve += timer.elapsed();
+				}
+			}
+		}
+
+		m_timings.back().push_back(timings);
+
+		std::vector<Scalar> residuals(m_strands.size());
+		int numUnsolved = 0;
+		for (int i = 0; i < m_strands.size(); ++i) {
+			if (!passed[i]) ++numUnsolved;
+			residuals[i] = m_steppers[i]->getError();
+		}
+		std::cout << "Unsolved Strand: " << numUnsolved << std::endl;
+		residualStats("Linear Solver", residuals);
+
+		printMemStats();
+	}
+	
+	void StrandImplicitManager::step_continousCollisionDetection()
+	{
+		// now currentState = x_{t+1}, futureState = x_t
+		// must input false to add AABB and futureAABB
+		m_collisionDetector->buildBVH(false);
+
+		EdgeFaceIntersection::s_doProximityDetection = true;
+		// findCollision assume currentState = x_{t+1}
+		m_collisionDetector->findCollisions(!m_params.m_useCTRodRodCollisions, false, false);
+
+		doContinuousTimeDetection(m_dt);
+		doProximityMeshHairDetection(m_dt);
+
+		m_collisionDetector->clear();
+	}
+
+	void StrandImplicitManager::step_processCollisions()
+	{
+		/* prune and sort m_mutualContacts and m_externalContacts
+		 * compute deformation basis
+		 */
+
+		// mutual
+		ProximityCollisions mutualCollisions;
+		mutualCollisions.reserve(m_mutualContacts.size());
+
+		if (m_params.m_pruneSelfCollisions)
+		{
+			// here we put penalty collisions aside
+			pruneCollisions(m_mutualContacts, mutualCollisions, m_params.m_stochasticPruning, false);
+		}
+		else
+		{
+			for (int i = 0; i < (int)m_mutualContacts.size(); ++i)
+			{
+				const ProximityCollision& proxyCol = m_mutualContacts[i];
+				const unsigned s1 = proxyCol.objects.first.globalIndex;
+				const unsigned s2 = proxyCol.objects.second.globalIndex;
+
+				if (m_steppers[s1]->refusesMutualContacts() || m_steppers[s2]->refusesMutualContacts()) {
+					ProximityCollision copy(proxyCol);
+					makeExternalContact(copy, m_steppers[s2]->refusesMutualContacts());
+				}
+				else {
+					mutualCollisions.push_back(proxyCol);
+				}
+			}
+			if (m_params.m_useDeterministicSolver)
+			{
+				std::sort(mutualCollisions.begin(), mutualCollisions.end());
+			}
+		}
+
+		m_mutualContacts = mutualCollisions;
+		m_statMutualCollisions = m_mutualContacts.size();
+
+#pragma omp parallel for
+		for (int i = 0; i < m_mutualContacts.size(); ++i) {
+			setupDeformationBasis(m_mutualContacts[i]);
+		}
+
+		// external
+		if (m_params.m_pruneExternalCollisions) {
+			pruneExternalCollisions(m_externalContacts);
+		}
+
+#pragma omp parallel for
+		for (int i = 0; i < (int)m_strands.size(); ++i) {
+			if (m_params.m_useDeterministicSolver && !m_params.m_pruneExternalCollisions) {
+				std::sort(m_externalContacts[i].begin(), m_externalContacts[i].end());
+			}
+			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
+				setupDeformationBasis(m_externalContacts[i][j]);
+				++m_statExternalContacts;
+			}
+		}
+		m_statTotalCollisions = m_statMutualCollisions + m_statExternalContacts;
+
+		InfoStream(g_log, "Contact") << "external: " << m_statExternalContacts
+			<< " mutual: " << m_statMutualCollisions;
+	}
+
+	void StrandImplicitManager::step_solveCollisions()
+	{
+		std::vector<ProximityCollision*> colPointers(m_statTotalCollisions);
+		std::vector<Scalar> residuals(m_statTotalCollisions);
+
+#pragma omp parallel for
+		for (int i = 0; i < m_mutualContacts.size(); ++i) {
+			ProximityCollision& collision = m_mutualContacts[i];
+			LinearStepper& first_stepper = *m_steppers[collision.objects.first.globalIndex];
+			LinearStepper& second_stepper = *m_steppers[collision.objects.second.globalIndex];
+			int first_vert = collision.objects.first.vertex;
+			int second_vert = collision.objects.second.vertex;
+
+			// Assemble
+			Mat14x M = Mat14x::Zero();
+			Mat7x first_M = first_stepper.getA().diagBlock<7>(4 * first_vert);
+			Mat7x second_M = second_stepper.getA().diagBlock<7>(4 * second_vert);;
+			M.block<7, 7>(0, 0) = first_M;
+			M.block<7, 7>(7, 7) = second_M;
+
+			Mat3x14x H = Mat3x14x::Zero();
+			H.block<3, 7>(0, 0) = MatXx(*collision.objects.first.defGrad);
+			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
+
+			Vec14x f;
+			if (m_params.m_freezeNearbyVertex) {
+				f.segment<7>(0) = first_stepper.getb().segment<7>(4 * first_vert);
+				f.segment<7>(7) = second_stepper.getb().segment<7>(4 * second_vert);
+			}
+			else {
+				f.segment<7>(0) = first_stepper.getExactResidual().segment<7>(4 * first_vert)
+					+ first_M * first_stepper.newVelocities().segment<7>(4 * first_vert);
+				f.segment<7>(7) = second_stepper.getExactResidual().segment<7>(4 * second_vert)
+					+ second_M * second_stepper.newVelocities().segment<7>(4 * second_vert);
+			}
+
+			Vec3x uf = Vec3x::Zero();
+
+			Mat3x E = collision.transformationMatrix;
+
+			Scalar mu = collision.mu;
+
+			bogus::MutualContactSolver collision_solver(M, H, f, uf, E, mu);
+
+			// Solve
+			Vec14x vel, impulse;
+			Scalar res = collision_solver.solve(collision.force, vel, impulse);
+
+			// Store velocity and impulse
+			first_stepper.accumulateCollision(first_vert, vel.segment<7>(0), impulse.segment<7>(0));
+			second_stepper.accumulateCollision(second_vert, vel.segment<7>(7), impulse.segment<7>(7));
+
+			residuals[i] = res;
+			colPointers[i] = &collision;
+		}
+
+		int col_idx = m_statMutualCollisions;
+#pragma omp parallel for
+		for (int i = 0; i < m_strands.size(); ++i) {
+			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
+				ProximityCollision& collision = m_externalContacts[i][j];
+				LinearStepper& stepper = *m_steppers[i];
+				int vert = collision.objects.first.vertex;
+
+				Mat7x M = stepper.getA().diagBlock<7>(4 * vert);
+				Mat3x7x H = MatXx(*collision.objects.first.defGrad);
+				Vec3x uf = -collision.objects.second.freeVel;
+				Mat3x E = collision.transformationMatrix;
+				Scalar mu = collision.mu;
+
+				Vec7x f;
+				if (m_params.m_freezeNearbyVertex) {
+					f = stepper.getb().segment<7>(4 * vert);
+				}
+				else {
+					f = stepper.getExactResidual().segment<7>(4 * vert) + M * stepper.newVelocities().segment<7>(4 * vert);
+				}
+
+				bogus::ExternalContactSolver solver(M, H, f, uf, E, mu);
+
+				Vec7x vel, impulse;
+				residuals[col_idx] = solver.solve(collision.force, vel, impulse);
+				stepper.accumulateCollision(vert, vel, impulse);
+				colPointers[col_idx++] = &collision;
+			}
+		}
+
+		// update current states
+		if (m_params.m_registerVelocity) {
+#pragma omp parallel for 
+			for (int i = 0; i < m_steppers.size(); ++i) {
+				m_steppers[i]->addCollisionVelocity();
+			}
+		}
+
+		// update collision database
+		if (!m_params.m_simulationManager_limitedMemory) {
+			for (int i = 0; i < colPointers.size(); ++i) {
+				m_collisionDatabase.insert(*colPointers[i]);
+			}
+		}
+		
+		//// output residual info
+		//Scalar max_r = 0.;
+		//int sid = -1, vid = -1;
+		//for (auto cp : colPointers) {
+		//	Scalar r_norm = cp->force.norm();
+		//	if (r_norm > max_r) {
+		//		max_r = r_norm;
+		//		sid = cp->objects.first.globalIndex;
+		//		vid = cp->objects.first.vertex;
+		//	}
+		//}
+		//residualStats("Collision Solver", residuals);
+		//std::cout << "Max Impulse: " << max_r << " @ (" << sid << ", " << vid << ")\n";
+	
+		for (int i = 0; i < residuals.size(); ++i) {
+			std::cout << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
+				<< colPointers[i]->objects.first.vertex << ") (" << colPointers[i]->objects.second.globalIndex
+				<< ", " << colPointers[i]->objects.second.vertex << ") res = " << residuals[i] << std::endl;
+		}
+	}
+
 } // namespace strandsim
-
-
-
-
-

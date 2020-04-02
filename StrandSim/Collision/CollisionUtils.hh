@@ -44,9 +44,8 @@ namespace strandsim
     Scalar getEllipticExternalCollisionOffset( const ElasticStrand& strand, const unsigned edge,
                                               const Vec3x& normal );
     
-    bool analyseRoughRodRodCollision( const ProximityCollisionDatabase& database, const ElasticStrand* sP, const ElasticStrand* sQ, const int iP,
-                                     const int iQ, const Scalar& contactAngle, Vec3x &normalQtoP, Scalar &s, Scalar &t, Scalar &distance, Scalar& adhesion, Scalar& yield, Scalar& eta, Scalar& power, Scalar& relative_vel, bool& solidTouching );
-    
+    bool analyseRoughRodRodCollision( const ElasticStrand* sP, const ElasticStrand* sQ, const int iP, const int iQ,
+                                      Vec3x &normalQtoP, Scalar &s, Scalar &t, Scalar &distance, Scalar& relative_vel, bool& solidTouching );
 }
 
 #endif

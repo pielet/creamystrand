@@ -42,6 +42,7 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 //template<typename Derived> std::ostream&
 //operator<<( std::ostream& os, const Eigen::MatrixBase<Derived>& v )
@@ -70,6 +71,7 @@ namespace strandsim
 	typedef unsigned long long uint64;
 	typedef long long int64;
 	
+	typedef Eigen::Array<Scalar, Eigen::Dynamic, 1> ArrayXx;
 	typedef Eigen::Matrix<Scalar, 2, 1> Vec2x; ///< 2d scalar vector
 	typedef Eigen::Matrix<Scalar, 3, 1> Vec3x; ///< 3d scalar vector
 	typedef Eigen::Matrix<Scalar, 4, 1> Vec4x; ///< 4d scalar vector
@@ -78,6 +80,7 @@ namespace strandsim
 	typedef Eigen::Matrix<Scalar, 7, 1> Vec7x; ///< 4d scalar vector
 	typedef Eigen::Matrix<Scalar, 8, 1> Vec8x; ///< 4d scalar vector
 	typedef Eigen::Matrix<Scalar, 9, 1> Vec9x; ///< 4d scalar vector
+	typedef Eigen::Matrix<Scalar, 14, 1> Vec14x;
 	typedef Eigen::Matrix<Scalar, 11, 1> Vec11x; ///< 11d scalar vector (stencil for local forces)
 	typedef Eigen::Matrix<Scalar, 27, 2> Mat27x2x; ///< 27x2d scalar vector (stencil for local forces)
 	typedef Eigen::Matrix<Scalar, 27, 3> Mat27x3x; ///< 27x3d scalar vector (stencil for local forces)
@@ -174,7 +177,11 @@ namespace strandsim
 	typedef Eigen::Matrix<Scalar, 3, 3> Mat3x; ///< 3x3 scalar matrix
 	typedef Eigen::Matrix<Scalar, 4, 4> Mat4x; ///< 4x4 scalar matrix
 	typedef Eigen::Matrix<Scalar, 6, 6> Mat6x; ///< 4x4 scalar matrix
+	typedef Eigen::Matrix<Scalar, 7, 7> Mat7x;
 	typedef Eigen::Matrix<Scalar, 11, 11> Mat11x; ///< 11x11 scalar matrix (stencil for local forces)
+	typedef Eigen::Matrix<Scalar, 14, 14> Mat14x;
+	typedef Eigen::Matrix<Scalar, 3, 7> Mat3x7x;
+	typedef Eigen::Matrix<Scalar, 3, 14> Mat3x14x;
 	typedef std::vector<Mat11x, Eigen::aligned_allocator<Mat11x> > Mat11xArray; ///< an array of 11d scalar matrices
 	typedef std::pair<Mat11x, Mat11x> Mat11xPair;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatXx; ///< arbitrary dimension scalar matrix
@@ -190,6 +197,7 @@ namespace strandsim
     
 	typedef Eigen::Quaternion<Scalar> Quaternion;
 	
+	typedef Eigen::Triplet<Scalar> Tripletx;
 	typedef Eigen::SparseMatrix< Scalar, Eigen::ColMajor, int > SparseMatx ;
 	typedef Eigen::SparseMatrix< Scalar, Eigen::RowMajor, int > SparseRowMatx ;
 	

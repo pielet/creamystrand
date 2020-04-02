@@ -10,6 +10,7 @@
 #define BANDMATRIX_HH_
 
 #include "BandMatrixFwd.hh"
+#include "Definitions.hh"
 
 namespace strandsim
 {
@@ -32,6 +33,46 @@ public:
     {
     }
 
+    void convertToSparseMat( SparseMatx& mat ) const
+    {
+        std::vector<Tripletx> triple_list;
+        triple_list.reserve(m_size);
+
+        for (int i = 0; i < kl + ku + 1; ++i) {
+            int lower = std::max(ku - i, 0);
+            int upper = std::min(m_cols + ku - i, m_cols);
+            for (int j = lower; j < upper; ++j) {
+                triple_list.push_back(Tripletx(i + j - ku, j, m_data[i * m_cols + j]));
+            }
+        }
+
+        triple_list.erase(std::remove_if(triple_list.begin(), triple_list.end(), [&](const Tripletx& t) {
+            return  (t.value() == 0.0);
+        }), triple_list.end());
+
+        mat.setFromTriplets(triple_list.begin(), triple_list.end());
+    }
+
+    template <int rows>
+    const Eigen::Matrix<Scalar, rows, rows> diagBlock(int start_idx) const
+    {
+        Eigen::Matrix<Scalar, rows, rows> block;
+        block.setZero();
+
+        int start_i = std::max(0, ku - rows + 1);
+        int end_i = std::min(ku + kl + 1, ku + rows);
+
+        for (int i = start_i; i < end_i; ++i) {
+            int start_j = std::min(start_idx + ku + i, start_idx);
+            int end_j = std::min(start_idx + rows + ku - i, start_idx + rows);
+            for (int j = start_j; j < end_j; ++j) {
+                block(i + j - ku - start_idx, j - start_idx) = m_data[i * m_cols + j];
+            }
+        }
+
+        return block;
+    }
+
     void resize( const IndexType rows, const IndexType cols )
     {
         m_rows = rows;
@@ -42,7 +83,7 @@ public:
 
     const ScalarT operator()( const IndexType i, const IndexType j ) const
     {
-        if ( !indicesValid( i, j ) )
+        if (!indicesValid(i, j))
             return 0.0;
 
         return m_data[( ku + i - j ) * m_cols + j];
@@ -348,18 +389,18 @@ private:
 template<typename ScalarT, IndexType kl, IndexType ku>
 std::ostream& operator<<( std::ostream& os, const BandMatrix<ScalarT, kl, ku>& M )
 {
-    os << '{';
+    os << '[';
     for ( int i = 0; i < M.rows() - 1; i++ )
     {
-        os << '{';
+        os << '[';
         for ( int j = 0; j < M.cols() - 1; j++ )
             os << M( i, j ) << ", ";
-        os << M( i, M.cols() - 1 ) << "}, \n";
+        os << M( i, M.cols() - 1 ) << "], \n";
     }
-    os << '{';
+    os << '[';
     for ( int j = 0; j < M.cols() - 1; j++ )
         os << M( M.rows() - 1, j ) << ", ";
-    os << M( M.rows() - 1, M.cols() - 1 ) << "}} \n";
+    os << M( M.rows() - 1, M.cols() - 1 ) << "]] \n";
 
     return os;
 }

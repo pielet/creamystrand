@@ -46,15 +46,8 @@ namespace strandsim
             }
         };
         
-        ProximityCollision()
-        : m_originalCTCollision( NULL )
-        , mu(0.)
-        , adhesion(0.)
-        , yield(0.)
-        , eta(0. )
-        , power(1. )
-        , distance(0.)
-        , relative_vel(0.)
+        ProximityCollision(): 
+            m_originalCTCollision( NULL ), mu(0.), distance(0.), relative_vel(0.)
         {
         }
         
@@ -62,10 +55,6 @@ namespace strandsim
         Vec3x normal;
         Vec3x force;
         Scalar mu;
-        Scalar adhesion;
-        Scalar yield;
-        Scalar eta;
-        Scalar power;
         Scalar distance ;
         Scalar relative_vel;
         bool do_soc_solve;

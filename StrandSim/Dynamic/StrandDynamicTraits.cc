@@ -40,7 +40,6 @@ namespace strandsim {
 	m_scriptingController( NULL ), //
 	m_futureJacobianUpToDate( false ), //
 	m_futureForcesUpToDate( false ), //
-	m_DOFmassesUpToDate( false ),
 	m_flowMassesUpToDate( false ),
 	m_renderer( NULL )
 	{
@@ -76,18 +75,14 @@ namespace strandsim {
 	
 	void StrandDynamicTraits::computeDOFMasses()
 	{
-		if( m_DOFmassesUpToDate ) return;
-		
 		for( IndexType vtx = 0 ; vtx < m_strand.m_numVertices ; ++vtx )
 		{
 			m_DOFmasses[4 * vtx + 0] = m_DOFmasses[4 * vtx + 1] = m_DOFmasses[4 * vtx + 2] =
-			m_strand.m_vertexMasses[vtx] + m_strand.getFutureSurfaceFlowMass(vtx);
+			m_strand.m_vertexMasses[vtx] ;
 			
 			if ( vtx < m_strand.m_numEdges )
 				m_DOFmasses[4 * vtx + 3] = m_strand.getEdgeInertia( vtx );
 		}
-		
-		m_DOFmassesUpToDate = true ;
 	}
 	
 	void StrandDynamicTraits::computeFlowMasses()
@@ -96,7 +91,8 @@ namespace strandsim {
 		
 		for( IndexType edge = 0; edge < m_strand.m_numEdges; ++edge )
 		{
-			m_flowMasses[edge] = m_strand.getFutureSurfaceFlowMassAtEdge(edge);
+			//m_flowMasses[edge] = m_strand.getFutureSurfaceFlowMassAtEdge(edge);
+            m_flowMasses[edge] = 0;
 		}
 		
 		m_flowMassesUpToDate = true;

@@ -43,10 +43,6 @@ public:
     virtual const FaceProxy* face() const = 0;
 
     Scalar faceFrictionCoefficient() const;
-    virtual Scalar faceAdhesionForce() const = 0;
-    virtual Scalar faceYield() const = 0;
-    virtual Scalar faceEta() const = 0;
-    virtual Scalar facePower() const = 0;
     virtual bool doSOCSolve() const = 0;
 
     Scalar m_u, m_v, m_w;

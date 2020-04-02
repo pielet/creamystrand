@@ -15,8 +15,18 @@ namespace strandsim
 class StepperBase
 {
 public:
-    StepperBase() {}
+    StepperBase(ElasticStrand& strand): m_strand(strand) {}
     virtual ~StepperBase() {}
+
+    VecXx& velocities() { return m_velocities; }
+    const VecXx& velocities() const { return m_velocities; }
+
+    ElasticStrand& getStrand() { return m_strand; }
+    const ElasticStrand& getStrand() const { return m_strand; }
+
+protected:
+    VecXx m_velocities;
+    ElasticStrand& m_strand;
 };
 
 }

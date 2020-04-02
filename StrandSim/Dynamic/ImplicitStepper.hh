@@ -328,7 +328,7 @@ private:
     //! Computes linearized dynamics
 
 
-	void solveLinearFlow();
+	//void solveLinearFlow();
 	
 	void updateFlowData();
 

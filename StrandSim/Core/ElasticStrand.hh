@@ -41,7 +41,7 @@ namespace strandsim
     class StrandDynamicTraits;
     class DOFScriptingController;
     class StrandImplicitManager;
-    class ImplicitStepper;
+    class LinearStepper;
     
     struct ProximityCollision;
     
@@ -292,6 +292,11 @@ namespace strandsim
         Vec3x getFutureVertex( IndexType vtx ) const
         {
             return m_futureState->getVertex( vtx );
+        }
+
+        Scalar getFutureTheta(IndexType vtx) const
+        {
+            return m_futureState->getTheta(vtx);
         }
         
         const VecXx& getFutureDegreesOfFreedom() const
@@ -556,15 +561,8 @@ namespace strandsim
             const Scalar a = m_parameters.getRadiusA( i, getNumVertices() );
             const Scalar b = m_parameters.getRadiusB( i, getNumVertices() );
             const Scalar mass0 = m_parameters.getDensity() * M_PI * a * b * m_restLengths[i];
-            const Scalar mass1 = (getFutureSurfaceFlowMass(i) + getFutureSurfaceFlowMass(i + 1)) * 0.5;
             
-            const Scalar ha00 = a + getFutureFlowHeight(i);
-            const Scalar ha01 = b + getFutureFlowHeight(i);
-            const Scalar ha10 = a + getFutureFlowHeight(i + 1);
-            const Scalar ha11 = b + getFutureFlowHeight(i + 1);
-            
-            return 0.25 * ( mass0 * ( square( a ) + square( b ) ) +
-                           mass1 * ( square( a ) + square( b ) + ( square(ha00) + square(ha01) + square(ha10) + square(ha11) ) * 0.5) );
+            return 0.25 * ( mass0 * ( square( a ) + square( b ) ) );
         }
         
         Scalar getCurvilinearAbscissa( int vtx, Scalar localAbscissa ) const;
@@ -718,11 +716,11 @@ namespace strandsim
             return m_parent;
         }
         
-        void setStepper(ImplicitStepper* stepper) {
+        void setStepper(LinearStepper* stepper) {
             m_stepper = stepper;
         }
         
-        ImplicitStepper* getStepper() const
+        LinearStepper* getStepper() const
         {
             return m_stepper;
         }
@@ -835,7 +833,7 @@ namespace strandsim
         StrandDynamicTraits* m_dynamics;
         // Parent to access other strands
         StrandImplicitManager* m_parent;
-        ImplicitStepper* m_stepper;
+        LinearStepper* m_stepper;
         
         // Rest shape
         std::vector<Scalar> m_restLengths; // The following four members depend on m_restLengths, which is why updateEverythingThatDependsOnRestLengths() must be called

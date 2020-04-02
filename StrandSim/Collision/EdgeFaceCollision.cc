@@ -100,11 +100,6 @@ bool EdgeFaceCollision::analyse()
 
     bool shouldAddProx = false ;
     
-    m_adhesive_force = 0.;
-    m_yield = 0.;
-    m_eta = 0.;
-    m_power = 1.;
-    
     if( m_onBoundary )
     {
         const short thirdApex = 3 - m_firstApex - m_secondApex ;
@@ -171,30 +166,9 @@ bool EdgeFaceCollision::analyse()
     const Scalar tang_rel = sqrt(std::max(0., d_disp.squaredNorm() - disp_rel * disp_rel));
 
     const Scalar colRadius = m_firstStrand->collisionParameters().externalCollisionsRadius( m_firstVertex, M_PI / 2 );
-	Scalar extraRadius;
-    
-    const Scalar contactAngle = m_firstStrand->getContactAngle();
-    
-    extraRadius = colRadius + (1. + 0.5 * contactAngle) * sqrt(m_firstStrand->getCurrentFlowDOFArea(m_firstVertex));
-
-    if ( extraRadius < 0. )
-        return false;
-
-//    Vec3x prox ;
-//    if( shouldAddProx )
-//    {
-//        prox = extraRadius * m_normal;
-//        pq0 += prox;
-//        pq1 += prox;
-//        dq0 += prox;
-//        dq1 += prox;
-//    }
-
-    // TODO: tetrahedron test?
 
     unsigned num_times ;
-    getCoplanarityTimes( pp0 - dp0, pp1 - dp1, pq0 - dq0, pq1 - dq1, pp0, pp1, pq0, pq1, times,
-            NULL, num_times );
+    getCoplanarityTimes( pp0 - dp0, pp1 - dp1, pq0 - dq0, pq1 - dq1, pp0, pp1, pq0, pq1, times, NULL, num_times );
 
     m_do_soc_solve = false;
     // Loop over the coplanarity times until we find a bona fide collision
@@ -240,18 +214,12 @@ bool EdgeFaceCollision::analyse()
         }
 
         // If, when they are coplanar, the objects are sufficiently close, register a collision
-        if ( sqrdist < extraRadius * extraRadius )
+        if ( sqrdist < colRadius * colRadius )
         {
-            const Scalar Ac = (m_firstStrand->getCurrentFlowDOFArea( m_firstVertex ) + m_firstStrand->getCurrentFlowDOFArea( m_firstVertex + 1 )) * 0.5;
-            
-            if(Ac < 1e-12 || disp_rel < -1e-7) {
-                m_do_soc_solve = sqrdist < colRadius * colRadius;
-            } else {
-                m_do_soc_solve = true;
-            }
+              
+            m_do_soc_solve = true;
 
             m_time = times[j];
-
 
             // Compute a collision normal at the time of the collision. For a first attempt, take the cross product of the edges.
 //            m_normal = ( q1col - q0col ).cross( p1col - p0col );
@@ -281,7 +249,6 @@ bool EdgeFaceCollision::analyse()
 
             if ( m_onBoundary )
             {
-//                std::cout << m_firstVertex << " / " << perp << " / " << faceNormal << " " << m_normal << std::endl ;
                 if( perp < 0 )
                 {
                     if( perp < -.9 ) continue ; // Collision normal opposed to boundary normal, discard
@@ -289,7 +256,6 @@ bool EdgeFaceCollision::analyse()
                     m_normal -= m_normal.dot( faceNormal ) * faceNormal ;
                     m_normal = m_normal.normalized() ;
                 }
-//                m_meshDisplacement += extraRadius * m_normal ;
 
             } else if( fnsign ) {
                 if( perp * fnsign < 0. )
@@ -313,53 +279,6 @@ bool EdgeFaceCollision::analyse()
 
                 m_face->setNormalSign( fnsign, m_time, *m_firstStrand, m_firstVertex );
 
-                //                m_meshDisplacement += extraRadius * m_normal ;
-
-            }
-
-//            if( shouldAddProx )
-//            {
-//                const Scalar extraRadius = prox.dot( m_normal ) ;
-//                const Scalar belowRadius = m_offset.dot( m_normal ) + extraRadius ;
-//                if( belowRadius > 0. && extraRadius > 0. )
-//                {
-//                    // We're already closer than the collision radius, let proximity handle that
-//                    m_meshDisplacement -= prox ;
-//                    m_offset.setZero() ;
-//                }
-//            }
-
-
-            if(Ac < 1e-12) {
-                m_adhesive_force = 0.;
-                m_yield = 0.;
-                m_eta = 0.;
-                m_power = 1.;
-            } else {
-                const Scalar r = sqrt((m_firstStrand->getRadiusA( m_firstVertex ) * m_firstStrand->getRadiusB( m_firstVertex ) + m_firstStrand->getRadiusA( m_firstVertex + 1 ) * m_firstStrand->getRadiusB( m_firstVertex + 1 )) * 0.5);
-				
-				VecXx color = (m_firstStrand->getFlowNewComponents( m_firstVertex ) + m_firstStrand->getFlowNewComponents( m_firstVertex + 1 ));
-				make_gibbs_simplex(color);
-                
-                const Scalar eta = m_firstStrand->getFlowConsistencyIndex(color);
-                const Scalar n = m_firstStrand->getFlowBehaviorIndex(color);
-                const Scalar tilde_sigma_Y = m_firstStrand->getFlowYieldStress(color) * 0.8164965809;
-                
-                const Scalar relative_vel = disp_rel / m_firstStrand->getDt();
-                const Scalar tangential_vel = tang_rel / m_firstStrand->getDt();
-                
-                const Scalar diff_vel = sgn(relative_vel) * pow(fabs(relative_vel) / std::max(r, extraRadius), n);
-                const Scalar tang_vel = pow(tangential_vel / std::max(r, extraRadius), n);
-                
-                const Scalar width = 0.75 * M_PI * r;
-                const Scalar elastic_force = width * ( eta * diff_vel + tilde_sigma_Y );
-                
-                const Scalar coeff = (p0col - p1col).norm();
-                m_adhesive_force = (m_firstStrand->collisionParameters().adhesionForcePlanar(Ac, extraRadius, color) + elastic_force) * coeff;
-                
-                m_yield = width * tilde_sigma_Y * coeff;
-                m_eta = width * eta * coeff / pow( std::max(r, extraRadius), n );
-                m_power = n;
             }
             
             return true;

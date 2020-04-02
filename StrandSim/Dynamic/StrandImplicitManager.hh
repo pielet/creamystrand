@@ -167,7 +167,8 @@ public:
     void execute(int total_num_substeps, int total_substep_id, const Scalar total_substep_dt);
 
     //! Performs a simulation substep
-    void step(int total_num_substeps, int total_substep_id);
+   void step(int total_num_substeps, int total_substep_id);
+    void step();
     
     Scalar getCFL() const;
 
@@ -222,10 +223,11 @@ public:
 			return m_fluidScriptingControllers[idx];
 		}
 	}
+
 private:
     void printMemStats();
-    template<typename StreamT>
-    void printNewtonSolverBreakdownTiming() const;
+    //template<typename StreamT>
+    //void printNewtonSolverBreakdownTiming() const;
     template<typename StreamT>
     void print( const SubStepTimings& timings ) const;
     template<typename StreamT>
@@ -236,9 +238,15 @@ private:
     //! Prepares the substep, executes the externals objects controllers
     void step_prepare( Scalar dt );
     //! Solves the unconstrained dynamics of each strand
-    void step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
+    /*void step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
+    void step_dynamics_cg(Scalar dt);*/
+    void step_prepareCollision();
+    void step_continousCollisionDetection();
+    void step_processCollisions();
+    void step_solveCollisions();
+
     //! Rewind and redo the unconstrained dynamics of each strand (possibly with new forces)
-    void redo_step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
+    //void redo_step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
     //! Analyses the current collisions and compute the colliding groups
     void step_processCollisions( Scalar dt );
     
@@ -256,29 +264,29 @@ private:
     /*! Will be true if the strand is subject to at least one contact or hard constraint */
     bool needsElasticExternalSolve( unsigned strandIdx ) const;
 
-    //! Setup the contacts and constraints for a colliding group
-    bool assembleBogusFrictionProblem( CollidingGroup& collisionGroup,
-									  bogus::MecheFrictionProblem& mecheProblem,
-                                      std::vector<ProximityCollisions>& externalContacts,
-									  std::vector<unsigned> &globalIds,
-									  std::vector<ProximityCollision*> &colPointers,
-									  VecXx& vels, VecXx& worldImpulses,
-                                      VecXx& impulses, VecXx& adhesions, VecXx& filters,
-									  VecXu& startDofs, VecXu& nDofs, int& numSubSys, bool herschelBulkleyProblem, bool ignoreMutualCollision );
-    //! Cleanup a friction problem and updates the strands with the new velocities if \p accept is true
-    int postProcessBogusFrictionProblem( bool updateVelocity, CollidingGroup& collisionGroup,
-            const bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
-            const std::vector<ProximityCollision*> &colPointers, VecXx& vels, VecXx& worldImpulses, VecXx& impulses,
-                                         VecXu& startDofs, VecXu& nDofs, std::vector< Scalar >& newton_residuals, int total_num_substeps, int total_substep_id  );
-    //! Proper solving of the MecheFrictionProblem
-    Scalar solveBogusFrictionProblem( bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
-            bool asFailSafe, bool herschelBulkleyProblem, bool doFrictionShrinking, VecXx& vels, VecXx& worldImpulses, VecXx& impulses, int& numSubSys );
+    ////! Setup the contacts and constraints for a colliding group
+    //bool assembleBogusFrictionProblem( CollidingGroup& collisionGroup,
+				//					  bogus::MecheFrictionProblem& mecheProblem,
+    //                                  std::vector<ProximityCollisions>& externalContacts,
+				//					  std::vector<unsigned> &globalIds,
+				//					  std::vector<ProximityCollision*> &colPointers,
+				//					  VecXx& vels, VecXx& worldImpulses,
+    //                                  VecXx& impulses, VecXx& adhesions, VecXx& filters,
+				//					  VecXu& startDofs, VecXu& nDofs, int& numSubSys, bool herschelBulkleyProblem, bool ignoreMutualCollision );
+    ////! Cleanup a friction problem and updates the strands with the new velocities if \p accept is true
+    //int postProcessBogusFrictionProblem( bool updateVelocity, CollidingGroup& collisionGroup,
+    //        const bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
+    //        const std::vector<ProximityCollision*> &colPointers, VecXx& vels, VecXx& worldImpulses, VecXx& impulses,
+    //                                     VecXu& startDofs, VecXu& nDofs, std::vector< Scalar >& newton_residuals, int total_num_substeps, int total_substep_id  );
+    ////! Proper solving of the MecheFrictionProblem
+    //Scalar solveBogusFrictionProblem( bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
+    //        bool asFailSafe, bool herschelBulkleyProblem, bool doFrictionShrinking, VecXx& vels, VecXx& worldImpulses, VecXx& impulses, int& numSubSys );
 
 
     //! Solve the contacts and constraints on a single object
-    Scalar solveSingleObject( std::vector<ProximityCollisions>& externalContacts, const unsigned objectIdx, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
+    //Scalar solveSingleObject( std::vector<ProximityCollisions>& externalContacts, const unsigned objectIdx, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
     //! Solve the contacts and constraints on a colliding group
-    Scalar solveCollidingGroup( CollidingGroup &cg, std::vector<ProximityCollisions>& externalContacts, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
+    //Scalar solveCollidingGroup( CollidingGroup &cg, std::vector<ProximityCollisions>& externalContacts, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
     
     void residualStats( const std::string& name, const std::vector< Scalar >& residuals );
 
@@ -326,13 +334,11 @@ private:
 
     const std::vector<ElasticStrand*>& m_strands;
     const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;
-    std::vector<ImplicitStepper*> m_steppers;
+    std::vector<LinearStepper*> m_steppers;
     const std::vector< std::shared_ptr<MeshScriptingController> >& m_meshScriptingControllers;
     const std::vector< std::shared_ptr<FluidScriptingController> >& m_fluidScriptingControllers;
-    std::vector<std::shared_ptr<LevelSetForce> > m_levelSetForces;
-
     const std::vector<ConstraintScriptingController*>& m_constraintScriptingControllers;
-//    std::vector<TriangularMesh*> m_triangularMeshes;
+
     std::vector<ElementProxy*> m_elementProxies; //!< List of all proxies that should be inserted in the BVH
     CollisionDetector* m_collisionDetector;        //!< BVH-based collision detector
 
@@ -352,8 +358,6 @@ private:
     //! Index of colliding group in which each strand should be. Can be -1.
     std::vector<int> m_collidingGroupsIdx;
     std::vector<int> m_elasticCollidingGroupsIdx;
-    //! Set of strands that share a common bilat constraint
-    std::vector<std::set<unsigned> > m_commonBilateralConstraints;
 
     //!< Spatial Hash Map for hair/hair proximity collision detetection
     typedef SpatialHashMap<ElasticStrand, unsigned, true> SpatialHashMapT;
