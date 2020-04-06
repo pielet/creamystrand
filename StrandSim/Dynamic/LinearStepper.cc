@@ -45,11 +45,11 @@ namespace strandsim
 		// compute b
 		m_b = m_velocities;
 		m_dynamics.multiplyByMassMatrix(m_b);
-		m_dynamics.computeFutureForces(true, false, false);
+		m_dynamics.computeFutureForces(true, true, true, false, false);
 		m_b += m_strand.getFutureTotalForces() * dt;
 
 		// compute A
-		m_dynamics.computeFutureJacobian(true, false, false);
+		m_dynamics.computeFutureJacobian(true, true, true, false, false);
 		m_A = m_strand.getTotalJacobian();
 		m_A *= dt * dt;
 		m_dynamics.addMassMatrixTo(m_A);
@@ -119,11 +119,13 @@ namespace strandsim
 
 	void LinearStepper::JacobiStep(VecXx b)
 	{
+		Scalar omega = m_params.m_relaxationFactor;
+
 		VecXx res = VecXx::Zero(m_velocities.size());
 		m_A.multiply(res, 1., m_velocities);
 		res = b - res;
 
-		m_newVelocities = (res.array() / m_A.diagonal().array()).matrix() + m_velocities;
+		m_newVelocities = (res.array() / m_A.diagonal().array() / omega).matrix() + m_velocities;
 
 		res.setZero();
 		m_A.multiply(res, 1., m_newVelocities);

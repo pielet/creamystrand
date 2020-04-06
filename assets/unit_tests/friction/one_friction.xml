@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
 
-  <duration time="5.0"/>
+  <duration time="4.0"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -44,15 +44,16 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <solveCollision value="0"/>
+    <solveCollision value="1"/>
     <collisionSolverTolerace value="1e-6"/>
     <logLevel value="5"/>
     <linearSolverIterations value="50"/>
     <linearSolverTolerance value="1e-12"/>
     <solverType value="gaussseidel"/>
-    <freezeNearbyVertex value="0"/>
+    <freezeNearbyVertex value="1"/>
     <registerImpulse value="1"/>
     <registerVelocity value="0"/>
+    <relaxationFactor value="2.0"/>
     <hairMeshFrictionCoefficient value="0.0"/>
     <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>

@@ -73,6 +73,7 @@
 		<percentCTRodRodCollisionsAccept value="100"/>
 		<pruneExternalCollisions value="1"/>
 		<pruneSelfCollisions value="1"/>
+		<relaxationFactor value="1.0"/>
 		<registerImpulse value="1"/>
 		<registerVelocity value="0"/>
 		<rodSubSteps value="1"/> 	<!-- substep when solving unconstraint nonlinear problem -->

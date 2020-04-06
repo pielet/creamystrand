@@ -2683,8 +2683,8 @@ namespace strandsim
 		for (int i = 0; i < m_params.m_linearSolverIterations; ++i) {
 #pragma omp parallel for
 			for (int s = 0; s < m_steppers.size(); ++s) {
-				if (!passed[i])
-					passed[i] = m_steppers[s]->solveLinear();
+				if (!passed[s])
+					passed[s] = m_steppers[s]->solveLinear();
 			}
 
 			timings.dynamics += timer.elapsed();

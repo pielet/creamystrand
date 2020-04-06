@@ -111,7 +111,7 @@ namespace strandsim {
 	// Dynamic methods, using viscous forces
 	////////////////////////////////////////////////////////////////////////////////
 	
-	void StrandDynamicTraits::computeFutureJacobian( bool withStretch, bool withViscous, bool butOnlyForBendingModes, bool dump_data, std::ostream& dump_stream )
+	void StrandDynamicTraits::computeFutureJacobian( bool withStretch, bool withTwist, bool withBend, bool withViscous, bool butOnlyForBendingModes, bool dump_data, std::ostream& dump_stream )
 	{
 		if ( m_futureJacobianUpToDate )
 		{
@@ -142,25 +142,27 @@ namespace strandsim {
             }
         }
         
-		m_strand.accumulateJ< TwistingForce<NonViscous> > ( futureState ) ;
-        
-        if(dump_data) {
+        if (withTwist) {
+            m_strand.accumulateJ< TwistingForce<NonViscous> >(futureState);
+
+            if (dump_data) {
 #pragma omp critical
-            {
-                dump_stream << "[" << m_strand.getGlobalIndex() << "] FJ2 = " << futureJ << std::endl;
+                {
+                    dump_stream << "[" << m_strand.getGlobalIndex() << "] FJ2 = " << futureJ << std::endl;
+                }
             }
         }
         
-        
-		m_strand.accumulateJ< BendingForce<NonViscous> > ( futureState ) ;
-        
-        if(dump_data) {
+        if (withBend) {
+            m_strand.accumulateJ< BendingForce<NonViscous> >(futureState);
+
+            if (dump_data) {
 #pragma omp critical
-            {
-                dump_stream << "[" << m_strand.getGlobalIndex() << "] FJ3 = " << futureJ << std::endl;
+                {
+                    dump_stream << "[" << m_strand.getGlobalIndex() << "] FJ3 = " << futureJ << std::endl;
+                }
             }
         }
-        
 		
 		if ( withViscous )
 		{
@@ -239,9 +241,9 @@ namespace strandsim {
 		}
 	}
 	
-	void StrandDynamicTraits::computeLHS( Scalar dt, bool withStretch, bool withViscous, bool dump_data, std::ostream& dump_stream )
+	void StrandDynamicTraits::computeLHS( Scalar dt, bool withStretch, bool withTwist, bool withBend, bool withViscous, bool dump_data, std::ostream& dump_stream )
 	{
-		computeFutureJacobian( withStretch, withViscous );
+		computeFutureJacobian( withStretch, withTwist, withBend, withViscous );
 		JacobianMatrixType& LHS = m_strand.getTotalJacobian();
 		LHS *= dt * dt;
 		addMassMatrixTo( LHS );
@@ -256,7 +258,7 @@ namespace strandsim {
 		
 	}
 	
-	void StrandDynamicTraits::computeFutureForces( bool withStretch, bool withViscous, bool butOnlyForBendingModes, bool dump_data, std::ostream& dump_stream )
+	void StrandDynamicTraits::computeFutureForces( bool withStretch, bool withTwist, bool withBend, bool withViscous, bool butOnlyForBendingModes, bool dump_data, std::ostream& dump_stream )
 	{
 		if ( m_futureForcesUpToDate )
 		{
@@ -290,23 +292,28 @@ namespace strandsim {
             }
         }
         
-        m_strand.accumulateF< TwistingForce<NonViscous> > ( futureState ) ;
-        // check_isnan("force_1", futureF);
-        if(dump_data) {
+        if (withTwist) {
+            m_strand.accumulateF< TwistingForce<NonViscous> >(futureState);
+            // check_isnan("force_1", futureF);
+            if (dump_data) {
 #pragma omp critical
-            {
-                dump_stream << "[" << m_strand.getGlobalIndex() << "] FF2 = " << futureF.transpose() << std::endl;
+                {
+                    dump_stream << "[" << m_strand.getGlobalIndex() << "] FF2 = " << futureF.transpose() << std::endl;
+                }
             }
         }
         
-		m_strand.accumulateF< BendingForce<NonViscous> > ( futureState ) ;
-        // check_isnan("force_2", futureF);
-        if(dump_data) {
+        if (withBend) {
+            m_strand.accumulateF< BendingForce<NonViscous> >(futureState);
+            // check_isnan("force_2", futureF);
+            if (dump_data) {
 #pragma omp critical
-            {
-                dump_stream << "[" << m_strand.getGlobalIndex() << "] FF3 = " << futureF.transpose() << std::endl;
+                {
+                    dump_stream << "[" << m_strand.getGlobalIndex() << "] FF3 = " << futureF.transpose() << std::endl;
+                }
             }
         }
+
 		if ( withViscous )
 		{
 			if ( !butOnlyForBendingModes )

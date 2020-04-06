@@ -505,7 +505,7 @@ namespace strandsim
 		m_timings.m_multiplyByMassMatrix += m_timer.elapsed();
 		
 		m_timer.restart();
-		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, false, false, dump_data, stream );
+		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, true, true, false, false, dump_data, stream );
 		m_timings.m_computeFutureForces += m_timer.elapsed();
 		
 		m_timer.restart();
@@ -576,7 +576,7 @@ namespace strandsim
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		
 		m_timer.restart();
-		dynamics.computeFutureJacobian( !m_params.m_usePreFilterGeometry, false, false, dump_data, stream );
+		dynamics.computeFutureJacobian( !m_params.m_usePreFilterGeometry, true, true, false, false, dump_data, stream );
 		m_timings.m_computeJ += m_timer.elapsed();
 
 		m_timer.restart();
