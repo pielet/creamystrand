@@ -65,7 +65,7 @@
 		<gaussSeidelIterations value="75"/>
 		<gaussSeidelTolerance value="1e-4"/> 
 		<logLevel value="5"/>  <!-- MsgInfo::kInfo -->
-		<maxNewtonIterations value="10000"/>
+		<maxNewtonIterations value="100"/>
 		<hairHairFrictionCoefficient value="0.3"/>
 		<hairMeshFrictionCoefficient value="0.0"/>
 		<numberOfThreads value="1"/>  <!-- or omp max threads -->

@@ -77,7 +77,7 @@
     <useNonlinearContacts value="0"/>
     <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
-    <solveLiquids value="1"/>
+    <solveLiquids value="0"/>
   </SimulationParameters>
 
   <particle x="-19.5000000000000 0.0 0.0" v="0.0 0.0 0.0" fixed="3" group="0"/>

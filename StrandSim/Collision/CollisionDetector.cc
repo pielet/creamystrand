@@ -18,7 +18,7 @@
 #include "../Utils/TimeUtils.hh"
 #include "../Dynamic/StrandDynamicTraits.hh"
 
-#define USE_OPENMP
+//#define USE_OPENMP
 
 namespace strandsim
 {
