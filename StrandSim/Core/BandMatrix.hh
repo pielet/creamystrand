@@ -131,7 +131,7 @@ public:
     }
 
     template<int nfixed>
-    void fixFirstDOFs( int startDof = 0 )
+    void fixFirstDOFs( int startDof = 0, Scalar val = 1.0 )
     {
         assert( startDof+nfixed <= m_rows && startDof+nfixed <= m_cols );
 
@@ -141,7 +141,7 @@ public:
                 ( *this )( i, j ) = 0.0;
             for ( int k = std::max( 0, (int) i - (int) ku ); k <= std::min( ( int ) m_rows - 1, (int) i + (int) kl ); k++ )
                 ( *this )( k, i ) = 0.0;
-            ( *this )( i, i ) = 1.0;
+            ( *this )( i, i ) = val;
 
         }
     }

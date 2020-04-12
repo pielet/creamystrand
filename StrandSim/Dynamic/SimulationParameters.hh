@@ -82,6 +82,7 @@ struct SimulationParameters
     unsigned m_linearSolverIterations;
     double m_linearSolverTolerance;
     LinearStepper::SolverType m_solverType;
+    int m_solverInterval;
 
     Scalar m_relaxationFactor;
     

@@ -144,8 +144,8 @@ public:
         return t;
     }
     
-    void fixLHS( JacobianMatrixType& LHS ) const;
-    void fixRHS( VecXx& rhs ) const;
+    void fixLHS( JacobianMatrixType& LHS, Scalar val = 1.0 ) const;
+    void fixRHS( VecXx& rhs, Scalar val = 0.0 ) const;
     
     void fixRHS( JacobianMatrixType& LHS, VecXx& rhs, Scalar dt ) const;
 

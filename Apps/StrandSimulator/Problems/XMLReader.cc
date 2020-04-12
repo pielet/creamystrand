@@ -1603,6 +1603,7 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_hairMeshFrictionCoefficient = 0.0;
     m_simulation_params.m_airDrag = 0.0003;
     m_simulation_params.m_relaxationFactor = 1.0;
+    m_simulation_params.m_solverInterval = 1;
 
     m_simulation_params.m_solverType = LinearStepper::SolverType::DIRECT;
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
@@ -1649,6 +1650,7 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "registerImpulse", m_simulation_params.m_registerImpulse);
     loadParam(nd, "registerVelocity", m_simulation_params.m_registerVelocity);
     loadParam(nd, "relaxationFactor", m_simulation_params.m_relaxationFactor);
+    loadParam(nd, "solverInterval", m_simulation_params.m_solverInterval);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))

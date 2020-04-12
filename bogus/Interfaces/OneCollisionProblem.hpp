@@ -48,6 +48,7 @@ namespace bogus
 		// Primal parameters
 		MInvType m_MInv;
 		DefGradMat m_defGrad;
+		DefGradMat m_defGradInv;
 		ForceVec m_force;
 
 		// Dual parameters

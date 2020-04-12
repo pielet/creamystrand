@@ -51,15 +51,17 @@ namespace strandsim
 
 		const JacobianMatrixType& getA() const { return m_A; }
 		const VecXx& getb() const { return m_b; }
+		const VecXx& getMass() const { return m_mass; }
+		const VecXx& getb_hat() const { return m_b_hat; }
 		const VecXx& getResidual() const { return m_residual; }
 		const VecXx& getExactResidual() const { return m_resWithoutImpulse; }
-		Scalar getError() const { return m_bestError; }
+		Scalar getBestResidual() const { return m_bestError; }
 
 	private:
-		void directSolver(VecXx b);
-		void JacobiStep(VecXx b);
-		void GaussSeidelStep(VecXx b);
-		void ConjgradStep(VecXx b);
+		void directSolver(const VecXx& b);
+		void JacobiStep(const VecXx& b);
+		void GaussSeidelStep(const VecXx& b);
+		void ConjgradStep(const VecXx& b);
 
 		void updateCurrentState();
 
@@ -75,8 +77,11 @@ namespace strandsim
 
 		JacobianSolver m_directSolver;
 		bool m_notSPD;
+
+		VecXx m_mass;
 		JacobianMatrixType m_A;
 		VecXx m_b;
+		VecXx m_b_hat;
 
 		VecXx m_velocities;
 		VecXx m_newVelocities;

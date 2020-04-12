@@ -33,18 +33,18 @@ namespace strandsim
     {
     }
     
-    void DOFScriptingController::fixLHS( JacobianMatrixType& LHS ) const
+    void DOFScriptingController::fixLHS( JacobianMatrixType& LHS, Scalar val ) const
     {
         for ( std::map<int, Scalar>::const_iterator dof = m_scriptedDegreesOfFreedom.begin();
              dof != m_scriptedDegreesOfFreedom.end(); ++dof )
-            LHS.fixFirstDOFs<1>( dof->first );
+            LHS.fixFirstDOFs<1>( dof->first, val );
     }
     
-    void DOFScriptingController::fixRHS( VecXx& rhs ) const
+    void DOFScriptingController::fixRHS( VecXx& rhs, Scalar val ) const
     {
         for ( std::map<int, Scalar>::const_iterator dof = m_scriptedDegreesOfFreedom.begin();
              dof != m_scriptedDegreesOfFreedom.end(); ++dof )
-            rhs[dof->first] = 0;
+            rhs[dof->first] = val;
     }
     
     void DOFScriptingController::fixRHS( JacobianMatrixType& LHS, VecXx& rhs, Scalar dt ) const

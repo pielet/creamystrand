@@ -49,6 +49,8 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <mutex>
+#include <condition_variable>
 
 #if defined(_OPENMP)
 #include <omp.h>
@@ -2555,8 +2557,8 @@ namespace strandsim
 	template<typename StreamT>
 	void StrandImplicitManager::print(const StrandImplicitManager::SubStepTimings& timings) const
 	{
-		StreamT(g_log, "Timing") << "PR: " << timings.prepare << " HH: " << timings.hairHairCollisions
-			<< " DY: " << timings.dynamics << " CD: " << timings.meshHairCollisions << " PC: "
+		StreamT(g_log, "Timing") << "PR: " << timings.prepare << " PCD: " << timings.proximityCollisions
+			<< " DY: " << timings.dynamics << " CCD: " << timings.continousTimeCollisions << " PC: "
 			<< timings.processCollisions << " SC: " << timings.solve;
 
 		StreamT(g_log, "Timing") << "Total: " << timings.sum();
@@ -2615,9 +2617,9 @@ namespace strandsim
 	{
 		StrandImplicitManager::SubStepTimings sum;
 		sum.prepare = lhs.prepare + rhs.prepare;
-		sum.hairHairCollisions = lhs.hairHairCollisions + rhs.hairHairCollisions;
+		sum.proximityCollisions = lhs.proximityCollisions + rhs.proximityCollisions;
 		sum.dynamics = lhs.dynamics + rhs.dynamics;
-		sum.meshHairCollisions = lhs.meshHairCollisions + rhs.meshHairCollisions;
+		sum.continousTimeCollisions = lhs.continousTimeCollisions + rhs.continousTimeCollisions;
 		sum.processCollisions = lhs.processCollisions + rhs.processCollisions;
 		sum.solve = lhs.solve + rhs.solve;
 
@@ -2629,9 +2631,9 @@ namespace strandsim
 	{
 		StrandImplicitManager::SubStepTimings avg = lhs;
 		avg.prepare /= rhs;
-		avg.hairHairCollisions /= rhs;
+		avg.proximityCollisions /= rhs;
 		avg.dynamics /= rhs;
-		avg.meshHairCollisions /= rhs;
+		avg.continousTimeCollisions /= rhs;
 		avg.processCollisions /= rhs;
 		avg.solve /= rhs;
 
@@ -2662,6 +2664,10 @@ namespace strandsim
 		}
 	}
 
+	bool g_one_iter = false;
+	std::mutex g_iter_mutex;
+	std::condition_variable g_cv;
+
 	void StrandImplicitManager::step()
 	{
 		SubStepTimings timings;
@@ -2669,7 +2675,23 @@ namespace strandsim
 		std::cout << "[Prepare Simulation Step]" << std::endl;
 		Timer timer("step", false);
 		step_prepare(m_dt);
-		timings.prepare = timer.elapsed();
+		timings.prepare += timer.elapsed();
+
+		if (m_params.m_solveCollision && !m_params.m_useCTRodRodCollisions) {
+			std::cout << "[Proximity Collision Detection]" << std::endl;
+			timer.restart();
+			step_prepareCollision();
+			/* TODO: add hair/mesh proximity test
+			 * EdgeFaceIntercestion in m_collisionDetector->findCollision()
+			*/
+			setupHairHairCollisions(m_dt);
+			doProximityMeshHairDetection(m_dt);
+			timings.proximityCollisions += timer.elapsed();
+
+			timer.restart();
+			step_processCollisions();
+			timings.processCollisions += timer.elapsed();
+		}
 
 		std::cout << "[Step Dynamics]" << std::endl;
 		timer.restart();
@@ -2677,33 +2699,61 @@ namespace strandsim
 		for (int i = 0; i < m_steppers.size(); ++i) {
 			m_steppers[i]->initSolver(m_dt);
 		}
+		timings.prepare += timer.elapsed();
 
 		std::vector<bool> passed(m_strands.size(), false);
 
 		for (int i = 0; i < m_params.m_linearSolverIterations; ++i) {
+			timer.restart();
 #pragma omp parallel for
 			for (int s = 0; s < m_steppers.size(); ++s) {
 				if (!passed[s])
 					passed[s] = m_steppers[s]->solveLinear();
 			}
-
 			timings.dynamics += timer.elapsed();
 
-			if (m_params.m_solveCollision) {
-				timer.restart();
-				step_prepareCollision();
+			if (g_one_iter) {
+				if (m_substep_callback) m_substep_callback->executeCallback();
+				std::vector<Scalar> residuals(m_strands.size());
+				for (int s = 0; s < m_strands.size(); ++s) {
+					residuals[s] = m_steppers[s]->getExactResidual().norm();
+				}
+				residualStats("Iter", residuals);
+				{
+					std::unique_lock<std::mutex> lk(g_iter_mutex);
+					g_one_iter = false;
+				}
+				std::unique_lock<std::mutex> lk(g_iter_mutex);
+				g_cv.wait(lk, [] {return g_one_iter; });
+			}
 
-				step_continousCollisionDetection();
-				timings.meshHairCollisions += timer.elapsed();
+			if (m_params.m_solveCollision && (i % m_params.m_solverInterval == 0)) {
+				if (m_params.m_useCTRodRodCollisions) {
+					timer.restart();
+					step_prepareCollision();
 
-				timer.restart();
-				step_processCollisions();
-				timings.processCollisions += timer.elapsed();
+					step_continousCollisionDetection();
+					timings.continousTimeCollisions += timer.elapsed();
+
+					timer.restart();
+					step_processCollisions();
+					timings.processCollisions += timer.elapsed();
+				}
 
 				if (m_statTotalCollisions > 0) {
 					timer.restart();
 					step_solveCollisions();
 					timings.solve += timer.elapsed();
+				}
+
+				if (g_one_iter) {
+					if (m_substep_callback) m_substep_callback->executeCallback();
+					{
+						std::unique_lock<std::mutex> lk(g_iter_mutex);
+						g_one_iter = false;
+					}
+					std::unique_lock<std::mutex> lk(g_iter_mutex);
+					g_cv.wait(lk, [] {return g_one_iter; });
 				}
 			}
 		}
@@ -2714,7 +2764,7 @@ namespace strandsim
 		int numUnsolved = 0;
 		for (int i = 0; i < m_strands.size(); ++i) {
 			if (!passed[i]) ++numUnsolved;
-			residuals[i] = m_steppers[i]->getError();
+			residuals[i] = m_steppers[i]->getBestResidual();
 		}
 		std::cout << "Unsolved Strand: " << numUnsolved << std::endl;
 		residualStats("Linear Solver", residuals);
@@ -2819,26 +2869,30 @@ namespace strandsim
 
 			// Assemble
 			Mat14x M = Mat14x::Zero();
-			Mat7x first_M = first_stepper.getA().diagBlock<7>(4 * first_vert);
-			Mat7x second_M = second_stepper.getA().diagBlock<7>(4 * second_vert);;
-			M.block<7, 7>(0, 0) = first_M;
-			M.block<7, 7>(7, 7) = second_M;
+			//Mat7x first_M = first_stepper.getA().diagBlock<7>(4 * first_vert);
+			//Mat7x second_M = second_stepper.getA().diagBlock<7>(4 * second_vert);;
+			//M.block<7, 7>(0, 0) = first_M;
+			//M.block<7, 7>(7, 7) = second_M;
+			M.block<7, 7>(0, 0) = first_stepper.getMass().segment<7>(4 * first_vert).asDiagonal();
+			M.block<7, 7>(7, 7) = second_stepper.getMass().segment<7>(4 * second_vert).asDiagonal();
 
 			Mat3x14x H = Mat3x14x::Zero();
 			H.block<3, 7>(0, 0) = MatXx(*collision.objects.first.defGrad);
 			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
 
 			Vec14x f;
-			if (m_params.m_freezeNearbyVertex) {
-				f.segment<7>(0) = first_stepper.getb().segment<7>(4 * first_vert);
-				f.segment<7>(7) = second_stepper.getb().segment<7>(4 * second_vert);
-			}
-			else {
-				f.segment<7>(0) = first_stepper.getExactResidual().segment<7>(4 * first_vert)
-					+ first_M * first_stepper.newVelocities().segment<7>(4 * first_vert);
-				f.segment<7>(7) = second_stepper.getExactResidual().segment<7>(4 * second_vert)
-					+ second_M * second_stepper.newVelocities().segment<7>(4 * second_vert);
-			}
+			f.segment<7>(0) = first_stepper.getb_hat().segment<7>(4 * first_vert);
+			f.segment<7>(7) = second_stepper.getb_hat().segment<7>(4 * second_vert);
+			//if (m_params.m_freezeNearbyVertex) {
+			//	f.segment<7>(0) = first_stepper.getb().segment<7>(4 * first_vert);
+			//	f.segment<7>(7) = second_stepper.getb().segment<7>(4 * second_vert);
+			//}
+			//else {
+			//	f.segment<7>(0) = first_stepper.getExactResidual().segment<7>(4 * first_vert)
+			//		+ first_M * first_stepper.newVelocities().segment<7>(4 * first_vert);
+			//	f.segment<7>(7) = second_stepper.getExactResidual().segment<7>(4 * second_vert)
+			//		+ second_M * second_stepper.newVelocities().segment<7>(4 * second_vert);
+			//}
 
 			Vec3x uf = Vec3x::Zero();
 
@@ -2868,19 +2922,22 @@ namespace strandsim
 				LinearStepper& stepper = *m_steppers[i];
 				int vert = collision.objects.first.vertex;
 
-				Mat7x M = stepper.getA().diagBlock<7>(4 * vert);
+				//Mat7x M = stepper.getA().diagBlock<7>(4 * vert);
+				Mat7x M = stepper.getMass().segment<7>(4 * vert).asDiagonal();
+
 				Mat3x7x H = MatXx(*collision.objects.first.defGrad);
 				Vec3x uf = -collision.objects.second.freeVel;
 				Mat3x E = collision.transformationMatrix;
 				Scalar mu = collision.mu;
 
 				Vec7x f;
-				if (m_params.m_freezeNearbyVertex) {
-					f = stepper.getb().segment<7>(4 * vert);
-				}
-				else {
-					f = stepper.getExactResidual().segment<7>(4 * vert) + M * stepper.newVelocities().segment<7>(4 * vert);
-				}
+				f = stepper.getb_hat().segment<7>(4 * vert);
+				//if (m_params.m_freezeNearbyVertex) {
+				//	f = stepper.getb().segment<7>(4 * vert);
+				//}
+				//else {
+				//	f = stepper.getExactResidual().segment<7>(4 * vert) + M * stepper.newVelocities().segment<7>(4 * vert);
+				//}
 
 				bogus::ExternalContactSolver solver(M, H, f, uf, E, mu);
 

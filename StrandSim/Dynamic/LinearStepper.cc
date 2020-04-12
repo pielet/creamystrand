@@ -24,6 +24,7 @@ namespace strandsim
 		m_bestError(1e+99)
 	{
 		m_dynamics.computeDOFMasses();
+		m_mass = m_dynamics.getDOFMasses();
 	}
 
 
@@ -54,6 +55,7 @@ namespace strandsim
 		m_A *= dt * dt;
 		m_dynamics.addMassMatrixTo(m_A);
 
+		m_dynamics.getScriptingController()->fixRHS(m_mass, 1.0);
 		m_dynamics.getScriptingController()->fixLHSAndRHS(m_A, m_b, dt);
 
 		if (m_solverType == SolverType::DIRECT) {
@@ -65,7 +67,6 @@ namespace strandsim
 
 		// reset solver
 		m_iteration = 0;
-		m_newVelocities = m_velocities;
 		m_bestError = 1e+99;
 		m_collisionImpulse.setZero();
 		m_collisionVelocity.setZero();
@@ -77,7 +78,7 @@ namespace strandsim
 		VecXx b = m_b;
 		if (m_params.m_registerImpulse) {
 			b += m_collisionImpulse;
-			m_dynamics.getScriptingController()->fixRHS(b);
+			m_dynamics.getScriptingController()->fixRHS(m_A, b, m_dt);
 			m_collisionImpulse.setZero();
 		}
 
@@ -99,6 +100,16 @@ namespace strandsim
 			break;
 		}
 
+		VecXx Av = VecXx::Zero(m_velocities.size());
+		m_A.multiply(Av, 1., m_newVelocities);
+		m_residual = b - Av;
+		m_resWithoutImpulse = m_b - Av;
+		m_bestError = std::min(m_bestError, m_residual.squaredNorm());
+
+		Av.setZero();
+		m_strand.getTotalJacobian().multiply(Av, 1., m_velocities);
+		m_b_hat = m_b - m_dt * m_dt * Av;
+
 		updateCurrentState();
 
 		++m_iteration;
@@ -106,18 +117,12 @@ namespace strandsim
 		return m_bestError < m_tolerance;
 	}
 
-	void LinearStepper::directSolver(VecXx b)
+	void LinearStepper::directSolver(const VecXx& b)
 	{
 		m_directSolver.solve(m_newVelocities, b);
-
-		VecXx Av = VecXx::Zero(m_residual.size());
-		m_A.multiply(Av, 1., m_newVelocities);
-		m_residual = b - Av;
-		m_resWithoutImpulse = m_b - Av;
-		m_bestError = m_residual.squaredNorm();
 	}
 
-	void LinearStepper::JacobiStep(VecXx b)
+	void LinearStepper::JacobiStep(const VecXx& b)
 	{
 		Scalar omega = m_params.m_relaxationFactor;
 
@@ -126,34 +131,24 @@ namespace strandsim
 		res = b - res;
 
 		m_newVelocities = (res.array() / m_A.diagonal().array() / omega).matrix() + m_velocities;
+		//m_newVelocities = (res.array() / m_mass.array() / omega).matrix() + m_velocities;
 
-		res.setZero();
-		m_A.multiply(res, 1., m_newVelocities);
-		m_residual = b - res;
-		m_resWithoutImpulse = m_b - res;
-		m_bestError = std::min(m_bestError, m_residual.squaredNorm());
 	}
 
-	void LinearStepper::GaussSeidelStep(VecXx b)
+	void LinearStepper::GaussSeidelStep(const VecXx& b)
 	{
 		const JacobianMatrixType A = m_A;
 
-		for (int i = 0; i < m_velocities.size(); ++i) {
-			Scalar sum = - A(i, i) * m_velocities(i);
-			for (int j = 0; j < m_velocities.size(); ++j)
-				sum += A(i, j) * m_velocities(j);
-			m_velocities(i) = (b(i) - sum) / A(i, i);
-		}
-
 		m_newVelocities = m_velocities;
-		VecXx Av = VecXx::Zero(m_velocities.size());
-		m_A.multiply(Av, 1., m_newVelocities);
-		m_residual = b - Av;
-		m_resWithoutImpulse = m_b - Av;
-		m_bestError = std::min(m_bestError, m_residual.squaredNorm());
+		for (int i = 0; i < m_newVelocities.size(); ++i) {
+			Scalar sum = - A(i, i) * m_newVelocities(i);
+			for (int j = 0; j < m_newVelocities.size(); ++j)
+				sum += A(i, j) * m_newVelocities(j);
+			m_newVelocities(i) = (b(i) - sum) / A(i, i);
+		}
 	}
 
-	void LinearStepper::ConjgradStep(VecXx b)
+	void LinearStepper::ConjgradStep(const VecXx &b)
 	{
 
 	}

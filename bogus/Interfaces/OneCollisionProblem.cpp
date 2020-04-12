@@ -1,5 +1,7 @@
 #include "OneCollisionProblem.hpp"
 #include "../Extra/SecondOrder.impl.hpp"
+#include "../Core/Utils/NumTraits.hpp"
+#include <Eigen/LU>
 
 namespace bogus
 {
@@ -9,8 +11,9 @@ namespace bogus
 		m_mu(mu), m_defGrad(E.transpose() * H), m_force(f)
 	{
 		m_MInv.compute(M);
+		m_defGradInv.transpose() = H.transpose() * (H * H.transpose()).lu().solve(E);
 
-		m_W = m_defGrad * (m_MInv * m_defGrad.transpose());
+		m_W = m_defGrad * (m_MInv * m_defGradInv.transpose());
 		m_b = E.transpose() * uf + m_defGrad * (m_MInv * f);
 	}
 
@@ -24,12 +27,28 @@ namespace bogus
 	double OneCollisionProblem<ndof>::solve(Eigen::Vector3d& r, ForceVec& v_world, ForceVec& r_world)
 	{
 		CoulombLaw law(1, &m_mu);
-		
-		if (!law.solveLocal(0, m_W, m_b, r, 1.0)) {
-			r *= 0.5;
+
+		//if (!law.solveLocal(0, m_W, m_b, r, 1.0)) {
+		//	r *= 0.5;
+		//}
+
+		if (m_b(0) > 0) {
+			r.setZero();
 		}
+		else {
+			double f_n = -m_b(0);
+			double f_t = sqrt(m_b(1) * m_b(1) + m_b(2) * m_b(2));
+
+			r = -m_b;
+			
+			if (f_t < m_mu * f_n) {
+				r(1) *= m_mu * f_n / f_t;
+				r(2) *= m_mu * f_n / f_t;
+			}
+		}
+		r = m_W.lu().solve(r);
 		
-		r_world = m_defGrad.transpose() * r;
+		r_world = m_defGradInv.transpose() * r;
 		v_world = m_MInv * (m_force + r_world);
 
 		Eigen::Vector3d v = m_W * r + m_b;

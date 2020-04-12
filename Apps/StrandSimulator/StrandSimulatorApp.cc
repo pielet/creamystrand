@@ -12,11 +12,15 @@
 #include <boost/filesystem.hpp>
 #include <thread>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
 
 // problems :
 #include "Problems/XMLReader.hh"
 
 #include "StrandSim/Utils/TextLog.hh"
+
+#include "StrandSim/Dynamic/StrandImplicitManager.hh"
 
 std::vector<ProblemStepper*> problems;
 int g_problem_idx = -1;
@@ -288,7 +292,6 @@ void menu( int id )
             g_exit = true;
             std:exit(EXIT_SUCCESS);
             break;
-            
         case ' ':
             g_paused = !g_paused;
             break;
@@ -299,7 +302,13 @@ void menu( int id )
             g_paused = !g_paused;
             break;
         case 'a':
-            break;
+            g_single_step = true;
+            g_paused = !g_paused;
+            {
+                std::lock_guard<std::mutex> lk(g_iter_mutex);
+                g_one_iter = true;
+                g_cv.notify_one();
+            }
         case 'd':
             break;
         case 'f':

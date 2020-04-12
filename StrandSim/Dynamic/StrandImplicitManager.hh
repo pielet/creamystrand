@@ -22,6 +22,8 @@
 #include <list>
 #include <set>
 #include <memory>
+#include <mutex>
+#include <condition_variable>
 
 namespace strandsim
 {
@@ -36,6 +38,10 @@ class FluidScriptingController;
 class ConstraintScriptingController;
 class CollisionBase;
 class LevelSetForce;
+
+extern bool g_one_iter;
+extern std::mutex g_iter_mutex;
+extern std::condition_variable g_cv;
 
 class StrandImplicitManager
 {
@@ -55,21 +61,21 @@ public:
     struct SubStepTimings
     {
         SubStepTimings() :
-                prepare( 0 ), hairHairCollisions( 0 ), dynamics( 0 ), meshHairCollisions( 0 ), processCollisions(
+                prepare( 0 ), proximityCollisions( 0 ), dynamics( 0 ), continousTimeCollisions( 0 ), processCollisions(
                         0 ), solve( 0 )
         {
         }
 
-        double prepare;                // Executing controllers, etc
-        double hairHairCollisions;     // Hair hair collision detection
-        double dynamics;               // Assembling + pre-solving linear systems
-        double meshHairCollisions;     // Mesh hair collision detection
-        double processCollisions;      // Updating collision gradients
-        double solve;                  // Proper solve
+        double prepare;                     // Executing controllers, etc
+        double proximityCollisions;         // Hair hair collision detection
+        double dynamics;                    // Assembling + pre-solving linear systems
+        double continousTimeCollisions;     // Mesh hair collision detection
+        double processCollisions;           // Updating collision gradients
+        double solve;                       // Proper solve
 
         double sum() const
         {
-            return prepare + hairHairCollisions + dynamics + meshHairCollisions + processCollisions
+            return prepare + proximityCollisions + dynamics + continousTimeCollisions + processCollisions
                     + solve;
         }
     };
