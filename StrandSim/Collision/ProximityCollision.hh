@@ -35,7 +35,7 @@ namespace strandsim
             DeformationGradient* defGrad;
             Vec3x freeVel;
             
-            Object() : globalIndex(0),vertex(0),abscissa(0), defGrad( NULL ) {}
+            Object() : globalIndex(0), vertex(0), abscissa(0), defGrad( NULL ) {}
             
             unsigned long computeSizeInBytes() const
             {
@@ -52,12 +52,12 @@ namespace strandsim
         }
         
         ContinuousTimeCollision* m_originalCTCollision; // If the proximity collision was actually built from a continuous time collision, this keeps a pointer to the original in case we need it for impulse resolution
+        
         Vec3x normal;
         Vec3x force;
         Scalar mu;
-        Scalar distance ;
+        Scalar distance;
         Scalar relative_vel;
-        bool do_soc_solve;
         Mat3x transformationMatrix ;
         
         std::pair<Object, Object> objects;
@@ -67,12 +67,11 @@ namespace strandsim
         
         unsigned long computeSizeInBytes() const;
         
-        
         void swapIfNecessary()
         {
-            if ( objects.first.globalIndex == -1 || (
-                                                     objects.second.globalIndex != -1
-                                                     && objects.second.globalIndex < objects.first.globalIndex ) )
+            if (objects.first.globalIndex == -1 || (
+                   objects.second.globalIndex != -1
+                    && objects.second.globalIndex < objects.first.globalIndex ) )
             {
                 normal = -normal;
                 force = -force;
@@ -104,18 +103,7 @@ namespace strandsim
             }
             else
                 return objects.first.vertex < rhs.objects.first.vertex;
-            
-            /* theirs
-             return objects.first.vertex < rhs.objects.first.vertex
-             || ( objects.first.vertex == rhs.objects.first.vertex
-             && objects.second.vertex < rhs.objects.second.vertex );
-             */
-            //    const Scalar l_abs1 = lhs.collision.objects.second.vertex + lhs.collision.objects.second.abscissa ;
-            //    const Scalar r_abs1 = rhs.collision.objects.first.vertex + rhs.collision.objects.first.abscissa ;
-            
-            //    const Scalar l_abs2 = lhs.collision.objects.second.vertex + lhs.collision.objects.second.abscissa ;
-            //    const Scalar r_abs2 = rhs.collision.objects.second.vertex + rhs.collision.objects.second.abscissa ;
-            
+         
         }
     };
     

@@ -170,7 +170,6 @@ bool EdgeFaceCollision::analyse()
     unsigned num_times ;
     getCoplanarityTimes( pp0 - dp0, pp1 - dp1, pq0 - dq0, pq1 - dq1, pp0, pp1, pq0, pq1, times, NULL, num_times );
 
-    m_do_soc_solve = false;
     // Loop over the coplanarity times until we find a bona fide collision
     for ( unsigned j = 0 ; j < num_times ; ++j )
     {
@@ -216,9 +215,6 @@ bool EdgeFaceCollision::analyse()
         // If, when they are coplanar, the objects are sufficiently close, register a collision
         if ( sqrdist < colRadius * colRadius )
         {
-              
-            m_do_soc_solve = true;
-
             m_time = times[j];
 
             // Compute a collision normal at the time of the collision. For a first attempt, take the cross product of the edges.

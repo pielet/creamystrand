@@ -86,8 +86,6 @@ bool VertexFaceCollision::analyse()
         {
             m_time = times[j];
         
-            m_do_soc_solve = true;
-
             computeBarycentricCoordinates( f0col, f1col, f2col, pcol, m_u, m_v, m_w );
             // computeBarycentricCoordinates coords could be outside of [0,1] right now because we've extended the triangles a little bit
             assert( isSmall(m_u + m_v + m_w - 1.0) );

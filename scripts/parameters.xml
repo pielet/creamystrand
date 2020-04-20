@@ -63,19 +63,17 @@
 	<SimulationParameters>
 		<airDrag value="0.0003"/> 
 		<collisionSolverTolerace value="1e-6"/>
-		<freezeNearbyVertex value="1"/>
 		<logLevel value="5"/>  <!-- MsgInfo::kInfo -->
-		<linearSolverIterations value="100"/>
-		<linearSolverTolerance value="1e-12"/>
+		<linearIterations value="10"/>
+		<linearSolverType value="direct"/>   <!-- direct / jacobi / gaussseidel / conjgrad -->
 		<hairHairFrictionCoefficient value="0.3"/>
 		<hairMeshFrictionCoefficient value="0.0"/>
+		<nonlinearIterations value="1"/>
 		<numberOfThreads value="1"/>  <!-- or omp max threads -->
 		<percentCTRodRodCollisionsAccept value="100"/>
 		<pruneExternalCollisions value="1"/>
 		<pruneSelfCollisions value="1"/>
 		<relaxationFactor value="1.0"/>
-		<registerImpulse value="1"/>
-		<registerVelocity value="0"/>
 		<rodSubSteps value="1"/> 	<!-- substep when solving unconstraint nonlinear problem -->
 		<simulationManagerLimitedMemory value="0"/>  <!-- if false, save computed impulses of current collisions, which can be used as warm start in next step -->
 		<skipFlowFrictions value="1"/>
@@ -83,7 +81,6 @@
 		<skipRodRodCollisions value="0"/>   <!-- hair-hair proximity test -->
 		<solveCollision value="1"/>
 		<solveLiquids value="1"/>
-		<solverType value="direct"/>   <!-- direct / jacobi / gaussseidel / conjgrad -->
 		<statGathering value="0"/>
 		<stochasticPruningFraction value="0.8"/>  <!-- the larger, the more likely to be pruned -->
 		<substeps value="1"/>
@@ -96,7 +93,7 @@
 		<useNonlinearContacts value="0"/>   	<!-- use Newton Method to solve constraint motion equation after bogus solver (add additional impulse to rhs)-->
 		<useSoftAttachConstraints value="0"/>  <!-- if ture, add fixing force instead of setting gradient to zero -->
 		<usePreFilterGeometry value="0"/>
-
+		<velocityDiffTolerance value-"1e-6"/>
 		<bogusAlgorithm value="projectedgradient"/>  <!-- projectedgradient / matrixfreegaussseidel / gaussseidel -->
 	</SimulationParameters>
 
@@ -145,7 +142,7 @@
     <distancefield usage="terminator" type="box" cx="0.0" cy="0.0" cz="0.0" ex="128.0" ey="128.0" ez="256.0" group="2" radius="0.001" inverted="1"/>
 
     <!-- motion script -->
-	    <!-- [type] rotate / translate / swirl / scale / switch -->
+	    <!-- [type] rotate / translate / swirl / scale / switch (unfreeze fixed point in group) -->
 	    <!-- [func] ease function: cubic / cosine / weno -->
 	    <!-- [x][y][z] total translation / rotation axis -->
 	    <!-- [w] total rotation angle -->

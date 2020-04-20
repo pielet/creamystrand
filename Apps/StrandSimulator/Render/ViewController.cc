@@ -129,8 +129,8 @@ void ViewController::setViewDirection(const Vec3d& d) {
 void ViewController::setBoundingRadius(Scalar r) {
   m_boundingRadius = r;
   m_camera.setDefault3D(m_boundingRadius);
-  m_translator.setScale(2 * m_boundingRadius);
-  m_zoomer.setScale(2 * m_boundingRadius);
+  m_translator.setScale(m_boundingRadius);
+  m_zoomer.setScale(m_boundingRadius);
 }
 
 Scalar ViewController::getBoundingRadius() {

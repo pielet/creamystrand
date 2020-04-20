@@ -40,20 +40,13 @@ namespace strandsim
         {
             return m_faceProxy ;
         }
-        
-        bool doSOCSolve() const
-        {
-            return m_do_soc_solve;
-        }
-        
+
     protected:
         void print( std::ostream& os ) const;
         
         const FaceProxy* const m_faceProxy;
         Vec3x m_meshDisplacement;
         Vec3x m_collisionOffset;
-        
-        bool m_do_soc_solve;
     };
     
 }

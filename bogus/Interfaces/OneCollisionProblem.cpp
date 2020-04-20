@@ -41,7 +41,7 @@ namespace bogus
 
 			r = -m_b;
 			
-			if (f_t < m_mu * f_n) {
+			if (f_t > m_mu * f_n) {
 				r(1) *= m_mu * f_n / f_t;
 				r(2) *= m_mu * f_n / f_t;
 			}

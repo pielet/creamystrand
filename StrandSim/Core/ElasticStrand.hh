@@ -41,7 +41,7 @@ namespace strandsim
     class StrandDynamicTraits;
     class DOFScriptingController;
     class StrandImplicitManager;
-    class LinearStepper;
+    class ImplicitStepper;
     
     struct ProximityCollision;
     
@@ -716,11 +716,11 @@ namespace strandsim
             return m_parent;
         }
         
-        void setStepper(LinearStepper* stepper) {
+        void setStepper(ImplicitStepper* stepper) {
             m_stepper = stepper;
         }
         
-        LinearStepper* getStepper() const
+        ImplicitStepper* getStepper() const
         {
             return m_stepper;
         }
@@ -833,7 +833,7 @@ namespace strandsim
         StrandDynamicTraits* m_dynamics;
         // Parent to access other strands
         StrandImplicitManager* m_parent;
-        LinearStepper* m_stepper;
+        ImplicitStepper* m_stepper;
         
         // Rest shape
         std::vector<Scalar> m_restLengths; // The following four members depend on m_restLengths, which is why updateEverythingThatDependsOnRestLengths() must be called

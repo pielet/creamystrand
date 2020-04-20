@@ -45,7 +45,7 @@ namespace strandsim
                                               const Vec3x& normal );
     
     bool analyseRoughRodRodCollision( const ElasticStrand* sP, const ElasticStrand* sQ, const int iP, const int iQ,
-                                      Vec3x &normalQtoP, Scalar &s, Scalar &t, Scalar &distance, Scalar& relative_vel, bool& solidTouching );
+                                      Vec3x &normalQtoP, Scalar &s, Scalar &t, Scalar &distance, Scalar& relative_vel );
 }
 
 #endif

@@ -61,22 +61,23 @@ public:
     struct SubStepTimings
     {
         SubStepTimings() :
-                prepare( 0 ), proximityCollisions( 0 ), dynamics( 0 ), continousTimeCollisions( 0 ), processCollisions(
-                        0 ), solve( 0 )
+            prepare( 0 ), proximityCollisions( 0 ), dynamics( 0 ), linearIteration( 0 ), continousTimeCollisions( 0 ),
+            processCollisions( 0 ), solve( 0 )
         {
         }
 
         double prepare;                     // Executing controllers, etc
         double proximityCollisions;         // Hair hair collision detection
-        double dynamics;                    // Assembling + pre-solving linear systems
+        double dynamics;                    // Assembling (+ pre-solving linear systems)
+        double linearIteration;             // Iterative solver
         double continousTimeCollisions;     // Mesh hair collision detection
         double processCollisions;           // Updating collision gradients
         double solve;                       // Proper solve
 
         double sum() const
         {
-            return prepare + proximityCollisions + dynamics + continousTimeCollisions + processCollisions
-                    + solve;
+            return prepare + proximityCollisions + dynamics + linearIteration + continousTimeCollisions 
+                + processCollisions + solve;
         }
     };
 
@@ -173,7 +174,6 @@ public:
     void execute(int total_num_substeps, int total_substep_id, const Scalar total_substep_dt);
 
     //! Performs a simulation substep
-   void step(int total_num_substeps, int total_substep_id);
     void step();
     
     Scalar getCFL() const;
@@ -232,8 +232,6 @@ public:
 
 private:
     void printMemStats();
-    //template<typename StreamT>
-    //void printNewtonSolverBreakdownTiming() const;
     template<typename StreamT>
     void print( const SubStepTimings& timings ) const;
     template<typename StreamT>
@@ -243,62 +241,18 @@ private:
 
     //! Prepares the substep, executes the externals objects controllers
     void step_prepare( Scalar dt );
-    //! Solves the unconstrained dynamics of each strand
-    /*void step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
-    void step_dynamics_cg(Scalar dt);*/
+    //! Clears collision set, ages collision database
     void step_prepareCollision();
+    //! Does continous collision detection
     void step_continousCollisionDetection();
+    //! Sorts and prunes collisions set
     void step_processCollisions();
+    //! Solves collisions and updates collision impulses
     void step_solveCollisions();
 
-    //! Rewind and redo the unconstrained dynamics of each strand (possibly with new forces)
-    //void redo_step_dynamics( int total_num_substeps, int total_substep_id, Scalar dt );
-    //! Analyses the current collisions and compute the colliding groups
-    void step_processCollisions( Scalar dt );
-    
-    //! Solves each flow friction group
-    void step_solveFlowFrictions( int total_num_substeps, int total_substep_id );
-    
-    //! Solves each colliding group
-    void step_solveCollisions( int total_num_substeps, int total_substep_id );
-
-    //! Returns wether a strand needs to be solved using bogus.
-    /*! Will be true if the strand is subject to at least one contact or hard constraint */
-    bool needsExternalSolve( unsigned strandIdx ) const;
-    
-    //! Returns wether a strand needs to be solved using bogus.
-    /*! Will be true if the strand is subject to at least one contact or hard constraint */
-    bool needsElasticExternalSolve( unsigned strandIdx ) const;
-
-    ////! Setup the contacts and constraints for a colliding group
-    //bool assembleBogusFrictionProblem( CollidingGroup& collisionGroup,
-				//					  bogus::MecheFrictionProblem& mecheProblem,
-    //                                  std::vector<ProximityCollisions>& externalContacts,
-				//					  std::vector<unsigned> &globalIds,
-				//					  std::vector<ProximityCollision*> &colPointers,
-				//					  VecXx& vels, VecXx& worldImpulses,
-    //                                  VecXx& impulses, VecXx& adhesions, VecXx& filters,
-				//					  VecXu& startDofs, VecXu& nDofs, int& numSubSys, bool herschelBulkleyProblem, bool ignoreMutualCollision );
-    ////! Cleanup a friction problem and updates the strands with the new velocities if \p accept is true
-    //int postProcessBogusFrictionProblem( bool updateVelocity, CollidingGroup& collisionGroup,
-    //        const bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
-    //        const std::vector<ProximityCollision*> &colPointers, VecXx& vels, VecXx& worldImpulses, VecXx& impulses,
-    //                                     VecXu& startDofs, VecXu& nDofs, std::vector< Scalar >& newton_residuals, int total_num_substeps, int total_substep_id  );
-    ////! Proper solving of the MecheFrictionProblem
-    //Scalar solveBogusFrictionProblem( bogus::MecheFrictionProblem& mecheProblem, const std::vector<unsigned> &globalIds,
-    //        bool asFailSafe, bool herschelBulkleyProblem, bool doFrictionShrinking, VecXx& vels, VecXx& worldImpulses, VecXx& impulses, int& numSubSys );
-
-
-    //! Solve the contacts and constraints on a single object
-    //Scalar solveSingleObject( std::vector<ProximityCollisions>& externalContacts, const unsigned objectIdx, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
-    //! Solve the contacts and constraints on a colliding group
-    //Scalar solveCollidingGroup( CollidingGroup &cg, std::vector<ProximityCollisions>& externalContacts, bool asFailSafe, bool herschelBulkleyProblem, bool updateVelocity, bool ignoreMutualCollision, std::vector< Scalar >& newtonResiduals, int& numNewtonIters, int total_num_substeps, int total_substep_id );
-    
     void residualStats( const std::string& name, const std::vector< Scalar >& residuals );
 
-    //! Mesh/hair collision detection
-    void setupMeshHairCollisions( Scalar dt );
-    //! Hair/hair collision detection
+    //! Hair/hair proximity collision detection
     void setupHairHairCollisions( Scalar dt );
 
     //! Proximity mesh/hair collision detection
@@ -306,30 +260,24 @@ private:
     //! Continuous-time mesh/hair collisision detection
     void doContinuousTimeDetection( Scalar dt );
 
-    bool isCollisionInvariantCT( Scalar dt );
-
     //! Adds an external contact on strand \p strIdx, edge \p edgeIdx, abscissa \p abscissa
     /*! \return whether this collision has been accepted */
     bool addExternalContact( const unsigned strIdx, const unsigned edgeIdx, const Scalar abscissa,
             const ProximityCollision& collision );
+    //! Transform a mutual collision into an external contact on the (onFirstObject ? first : second) object
+    void makeExternalContact(ProximityCollision& c, bool onFirstObject);
 
     //! Computes the deformation gradient of a strand at one contact point, ie dq/dx
     void computeDeformationGradient( ProximityCollision::Object &object ) const;
     //! Setup the local frame for one contact and calls computeDeformationGradient() for each object
     void setupDeformationBasis( ProximityCollision &collision ) const;
 
-    //! Transform a mutual collision into an external contact on the (onFirstObject ? first : second) object
-    void makeExternalContact( ProximityCollision& c, bool onFirstObject, std::vector<ProximityCollisions>& contacts );
-    void makeExternalContact( ProximityCollision& c, bool onFirstObject );
-    void makeElasticExternalContact( ProximityCollision& c, bool onFirstObject );
     //! Discards mesh/hair collisions that are unlikely to be activated
     void pruneExternalCollisions( std::vector<ProximityCollisions>& contacts );
 
     //! Discards hair/hair collisions that are unlikely to be activated
     void pruneCollisions( const ProximityCollisions &origMutualCollisions,
-            ProximityCollisions &mutualCollisions, const Scalar stochasticPruning, bool elastic );
-    //! Computes the colliding groups using a graph walking algorithm
-    void computeCollidingGroups( const ProximityCollisions &mutualCollisions, Scalar dt, bool elastic );
+            ProximityCollisions &mutualCollisions, const Scalar stochasticPruning );
 
     void exportStrandRestShapes( const std::string& fileName ) const;
 
@@ -339,8 +287,7 @@ private:
     std::string m_output_directory;
 
     const std::vector<ElasticStrand*>& m_strands;
-    const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;
-    std::vector<LinearStepper*> m_steppers;
+    std::vector<ImplicitStepper*> m_steppers;
     const std::vector< std::shared_ptr<MeshScriptingController> >& m_meshScriptingControllers;
     const std::vector< std::shared_ptr<FluidScriptingController> >& m_fluidScriptingControllers;
     const std::vector<ConstraintScriptingController*>& m_constraintScriptingControllers;
@@ -348,22 +295,11 @@ private:
     std::vector<ElementProxy*> m_elementProxies; //!< List of all proxies that should be inserted in the BVH
     CollisionDetector* m_collisionDetector;        //!< BVH-based collision detector
 
-    std::vector<ProximityCollisions> m_externalContacts;  //!< External contacts on each strand
-    std::vector<ProximityCollisions> m_elasticExternalContacts;  //!< External contacts under elastic rule only
-    
-    ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts
-    ProximityCollisions m_elasticMutualContacts;    //!< List of all mutual contacts under elastic rule only
+    ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts (edge/edge)
+    std::vector<ProximityCollisions> m_externalContacts;         //!< List of all contacts between movable hair and fixed edges
     //! Structure for storing collisions and forces, useful for drawaing and warm-starting solver
     ProximityCollisionDatabase m_collisionDatabase;
-
-    std::vector<CollidingGroup> m_collidingGroups;
-    std::vector<CollidingGroup> m_elasticCollidingGroups;
-
-    std::vector<unsigned> m_globalIds;
-
-    //! Index of colliding group in which each strand should be. Can be -1.
-    std::vector<int> m_collidingGroupsIdx;
-    std::vector<int> m_elasticCollidingGroupsIdx;
+    const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;
 
     //!< Spatial Hash Map for hair/hair proximity collision detetection
     typedef SpatialHashMap<ElasticStrand, unsigned, true> SpatialHashMapT;
@@ -373,12 +309,9 @@ private:
     // Stat gathering 
     SolverStat m_solverStat;
     Timings m_timings;
-    
+    unsigned m_statTotalContacts;
     Scalar m_mem_usage_accu;
     Scalar m_mem_usage_divisor;
-    unsigned m_statExternalContacts, m_statMutualCollisions, m_statTotalCollisions;
-    unsigned m_num_nonlinear_iters, m_num_contact_solves, m_max_nonlinear_iters, m_max_perstep_nonlinear_iters;
-    int m_num_ct_hair_hair_col;
     CDTimings m_cdTimings;
 };
 

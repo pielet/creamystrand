@@ -56,7 +56,8 @@ public:
 
     Scalar time() const { return m_time ; }
     const Vec3x &normal() const { return m_normal ; }
-    virtual Vec3x offset() const ;
+    virtual Vec3x offset() const;
+    Scalar distance() const { return m_offset.norm(); }
 
 //protected:
 public:

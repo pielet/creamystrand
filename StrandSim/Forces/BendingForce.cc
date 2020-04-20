@@ -12,7 +12,7 @@
 #include "../Core/BandMatrix.hh"
 #include "../Core/ElasticStrand.hh"
 #include "../Dynamic/StrandDynamicTraits.hh"
-#include "../Dynamic/LinearStepper.hh"
+#include "../Dynamic/ImplicitStepper.hh"
 
 namespace strandsim
 {

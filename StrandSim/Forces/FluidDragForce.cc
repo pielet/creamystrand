@@ -12,7 +12,7 @@
 #include "../Dynamic/StrandDynamicTraits.hh"
 #include "../Core/BandMatrix.hh"
 #include "../Dynamic/FluidScriptingController.hh"
-#include "../Dynamic/LinearStepper.hh"
+#include "../Dynamic/ImplicitStepper.hh"
 #include "../Utils/MathUtilities.hh"
 
 namespace strandsim {

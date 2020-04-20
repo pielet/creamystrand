@@ -8,7 +8,7 @@
 
 
 #include "XMLReader.hh"
-#include "../../../StrandSim/Dynamic/LinearStepper.hh"
+#include "../../../StrandSim/Dynamic/ImplicitStepper.hh"
 #include "../../../StrandSim/Dynamic/DistanceFieldObject.hh"
 #include "../../../StrandSim/Forces/FluidDragForce.hh"
 #include "../../../StrandSim/Forces/FluidPressureForce.hh"
@@ -1573,9 +1573,6 @@ void XMLReader::setSimulationParameters()
 #endif
     m_simulation_params.m_rodSubSteps = 1;
     m_simulation_params.m_logLevel = MsgInfo::kInfo;
-    m_simulation_params.m_freezeNearbyVertex = true;
-    m_simulation_params.m_registerImpulse = true;
-    m_simulation_params.m_registerVelocity = false;
     m_simulation_params.m_useLengthProjection = true;
     m_simulation_params.m_usePreFilterGeometry = false;
     m_simulation_params.m_useApproxRodElasticFriction = true;
@@ -1589,8 +1586,8 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_solveCollision = true;
     m_simulation_params.m_useAdditionalExternalFailSafe = false;
     m_simulation_params.m_useImpulseMethod = false;
-    m_simulation_params.m_linearSolverIterations = 100;
-    m_simulation_params.m_linearSolverTolerance = 1e-12;
+    m_simulation_params.m_linearIterations = 10;
+    m_simulation_params.m_nonlinearIterations = 1;
     m_simulation_params.m_collisionSolverTolerace = 1e-6;
     m_simulation_params.m_simulationManager_limitedMemory = false;
     m_simulation_params.m_pruneSelfCollisions = true;
@@ -1603,9 +1600,9 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_hairMeshFrictionCoefficient = 0.0;
     m_simulation_params.m_airDrag = 0.0003;
     m_simulation_params.m_relaxationFactor = 1.0;
-    m_simulation_params.m_solverInterval = 1;
+    m_simulation_params.m_velocityDiffTolerance = 1e-6;
 
-    m_simulation_params.m_solverType = LinearStepper::SolverType::DIRECT;
+    m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::DIRECT;
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
     if(!m_scene_node)
@@ -1633,8 +1630,7 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
     loadParam(nd, "useAdditionalExternalFailSafe", m_simulation_params.m_useAdditionalExternalFailSafe);
     loadParam(nd, "useImpulseMethod", m_simulation_params.m_useImpulseMethod);
-    loadParam(nd, "linearSolverIterations", m_simulation_params.m_linearSolverIterations);
-    loadParam(nd, "linearSolverTolerance", m_simulation_params.m_linearSolverTolerance);
+    loadParam(nd, "linearIterations", m_simulation_params.m_linearIterations);
     loadParam(nd, "collisionSolverTolerance", m_simulation_params.m_collisionSolverTolerace);
     loadParam(nd, "simulationManagerLimitedMemory", m_simulation_params.m_simulationManager_limitedMemory);
     loadParam(nd, "pruneSelfCollisions", m_simulation_params.m_pruneSelfCollisions);
@@ -1646,11 +1642,9 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "hairMeshFrictionCoefficient", m_simulation_params.m_hairMeshFrictionCoefficient);
     loadParam(nd, "airDrag", m_simulation_params.m_airDrag);
     loadParam(nd, "subSteps", m_simulation_params.m_subSteps);
-    loadParam(nd, "freezeNearbyVertex", m_simulation_params.m_freezeNearbyVertex);
-    loadParam(nd, "registerImpulse", m_simulation_params.m_registerImpulse);
-    loadParam(nd, "registerVelocity", m_simulation_params.m_registerVelocity);
     loadParam(nd, "relaxationFactor", m_simulation_params.m_relaxationFactor);
-    loadParam(nd, "solverInterval", m_simulation_params.m_solverInterval);
+    loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
+    loadParam(nd, "velocityDiffTolerance", m_simulation_params.m_velocityDiffTolerance);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))
@@ -1666,15 +1660,15 @@ void XMLReader::setSimulationParameters()
 		}
 	}
 
-    if ((subnd = nd->first_node("solverType")))
+    if ((subnd = nd->first_node("LinearSolverType")))
     {
         std::string attribute(subnd->first_attribute("value")->value());
-        if (attribute == "direct") m_simulation_params.m_solverType = LinearStepper::SolverType::DIRECT;
-        else if (attribute == "jacobi") m_simulation_params.m_solverType = LinearStepper::SolverType::JACOBI;
-        else if (attribute == "gaussseidel") m_simulation_params.m_solverType = LinearStepper::SolverType::GAUSS_SEIDEL;
-        else if (attribute == "conjgrad") m_simulation_params.m_solverType = LinearStepper::SolverType::CONJ_GRAD;
+        if (attribute == "direct") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::DIRECT;
+        else if (attribute == "jacobi") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::JACOBI;
+        else if (attribute == "gaussseidel") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::GAUSS_SEIDEL;
+        else if (attribute == "conjgrad") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::CONJ_GRAD;
         else {
-            std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSE:" << outputmod::endred << " Invalid simulation parameter 'solverType' specified. Exiting." << std::endl;
+            std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSE:" << outputmod::endred << " Invalid simulation parameter 'LinearSolverType' specified. Exiting." << std::endl;
             exit(1);
         }
     }

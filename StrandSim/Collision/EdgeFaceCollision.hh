@@ -54,11 +54,6 @@ namespace strandsim
         {
             return m_face;
         }
-
-        bool doSOCSolve() const
-        {
-            return m_do_soc_solve;
-        }
         
     protected:
         void print( std::ostream& os ) const;
@@ -68,7 +63,6 @@ namespace strandsim
         int m_firstIdx, m_secondIdx, m_firstApex, m_secondApex;
         bool m_onBoundary ;
         Vec3x m_meshDisplacement;
-        bool m_do_soc_solve;
     };
     
 }

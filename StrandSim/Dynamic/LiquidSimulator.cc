@@ -12,7 +12,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "StrandDynamicTraits.hh"
 #include "ImplicitStepper.hh"
-#include "LinearStepper.hh"
+#include "ImplicitStepper.hh"
 #include "TriangularMeshFlow.hh"
 #include "../Collision/TriangularMesh.hh"
 #include <fstream>

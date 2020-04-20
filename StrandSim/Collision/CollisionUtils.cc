@@ -14,7 +14,7 @@
 #include "../Utils/Distances.hh"
 #include "ProximityCollision.hh"
 #include "../Dynamic/ImplicitStepper.hh"
-#include "../Dynamic/LinearStepper.hh"
+#include "../Dynamic/ImplicitStepper.hh"
 
 #include "../Utils/MathUtilities.hh"
 
@@ -426,7 +426,7 @@ namespace strandsim
     }
     
     bool analyseRoughRodRodCollision( const ElasticStrand* sP, const ElasticStrand* sQ, const int iP, const int iQ, 
-        Vec3x &depl, Scalar &s, Scalar &t, Scalar &d, Scalar& relative_vel, bool& do_soc_solve )
+        Vec3x &depl, Scalar &s, Scalar &t, Scalar &d, Scalar& relative_vel )
     {
         // return false when sP intersects with sQ || they lay in the same line
         // compute interpolote rate s, t, distance(d) and normal
@@ -478,12 +478,11 @@ namespace strandsim
             return false;
         
         relative_vel = (us - vt).dot(depl);
-        const Scalar tangential_vel = sqrt(std::max(0., (us - vt).squaredNorm() - relative_vel * relative_vel));
+        //const Scalar tangential_vel = sqrt(std::max(0., (us - vt).squaredNorm() - relative_vel * relative_vel));
 		
-		do_soc_solve = sqDist <= BCRad * BCRad;
         d = std::sqrt( sqDist );
         
-        return true;
+        return sqDist < BCRad * BCRad;
     }
     
 }

@@ -1,451 +1,99 @@
-/**
- * \copyright 2014 Danny Kaufman, 2019 Yun (Raymond) Fei
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+#ifndef STRANDSIM_ImplicitStepper_HH
+#define STRANDSIM_ImplicitStepper_HH
 
-#ifndef STRANDSIM_IMPLICITSTEPPER_HH
-#define STRANDSIM_IMPLICITSTEPPER_HH
-
-#include "../Core/StepperBase.hh"
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+#include "../Core/Definitions.hh"
 #include "../Utils/SymmetricBandMatrixSolver.hh"
-#include "../Collision/ProximityCollision.hh"
-#include "../Utils/LoggingTimer.hh"
-
-#include <memory>
-#include <vector>
 
 namespace strandsim
 {
+	class ElasticStrand;
+	class StrandDynamicTraits;
+	struct SimulationParameters;
 
-class ElasticStrand;
-struct SimulationParameters;
-
-class ProximityCollision ;
-typedef std::vector<ProximityCollision> ProximityCollisions;
-
-class ImplicitStepper
-{
-public:
-    ImplicitStepper( ElasticStrand& strand, const SimulationParameters &params );
-
-    virtual ~ImplicitStepper();
-
-    //! Updates the strand degrees of freedom using the velocities stored in m_newVelocities
-    /*! Checks if the strand has a high stretch energy. If this is the case and afterContraints if false,
-      calls an appropriate failsafe
-      \return whether the new velocities are acceptable ( stretch energy is low enough )
-    */
-    bool update(bool afterConstraints = false );
-	
-	void updateRodAccelerationAndVelocity();
-
-	void updateRodAcceleration();
-	
-	void setDt( const Scalar& dt )
+	class ImplicitStepper
 	{
-		m_dt = dt;
-	}
+	public:
+		enum LinearSolverType { DIRECT, JACOBI, GAUSS_SEIDEL, CONJ_GRAD };
 
-	void setFraction( const Scalar& fraction )
-	{
-		m_fraction = fraction;
-	}
-	
-    //! Accept's the new strand's state
-    void finalize();
+		ImplicitStepper(ElasticStrand& strand, const SimulationParameters& params);
+		~ImplicitStepper();
 
-    //! Scales the dynamics' linear sytem by s
-    void scale( const Scalar s );
+		// Save states
+		void initSolver(Scalar dt);
+		// Linearize at v_{t+1}^{k} (compute A and b)
+		void linearize();
+		// Update v (Direct solver or one iteration in iterative solver)
+		bool solveLinear();
+		// update current state and compute \hat{b}
+		void postSolveLinear();
+		// Register velocities and impulses outputed by collision solver
+		void accumulateCollision(int vid, const Vec7x& impulse);
 
-    //! Reverts the strand's state to the one at the beginning of the timestep
-    void rewind();
+		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
+		Scalar maxCollisionImpulseNorm(int& idx) const;
 
-    Scalar getCurrentFlowVelocityAtVertex(int vtx) const;
-	
-	VecXx& flowNewStrain()
-	{
-		return m_flow_newStrain;
-	}
-	
-	const VecXx& flowNewStrain() const
-	{
-		return m_flow_newStrain;
-	}
-	
-	VecXx& flowStrain()
-	{
-		return m_flow_strain;
-	}
-	
-	const VecXx& flowStrain() const
-	{
-		return m_flow_strain;
-	}
-	
-	const VecXx& getCurrentFlowVelocity() const
-	{
-		return m_flow_velocities;
-	}
-	
-	const VecXx& getFutureFlowVelocity() const
-	{
-		return m_flow_newVelocities;
-	}
-    
-    void setFutureFlowVelocity(int eidx, const Scalar& u_tau)
-    {
-        m_flow_newVelocities[eidx] = u_tau;
-    }
-    
-    void setCurrentFlowVelocity(int eidx, const Scalar& u_tau)
-    {
-        m_flow_velocities[eidx] = u_tau;
-    }
-	
-    Scalar getDt() const
-    {
-        return m_dt;
-    }
+		void finalize() {}
 
-	void initStepping( Scalar dt );
-    //! Starts a new substep
-    void startSubstep( int id, Scalar dt, Scalar fraction );
-    //! Update the strand's boundary conditions controller
-    void updateDofController( int subStepId, int numSubstepsPerDt );
+		bool refusesMutualContacts() const { return m_notSPD; }
+		Scalar getStretchMultiplier() const { return 1.0; }
+		VecXx flowComponents() const { return VecXx::Ones(m_velocities.size()); }	// for StrandRender::computeFlowQuads and ProblemStepper::dumpRods
 
+		VecXx& velocities() { return m_velocities; }
+		const VecXx& velocities() const { return m_velocities; }
 
-    ElasticStrand& getStrand()
-    {
-        return m_strand;
-    }
+		VecXx& newVelocities() { return m_newVelocities; }
+		const VecXx& newVelocities() const { return m_newVelocities; }
 
-    const ElasticStrand& getStrand() const
-    {
-        return m_strand;
-    }
+		ElasticStrand& getStrand() { return m_strand; }
+		const ElasticStrand& getStrand() const { return m_strand; }
 
-    JacobianMatrixType& Lhs();
-    const JacobianMatrixType& Lhs() const;
+		const JacobianMatrixType& getA() const { return m_A; }
+		const VecXx& getb() const { return m_b; }
+		const VecXx& getMass() const { return m_mass; }
+		const VecXx& getb_hat() const { return m_b_hat; }
+		Scalar getBestResidual() const { return m_bestError; }
+		Scalar getVelocityDiff() const { return m_velocityDiff; }
 
-    const VecXx& flow_lhs() const
-    {
-        return m_flow_lhs;
-    }
-    
-    const VecXx& rhs() const
-    {
-        return m_rhs;
-    }
-    
-    VecXx& impulse_rhs() ;
+	private:
+		void directSolver(const VecXx& b);
+		void JacobiStep(const VecXx& b);
+		void GaussSeidelStep(const VecXx& b);
+		void ConjgradStep(const VecXx& b);
 
-    const VecXx& getDOFMasses() const;
-	
-	VecXx & flowVelocities()
-	{
-		return m_flow_velocities;
-	}
-	VecXx & newFlowVelocities()
-	{
-		return m_flow_newVelocities;
-	}
-	
-    VecXx & velocities()
-    {
-        return m_velocities;
-    }
-    VecXx & newVelocities()
-    {
-        return m_newVelocities;
-    }
-    
-    const VecXx & flowComponents() const
-    {
-        return m_flow_components;
-    }
-    const VecXx & flowNewComponents() const
-    {
-        return m_flow_newComponents;
-    }
+		Scalar m_dt;
 
-    VecXx & flowComponents()
-    {
-        return m_flow_components;
-    }
-    VecXx & flowNewComponents()
-    {
-        return m_flow_newComponents;
-    }
-    
+		omp_lock_t m_lock;
 
-    VecXx & additionalImpulses()
-    {
-        return m_additional_impulse;
-    }
-    
-    const VecXx & additionalImpulses() const
-    {
-        return m_additional_impulse;
-    }
-    
-    const VecXx & velocities() const
-    {
-        return m_velocities;
-    }
-    const VecXx & newVelocities() const
-    {
-        return m_newVelocities;
-    }
-    bool notSPD() const
-    {
-        return m_notSPD;
-    }
+		ElasticStrand& m_strand;
+		const SimulationParameters& m_params;
+		StrandDynamicTraits& m_dynamics;
 
-    bool lastStepWasRejected() const
-    {
-        return m_lastStepWasRejected ;
-    }
+		LinearSolverType m_linearSolverType;
+		int m_iteration;
+		Scalar m_tolerance;
 
-    bool usedNonLinearSolver()
-    {
-        return m_usedNonlinearSolver ;
-    }
+		JacobianSolver m_directSolver;
+		bool m_notSPD;
 
-    bool refusesMutualContacts() const
-    {
-        return notSPD() ;
-    }
+		VecXx m_mass;
+		JacobianMatrixType m_A;
+		VecXx m_b;
+		VecXx m_b_hat;
 
-    JacobianSolver& linearSolver ()
-    {
-        return m_linearSolver;
-    }
-    
-    JacobianSolver& massMatrixLinearSolver ()
-    {
-        return m_massMatrix_linearSolver;
-    }
-    
-    //    JacobianSolver& complianceLinearSolver ()
-    //    {
-    //        return m_compliance_linearSolver;
-    //    }
+		VecXx m_velocities;
+		VecXx m_newVelocities;
+		VecXx m_savedVelocities;
+		VecXx m_substepVelocities;
+		
+		VecXx m_collisionImpulse;
 
-    //! Updates the current Lhs and rhs based of the m_newVelocities guess
-    /*! \return whether the linear system has been updated */
-    bool updateLinearSystem( const VecXx solverForces ) ;
+		VecXx m_residual;
+		Scalar m_bestError;
+		Scalar m_velocityDiff;
+	};
+}
 
-    unsigned numIters()
-    {
-        return m_newtonIter;
-    }
-
-    void prepareSolveNonlinear();
-
-    bool postSolveNonlinear();    
-
-    bool prepareNewtonIteration();
-
-    bool performNewtonIteration();
-     //! Intialized future degrees of freedom, setup frames, optionally initialize length constraints
-    void prepareDynamics() ;
-	
-	void backtrackFlowData() ;
-    
-    void updateAdditionalInertia() ;
-	
-	void recoverFromBeginning();
-	
-	void stepFlowAdvForce();
-    
-    void stepFlowData();
-    
-    void limitAdditionalImpulses(const Scalar& maxImpulses);
-    
-    void updateRHSwithImpulse( const VecXx& impulses );
-    
-    Scalar getNewtonResidual() const
-    {
-        return m_minErr;
-    }
-	
-    Scalar maxAdditionalImpulseNorm(int& idx);
-    
-    Scalar getStretchMultiplier() const;
-
-    void solveLinear();
-
-    void getTimings(double& pre, double& rhs, double& timesM, double& F, double& composeRhs, double& lhs, double& J, double& addM, double& store, double& solve, double& post) const;
-private:
-
-    struct NewtonTimings
-    {
-        NewtonTimings() :
-            m_prepare(0), m_computeLHS(0), m_computeRHS(0), m_storeAndFab(0), m_solve(0), m_post(0),
-            m_multiplyByMassMatrix(0), m_computeFutureForces(0), m_composeRHS(0), m_computeJ(0), m_addM(0)
-        {
-        }
-
-        void reset()
-        {
-            m_prepare = 0;
-
-            m_computeLHS = 0;
-            m_multiplyByMassMatrix = 0;
-            m_computeFutureForces = 0;
-            m_composeRHS = 0;
-
-            m_computeRHS = 0;
-            m_computeJ = 0;
-            m_addM = 0;
-
-            m_storeAndFab = 0;
-            m_solve = 0;
-            m_post = 0;
-        }
-
-
-        double m_prepare;
-
-        double m_computeRHS;
-        double m_multiplyByMassMatrix = 0;
-        double m_computeFutureForces = 0;
-        double m_composeRHS = 0;
-
-        double m_computeLHS;
-        double m_computeJ;
-        double m_addM;
-
-        double m_storeAndFab;
-        double m_solve;
-        double m_post;
-    };
-
-
-    //! Computes linearized dynamics
-
-
-	//void solveLinearFlow();
-	
-	void updateFlowData();
-
-    //! Computes the left-hand-side of the linear system of linearized dynamics at current guess
-    void computeLHS(bool dump_data = false, std::ostream& = std::cout) ;
-    //! Computes the right-hand-side of the linear system of linearized dynamics at current guess
-    void computeRHS(bool dump_data = false, std::ostream& = std::cout) ;
-	
-    //! Computes the left-hand-side of the linear system of flow dynamics
-	void computeFlowLHS() ;
-	
-	//! Computes the right-hand-side of the linear system of flow dynamics
-	void computeFlowRHS() ;
-
-    //! Copy reference frames from current state to future state
-    void setupFuturesFrames() ;
-
-    void clearConstraints();
-    //! Allocates the length constraints
-    void createConstraints();
-    
-    VecXx interpolateStrand(const Scalar& pos, const std::vector< Scalar >& summed_length, const VecXx& source, bool clamped, const VecXx& default_val);
-    
-    Vec4x interpolateStrandVelocity(const Scalar& pos, const std::vector< Scalar >& summed_length, const VecXx& source, bool clamped, const Vec4x& default_val);
-
-	Scalar interpolateStrand(const Scalar& pos, const std::vector< Scalar >& summed_length, const VecXx& source, bool clamped, const Scalar& default_val);
-	
-	Scalar traceRK2Strand(const Scalar& pos, const Scalar& dt, const std::vector< Scalar >& summed_length, const VecXx& u_vert, bool clamped, const Scalar& default_val);
-	
-	Scalar traceRK2Strand(const int ipos, const Scalar& dt, const std::vector< Scalar >& summed_length, const VecXx& u_vert, bool clamped, const Scalar& default_val);
-	
-	void accumulateReservoir();
-	
-	void markFlowStatus();
-
-	template<int nelem = 1, int nstep = 1>
-	void mapEdgeToVertices(const VecXx& edge_vars, VecXx& vertex_vars);
-	
-	template<int nelem = 1, int nstep = 1>
-	void mapVertexToEdges(const VecXx& vertex_vars, VecXx& edge_vars);
-	
-	void computeGradAtVertex(const VecXx& edge_vars, VecXx& vertex_grads);
-    //! Geometric projection of the strand's future dofs to enfore edges rest lengths
-    /*! \param preStep  whether this projection is done before or after dynamics */
-    void filterGeometryLength( bool preStep );
-
-    //! Returns the value of the stretch energy divided  by the length of the rods times its stiffness
-    Scalar getLineicStretch();
-
-    Timer m_timer;
-    NewtonTimings m_timings;
-
-    Scalar m_dt;
-	Scalar m_fraction;
-
-    const SimulationParameters &m_params;
-    Scalar m_stretchingFailureThreshold;
-    Scalar m_costretchResidualFailureThreshold;
-    Scalar m_stretchMultiplier;
-
-    JacobianSolver m_linearSolver;
-    
-    JacobianSolver m_massMatrix_linearSolver; // for zeroth-order contact resolve
-    JacobianMatrixType m_massMatrix; // really just mass
-    
-    //    JacobianSolver m_compliance_linearSolver; 
-    //    JacobianMatrixType m_complianceMatrix; 
-
-    bool m_notSPD;
-    bool m_usedNonlinearSolver;
-    bool m_linearSystemIsDirty;
-    bool m_lastStepWasRejected;
-	
-	VecXx m_flow_velocities;
-	VecXx m_flow_newVelocities;
-    
-    VecXx m_flow_components;
-    VecXx m_flow_newComponents;
-	
-	VecXx m_flow_strain;
-	VecXx m_flow_newStrain;
-
-	VecXx m_beginningVelocities;
-    VecXx m_savedVelocities;
-    VecXx m_velocities;
-    VecXx m_newVelocities;
-    VecXx m_additional_inertia;
-	
-    VecXx m_rhs;
-    VecXx m_impulseRhs; // for zeroth-order contact
-    VecXx m_additional_impulse;
-    VecXx m_projectionDisplacements;
-	
-	VecXx m_flow_rhs;
-	VecXx m_flow_lhs;
-
-    JacobianMatrixType m_bestLHS ;
-    VecXx m_bestRhs;
-    VecXx m_prevRhs ;
-	
-//	std::vector<unsigned char> m_flow_status;
-//	VecXx m_flow_pressure;
-
-    Scalar m_alpha;          // Current step length
-    Scalar m_minErr;
-    Scalar m_prevErr;
-    
-    Scalar m_total_flow;
-
-public:
-    ElasticStrand& m_strand;
-private:
-    
-    unsigned m_newtonIter;
-
-};
-
-} // namespace strandsim
-
-#endif // STRANDSIM_IMPLICITSTEPPER_HH
+#endif // !STRANDSIM_ImplicitStepper_HH

@@ -19,7 +19,7 @@ namespace strandsim
     public:
         EdgeEdgeCollision(ElasticStrand* firstStrand, int firstVertex, ElasticStrand* secondStrand, int secondVertex) :
             ContinuousTimeCollision(firstStrand, firstVertex), m_secondStrand(secondStrand), m_secondVertex(secondVertex),
-            m_firstAbscissa(0.), m_secondAbscissa(0.), m_doSOCSolve(false)
+            m_firstAbscissa(0.), m_secondAbscissa(0.)
         {
         }
 
@@ -30,8 +30,6 @@ namespace strandsim
         Scalar getFirstAbscissa() const {  return m_firstAbscissa; }
 
         Scalar getSecondAbscissa() const { return m_secondAbscissa; }
-
-        bool doSOCSolve() const { return m_doSOCSolve; }
 
         virtual bool analyse();
 
@@ -45,8 +43,6 @@ namespace strandsim
 
         Scalar m_firstAbscissa;
         Scalar m_secondAbscissa;
-
-        bool m_doSOCSolve;
     };
 }
 

@@ -13,7 +13,7 @@
 #include "../Core/Definitions.hh"
 
 #include "../../bogus/Interfaces/MecheEigenInterface.hpp"
-#include "../Dynamic/LinearStepper.hh"
+#include "../Dynamic/ImplicitStepper.hh"
 
 namespace strandsim
 {
@@ -56,10 +56,6 @@ struct SimulationParameters
     double m_collisionSolverTolerace;
 
     double m_airDrag ;
-
-    bool m_freezeNearbyVertex;
-    bool m_registerVelocity;
-    bool m_registerImpulse;
     
     /**
      * Inextensibility 
@@ -79,10 +75,10 @@ struct SimulationParameters
     /**
      * Linear Solver for one Newton step
      */
-    unsigned m_linearSolverIterations;
-    double m_linearSolverTolerance;
-    LinearStepper::SolverType m_solverType;
-    int m_solverInterval;
+    double m_velocityDiffTolerance;
+    unsigned m_nonlinearIterations;
+    unsigned m_linearIterations;
+    ImplicitStepper::LinearSolverType m_linearSolverType;
 
     Scalar m_relaxationFactor;
     

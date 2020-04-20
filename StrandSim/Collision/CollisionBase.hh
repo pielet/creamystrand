@@ -43,7 +43,6 @@ public:
     virtual const FaceProxy* face() const = 0;
 
     Scalar faceFrictionCoefficient() const;
-    virtual bool doSOCSolve() const = 0;
 
     Scalar m_u, m_v, m_w;
 };

@@ -82,15 +82,12 @@ namespace strandsim
         unsigned long total = 0;
         
         //ContinuousTimeCollision* m_originalCTCollision;
-        //std::cout << m_originalCTCollision << std::endl;
         total += sizeof( ContinuousTimeCollision* );
         //Vec3x normal;
         total += normal.size() * sizeof( Vec3x::Scalar );
         //Vec3x force;
         total += force.size() * sizeof( Vec3x::Scalar );
         //Scalar mu;
-        total += sizeof( Scalar );
-        //Scalar adhesion;
         total += sizeof( Scalar );
         //Scalar distance ;
         total += sizeof( Scalar );
