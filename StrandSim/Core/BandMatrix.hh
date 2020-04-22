@@ -348,18 +348,18 @@ private:
 template<typename ScalarT, IndexType kl, IndexType ku>
 std::ostream& operator<<( std::ostream& os, const BandMatrix<ScalarT, kl, ku>& M )
 {
-    os << '{';
+    os << '[';
     for ( int i = 0; i < M.rows() - 1; i++ )
     {
-        os << '{';
+        os << '[';
         for ( int j = 0; j < M.cols() - 1; j++ )
             os << M( i, j ) << ", ";
-        os << M( i, M.cols() - 1 ) << "}, \n";
+        os << M( i, M.cols() - 1 ) << "], \n";
     }
     os << '{';
     for ( int j = 0; j < M.cols() - 1; j++ )
         os << M( M.rows() - 1, j ) << ", ";
-    os << M( M.rows() - 1, M.cols() - 1 ) << "}} \n";
+    os << M( M.rows() - 1, M.cols() - 1 ) << "]] \n";
 
     return os;
 }

@@ -1762,6 +1762,21 @@ namespace strandsim
 			assert(collisionId + collisionGroup.second.size() == nContacts);
 		}
 
+
+		//if (nContacts > 0) {
+		//	for (int i = 0; i < nSubsystems; ++i)
+		//		std::cout << "\nStrand " << i << ": \n" << MassMat[i]->matrix();
+		//	for (int i = 0; i < nContacts; ++i) {
+		//		std::cout << "\nContact " << i << ":\n";
+		//		if (H_0[i])
+		//			std::cout << *H_0[i] << std::endl;
+		//		if (H_1[i])
+		//			std::cout << *H_1[i] << std::endl;
+
+		//		std::cout << "\nE " << i << ":\n" << E[i];
+		//	}
+		//}
+
 		m_solverStat.m_assembleTime += tt.elapsed();
 		mecheProblem.fromPrimal(nSubsystems, nndofs, dof / m_dt, MassMat, forces, adhesions, filters,
 			nContacts, mu, yields, etas, powers, E, u_frees, &ObjA[0], &ObjB[0], H_0, H_1, m_params.m_useImpulseMethod);
