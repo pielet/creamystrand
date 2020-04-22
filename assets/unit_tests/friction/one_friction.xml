@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
 
-  <duration time="4"/>
+  <duration time="1"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -41,10 +41,11 @@
     <selfCollisionsRadius value="0.0055"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
+    <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <logLevel value="1"/>
+    <logLevel value="5"/>
     <airDrag value="0.0005"/> 
     <solveCollision value="1"/>
     <gaussSeidelIterations value="200"/>
@@ -75,45 +76,45 @@
     <bogusAlgorithm value="projectedgradient"/>
   </SimulationParameters>
 
-  <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="3" group="0"/>
-  <particle x="-9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="0.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
+  <particle x="-9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="0.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
   <particle x="9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
 
   <particle x="0.0 1.0 -10.0" v="0.0 0.0 0.0" fixed="3" group="1"/>

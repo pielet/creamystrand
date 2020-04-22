@@ -1460,7 +1460,7 @@ namespace strandsim
 			}
 		}
 
-		std::cout << "Max WI (Elastic): " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
+		//std::cout << "Max WI (Elastic): " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
 	}
 
 	// DK: solve all collisions and then finalize (relax theta's and accept state update).
@@ -1570,9 +1570,10 @@ namespace strandsim
 				maxWI_idx = i;
 				maxWI_subidx = subidx;
 			}
+			std::cout << "Impulse norm: " << maxWI << " @ " << i << ", " << subidx << std::endl;
 		}
 
-		std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
+		//std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
 
 #pragma omp parallel for
 		for (int i = 0; i < (int)m_strands.size(); i++)
@@ -1951,8 +1952,9 @@ namespace strandsim
 
 				ProximityCollision& col = *colPointers[i];
 				col.force = impulses.segment<3>(i * 3); // ??? Missing Adhesion forces
-				// std::cout << "impulse[" << i << "]: " << impulses.segment<3>(i) << std::endl;
 				m_collisionDatabase.insert(col);
+				std::cout << col.force << " @ (" << col.objects.first.globalIndex << ", " << col.objects.first.vertex
+					<< ") (" << col.objects.second.globalIndex << " , " << col.objects.second.vertex << ")" << std::endl;
 			}
 		}
 
