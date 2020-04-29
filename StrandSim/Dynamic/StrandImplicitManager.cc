@@ -1556,21 +1556,13 @@ namespace strandsim
 			}
 		}
 
-		Scalar maxWI = 0.;
-		int maxWI_idx = -1;
-		int maxWI_subidx = -1;
 
 		for (int i = 0; i < (int)m_steppers.size(); i++)
 		{
 			int subidx = -1;
 			const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
-			//            maxWI = std::max(maxWI, Wi);
-			if (Wi > maxWI) {
-				maxWI = Wi;
-				maxWI_idx = i;
-				maxWI_subidx = subidx;
-			}
-			std::cout << "Impulse norm: " << maxWI << " @ " << i << ", " << subidx << std::endl;
+
+			std::cout << "Impulse norm: " << Wi << " @ " << i << ", " << subidx << std::endl;
 		}
 
 		//std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
