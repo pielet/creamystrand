@@ -65,6 +65,7 @@
 		<collisionSolverTolerace value="1e-6"/>
 		<logLevel value="5"/>  <!-- MsgInfo::kInfo -->
 		<linearIterations value="10"/>
+		<linearizebHat value="0"/>
 		<linearSolverType value="direct"/>   <!-- direct / jacobi / gaussseidel / conjgrad -->
 		<hairHairFrictionCoefficient value="0.3"/>
 		<hairMeshFrictionCoefficient value="0.0"/>

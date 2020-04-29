@@ -81,9 +81,6 @@ namespace strandsim
                 m_offset = (1. - m_firstAbscissa) * (pp0 - dp0) + m_firstAbscissa * (pp1 - dp1)   // p orig
                     - ((1. - m_secondAbscissa) * (pq0 - dq0) + m_secondAbscissa * (pq1 - dq1));   // q orig
 
-                std::cout << m_firstVertex << " " << m_secondVertex << " " << m_firstAbscissa << " " << m_secondAbscissa << '\n';
-                std::cout << m_offset.norm() << std::endl;
-
                 const Vec3x relativeDisplacement = m_time * 
                     (((1.0 - m_firstAbscissa) * dp0 + m_firstAbscissa * dp1)    // edge1 displacement
                     - ((1.0 - m_secondAbscissa) * dq0 + m_secondAbscissa * dq1));   // edge2 displacement

@@ -49,6 +49,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <mutex>
 #include <condition_variable>
 
@@ -2096,7 +2097,12 @@ namespace strandsim
 				unsigned s2 = s2It->first;
 				auto& cols = s2It->second;
 
-				std::map< Scalar, const ProximityCollision* > sorted_coll;
+				for (const auto& col : cols)
+				{
+					closest_per_edges[col->objects.first.vertex][col->distance] = col;
+				}
+
+				/*std::map< Scalar, const ProximityCollision* > sorted_coll;
 				std::unordered_set< std::pair< unsigned, unsigned >, PairHash > vertex_pair_set;
 
 				for (const auto& col : cols)
@@ -2129,7 +2135,7 @@ namespace strandsim
 				for (auto& col : new_collisions)
 				{
 					closest_per_edges[col->objects.first.vertex][col->distance] = col;
-				}
+				}*/
 
 				//std::vector<bool> accept(cols.size());
 				//std::vector<bool> taken(m_strands[s2]->getNumVertices());
@@ -2426,7 +2432,7 @@ namespace strandsim
 			externalContacts.swap(prunedExternalContacts);
 		}
 
-		DebugStream(g_log, "") << "Pruned " << nPruned << " external collisions ";
+		std::cout << "Pruned " << nPruned << " external collisions" << std::endl;
 
 	}
 
@@ -2670,16 +2676,6 @@ namespace strandsim
 						step_solveCollisions();
 						timings.solve += timer.elapsed();
 					}
-
-					//if (g_one_iter) {
-					//	if (m_substep_callback) m_substep_callback->executeCallback();
-					//	{
-					//		std::unique_lock<std::mutex> lk(g_iter_mutex);
-					//		g_one_iter = false;
-					//	}
-					//	std::unique_lock<std::mutex> lk(g_iter_mutex);
-					//	g_cv.wait(lk, [] {return g_one_iter; });
-					//}
 				}
 			}
 			if (all_done) break;
@@ -2768,12 +2764,11 @@ namespace strandsim
 		
 		if (m_params.m_pruneSelfCollisions) {
 			pruneCollisions(m_mutualContacts, mutualCollisions, m_params.m_stochasticPruning);
+			m_mutualContacts.swap(mutualCollisions);
 		}
 		if (m_params.m_useDeterministicSolver) {
-			std::sort(mutualCollisions.begin(), mutualCollisions.end());
+			std::sort(m_mutualContacts.begin(), m_mutualContacts.end());
 		}
-
-		m_mutualContacts.swap(mutualCollisions);
 
 #pragma omp parallel for
 		for (int i = 0; i < m_mutualContacts.size(); ++i) {
@@ -2808,6 +2803,9 @@ namespace strandsim
 		std::vector<ProximityCollision*> colPointers(m_statTotalContacts);
 		std::vector<Scalar> residuals(m_statTotalContacts);
 
+		/*auto rng = std::default_random_engine{};
+		std::shuffle(m_mutualContacts.begin(), m_mutualContacts.end(), rng);*/
+
 //#pragma omp parallel for
 		for (int i = 0; i < m_mutualContacts.size(); ++i) {
 			ProximityCollision& collision = m_mutualContacts[i];
@@ -2826,8 +2824,10 @@ namespace strandsim
 			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
 
 			Vec14x f;
-			f.segment<7>(0) = first_stepper.getb_hat().segment<7>(4 * first_vert);
-			f.segment<7>(7) = second_stepper.getb_hat().segment<7>(4 * second_vert);
+			f.segment<7>(0) = first_stepper.getb_hat().segment<7>(4 * first_vert)
+				+ first_stepper.getCollisionImpulse().segment<7>(4 * first_vert);
+			f.segment<7>(7) = second_stepper.getb_hat().segment<7>(4 * second_vert)
+				+ second_stepper.getCollisionImpulse().segment<7>(4 * second_vert);
 
 			Vec3x uf = Vec3x::Zero();
 
@@ -2863,7 +2863,8 @@ namespace strandsim
 				Mat3x E = collision.transformationMatrix;
 				Scalar mu = collision.mu;
 
-				Vec7x f = stepper.getb_hat().segment<7>(4 * vert);
+				Vec7x f = stepper.getb_hat().segment<7>(4 * vert) 
+					+ stepper.getCollisionImpulse().segment<7>(4 * vert);
 
 				bogus::ExternalContactSolver solver(M, H, f, uf, E, mu);
 
@@ -2893,14 +2894,29 @@ namespace strandsim
 		//		vid = cp->objects.first.vertex;
 		//	}
 		//}
-		//residualStats("Collision Solver", residuals);
+		////residualStats("Collision Solver", residuals);
 		//std::cout << "Max Impulse: " << max_r << " @ (" << sid << ", " << vid << ")\n";
-	
+		
 		for (int i = 0; i < residuals.size(); ++i) {
 			ContactStream(g_log, "") << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
 				<< colPointers[i]->objects.first.vertex << ") (" << colPointers[i]->objects.second.globalIndex
 				<< ", " << colPointers[i]->objects.second.vertex << ") res = " << residuals[i];
 		}
+
+		// delete collision with small impulse
+		m_mutualContacts.erase(std::remove_if(m_mutualContacts.begin(), m_mutualContacts.end(), [&](const ProximityCollision& col) {
+			return isSmall(col.force.norm());
+		}), m_mutualContacts.end());
+		int nExt = 0;
+		for (int i = 0; i < m_strands.size(); ++i)
+		{
+			m_externalContacts[i].erase(std::remove_if(m_externalContacts[i].begin(), m_externalContacts[i].end(),
+				[&](const ProximityCollision& col) { return isSmall(col.force.norm()); }),
+				m_externalContacts[i].end());
+			nExt += m_externalContacts[i].size();
+		}
+
+		m_statTotalContacts = m_mutualContacts.size() + nExt;
 	}
 
 } // namespace strandsim

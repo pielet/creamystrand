@@ -144,15 +144,20 @@ namespace strandsim
 		m_dynamics.getDisplacements() = displacements;
 		m_dynamics.getAccelerations() = (m_newVelocities - m_velocities) / m_dt;
 
-		/*m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
-		m_b_hat = m_savedVelocities;
-		m_dynamics.multiplyByMassMatrix(m_b_hat);
-		m_dynamics.computeFutureForces(true, true, true, false, false);
-		m_b_hat += m_strand.getFutureTotalForces() * m_dt;*/
-
-		m_b_hat = m_b;
-		JacobianMatrixType A = m_strand.getTotalJacobian();
-		A.multiply(m_b_hat, -m_dt * m_dt, m_newVelocities);
+		if (m_params.m_linearizebHat)
+		{
+			m_b_hat = m_b;
+			JacobianMatrixType A = m_strand.getTotalJacobian();
+			A.multiply(m_b_hat, -m_dt * m_dt, m_newVelocities);
+		}
+		else
+		{
+			m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
+			m_b_hat = m_savedVelocities;
+			m_dynamics.multiplyByMassMatrix(m_b_hat);
+			m_dynamics.computeFutureForces(true, true, true, false, false);
+			m_b_hat += m_strand.getFutureTotalForces() * m_dt;
+		}
 
 		m_velocities = m_newVelocities;
 	}

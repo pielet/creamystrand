@@ -54,6 +54,7 @@ namespace strandsim
 		const VecXx& getb() const { return m_b; }
 		const VecXx& getMass() const { return m_mass; }
 		const VecXx& getb_hat() const { return m_b_hat; }
+		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
 		Scalar getBestResidual() const { return m_bestError; }
 		Scalar getVelocityDiff() const { return m_velocityDiff; }
 
