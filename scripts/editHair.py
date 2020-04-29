@@ -33,7 +33,7 @@ new_hairs = []
 new_vertices = []
 globle_idx = 1
 for i, hair in enumerate(hairs):
-    if distance(center_pos, first_pos[i]) < 0.05:
+    if distance(center_pos, first_pos[i]) < 0.1:
         idx_list = []
         v_list = []
         for idx in hair:

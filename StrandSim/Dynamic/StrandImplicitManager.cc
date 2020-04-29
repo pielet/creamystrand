@@ -2939,6 +2939,11 @@ namespace strandsim
 				<< colPointers[i]->objects.first.globalIndex << ", " << colPointers[i]->objects.first.vertex << ") (" 
 				<< colPointers[i]->objects.second.globalIndex << ", " << colPointers[i]->objects.second.vertex << ")";
 		}
+
+		for (int i = 0; i < m_strands.size(); ++i) {
+			Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
+			ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
+		}
 	}
 
 } // namespace strandsim

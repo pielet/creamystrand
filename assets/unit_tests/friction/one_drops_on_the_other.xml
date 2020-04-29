@@ -59,7 +59,7 @@
     <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
-    <pruneSelfCollisions value="1"/>
+    <pruneSelfCollisions value="0"/>
     <statGathering value="0"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
