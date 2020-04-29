@@ -94,7 +94,7 @@
 		<useNonlinearContacts value="0"/>   	<!-- use Newton Method to solve constraint motion equation after bogus solver (add additional impulse to rhs)-->
 		<useSoftAttachConstraints value="0"/>  <!-- if ture, add fixing force instead of setting gradient to zero -->
 		<usePreFilterGeometry value="0"/>
-		<velocityDiffTolerance value-"1e-6"/>
+		<velocityDiffTolerance value="1e-6"/>
 		<bogusAlgorithm value="projectedgradient"/>  <!-- projectedgradient / matrixfreegaussseidel / gaussseidel -->
 	</SimulationParameters>
 

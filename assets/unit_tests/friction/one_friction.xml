@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
-           
-  <duration time="3.0"/>
+
+  <duration time="1"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -45,40 +45,77 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <solveCollision value="1"/>
-    <collisionSolverTolerace value="1e-6"/>
     <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <nonlinearIterations value="1"/>
-    <linearIterations value="50"/>
-    <velocityDiffTolerance value="1e-4"/>
-    <linearSolverType value="direct"/>
-    <relaxationFactor value="2.0"/>
-    <useCTRodRodCollisions value="0"/>
-    <hairMeshFrictionCoefficient value="0.0"/>
-    <hairHairFrictionCoefficient value="0.3"/>
-    <numberOfThreads value="24"/>
-    <pruneExternalCollisions value="0"/>
-    <pruneSelfCollisions value="1"/>
-    <statGathering value="0"/>
-    <useImpulseMethod value="0"/>
-    <useNonlinearContacts value="0"/>
-    <solveLiquids value="0"/>
-    <bogusAlgorithm value="projectedgradient"/>
-
+    <airDrag value="0.0005"/> 
+    <solveCollision value="1"/>
     <gaussSeidelIterations value="200"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
+    <hairMeshFrictionCoefficient value="0.0"/>
+    <numberOfThreads value="24"/>
+    <percentCTRodRodCollisionsAccept value="100"/>
+    <pruneExternalCollisions value="0"/>
+    <pruneSelfCollisions value="0"/>
+    <rodSubSteps value="1"/>
+    <simulationManagerLimitedMemory value="0"/>
+    <skipFlowFrictions value="1"/>
+    <skipRodMeshCollisions value="0"/>
+    <skipRodRodCollisions value="0"/>
+    <statGathering value="1"/>
+    <stochasticPruningFraction value="0.8"/>
+    <hairHairFrictionCoefficient value="0.16"/>
+    <substeps value="1"/>
+    <useApproxRodElasticFriction value="1"/>
+    <useCTRodRodCollisions value="1"/>
+    <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
+    <useNonlinearContacts value="0"/>
+    <useSoftAttachConstraints value="0"/>
+    <usePreFilterGeometry value="0"/>
+    <solveLiquids value="0"/>
+    <bogusAlgorithm value="projectedgradient"/>
   </SimulationParameters>
 
-<!--
-  <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
-    <fixed start="0" end="0" value="3"/>
-    <fixed start="1" end="1" value="1"/>
-    <fixed start="39" end="39" value="3"/>
-    <fixed start="40" end="40" value="1"/>
-  </hairobj>
+  <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
+  <particle x="-9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="-0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="0.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
 
   <particle x="0.0 1.0 -10.0" v="0.0 0.0 0.0" fixed="3" group="1"/>
   <particle x="0.0 1.0 -9.5" v="0.0 0.0 0.0" fixed="1" group="1"/>
@@ -120,57 +157,12 @@
   <particle x="0.0 1.0 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 1.0 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 1.0 9.5" v="0.0 0.0 0.0" fixed="0"/>
--->
-
-  <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
-  <particle x="-9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="-0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="0.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="0.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="1.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="1.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="2.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="2.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="3.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="3.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="4.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="4.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="5.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="5.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="6.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="6.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="7.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="7.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="8.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="8.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
-  <particle x="9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
-
+  
   <hair params="0" start="0" count="40"/>
+  <hair params="0" start="40" count="40"/>
 
-  <hairobj filename="assets/strands.obj" params="0" group="1" x="0.0" y="1.0" z="1.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
-    <fixed start="0" end="0" value="3"/>
-    <fixed start="1" end="1" value="1"/>
-  </hairobj>
-
-  <!--<script type="translate" x="0" y="0" z="-10" w="0.0" start="0.1" end="0.3" group="1"/>-->
+  <!--<script type="translate" x="-5.0" y="0" z="0" w="0" start="0" end="0.3" group="0"/>-->
+  <!--<script type="translate" x="0" y="0" z="-10.0" w="0.0" start="0" end="0.3" group="1"/>-->
 
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1">
   </distancefield>
