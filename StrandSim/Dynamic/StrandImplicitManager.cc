@@ -2683,6 +2683,8 @@ namespace strandsim
 
 		m_timings.back().push_back(timings);
 
+		step_postCollision();
+
 		std::vector<Scalar> residuals(m_strands.size());
 		std::vector<Scalar> delta_v(m_strands.size());
 		int numUnsolved = 0;
@@ -2875,38 +2877,28 @@ namespace strandsim
 				colPointers[col_idx++] = &collision;
 			}
 		}
-
-		// update collision database
-		if (!m_params.m_simulationManager_limitedMemory) {
-			for (int i = 0; i < colPointers.size(); ++i) {
-				m_collisionDatabase.insert(*colPointers[i]);
+		
+		if (g_one_iter) {
+			for (int i = 0; i < residuals.size(); ++i) 
+			{
+				ContactStream(g_log, "") << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
+					<< colPointers[i]->objects.first.vertex << ") (" << colPointers[i]->objects.second.globalIndex
+					<< ", " << colPointers[i]->objects.second.vertex << ") res = " << residuals[i];
 			}
-		}
-		
-		//// output residual info
-		//Scalar max_r = 0.;
-		//int sid = -1, vid = -1;
-		//for (auto cp : colPointers) {
-		//	Scalar r_norm = cp->force.norm();
-		//	if (r_norm > max_r) {
-		//		max_r = r_norm;
-		//		sid = cp->objects.first.globalIndex;
-		//		vid = cp->objects.first.vertex;
-		//	}
-		//}
-		////residualStats("Collision Solver", residuals);
-		//std::cout << "Max Impulse: " << max_r << " @ (" << sid << ", " << vid << ")\n";
-		
-		for (int i = 0; i < residuals.size(); ++i) {
-			ContactStream(g_log, "") << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
-				<< colPointers[i]->objects.first.vertex << ") (" << colPointers[i]->objects.second.globalIndex
-				<< ", " << colPointers[i]->objects.second.vertex << ") res = " << residuals[i];
+
+			{
+				std::unique_lock<std::mutex> lk(g_iter_mutex);
+				g_one_iter = false;
+			}
+			std::unique_lock<std::mutex> lk(g_iter_mutex);
+			g_cv.wait(lk, [] {return g_one_iter; });
 		}
 
 		// delete collision with small impulse
 		m_mutualContacts.erase(std::remove_if(m_mutualContacts.begin(), m_mutualContacts.end(), [&](const ProximityCollision& col) {
 			return isSmall(col.force.norm());
 		}), m_mutualContacts.end());
+
 		int nExt = 0;
 		for (int i = 0; i < m_strands.size(); ++i)
 		{
@@ -2917,6 +2909,36 @@ namespace strandsim
 		}
 
 		m_statTotalContacts = m_mutualContacts.size() + nExt;
+	}
+
+	void StrandImplicitManager::step_postCollision()
+	{
+		std::vector<ProximityCollision*> colPointers(m_statTotalContacts);
+
+		for (int i = 0; i < m_mutualContacts.size(); ++i) {
+			colPointers[i] = &m_mutualContacts[i];
+		}
+
+		int idx = m_mutualContacts.size();
+		for (int i = 0; i < m_strands.size(); ++i) {
+			for (auto& col : m_externalContacts[i]) {
+				colPointers[idx++] = &col;
+			}
+		}
+
+		// update collision database
+		if (!m_params.m_simulationManager_limitedMemory) {
+			for (int i = 0; i < colPointers.size(); ++i) {
+				m_collisionDatabase.insert(*colPointers[i]);
+			}
+		}
+
+		// print impulse
+		for (int i = 0; i < colPointers.size(); ++i) {
+			ContactStream(g_log, "") << colPointers[i]->force << " @ (" 
+				<< colPointers[i]->objects.first.globalIndex << ", " << colPointers[i]->objects.first.vertex << ") (" 
+				<< colPointers[i]->objects.second.globalIndex << ", " << colPointers[i]->objects.second.vertex << ")";
+		}
 	}
 
 } // namespace strandsim

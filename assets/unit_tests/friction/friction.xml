@@ -65,16 +65,20 @@
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="projectedgradient"/>
+
+    <gaussSeidelIterations value="1000"/>
+    <gaussSeidelTolerance value="1e-06"/> 
+    <maxNewtonIterations value="100"/>
   </SimulationParameters>
 
-<!--
+
   <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
     <fixed start="39" end="39" value="3"/>
     <fixed start="40" end="40" value="1"/>
   </hairobj>
-
+<!--
   <particle x="0.0 1.0 -10.0" v="0.0 0.0 0.0" fixed="3" group="1"/>
   <particle x="0.0 1.0 -9.5" v="0.0 0.0 0.0" fixed="1" group="1"/>
   <particle x="0.0 1.0 -9.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -116,6 +120,7 @@
   <particle x="0.0 1.0 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 1.0 9.5" v="0.0 0.0 0.0" fixed="0"/>
 -->
+<!--
   <particle x="-10.0 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
   <particle x="-9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="-9.0 0.0 0.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -158,6 +163,7 @@
   <particle x="9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
 
   <hair params="0" start="0" count="40"/>
+-->
 
   <hairobj filename="assets/strands.obj" params="0" group="1" x="0.0" y="1.0" z="1.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
     <fixed start="0" end="0" value="3"/>

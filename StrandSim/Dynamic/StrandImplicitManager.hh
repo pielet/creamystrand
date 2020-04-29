@@ -249,6 +249,8 @@ private:
     void step_processCollisions();
     //! Solves collisions and updates collision impulses
     void step_solveCollisions();
+    //! Updates collision database and prints collision info
+    void step_postCollision();
 
     void residualStats( const std::string& name, const std::vector< Scalar >& residuals );
 
