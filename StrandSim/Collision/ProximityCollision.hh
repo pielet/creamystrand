@@ -14,6 +14,12 @@
 #include <map>
 #include <unordered_map>
 
+
+namespace bogus
+{
+    class CollisionSolverBase;
+}
+
 namespace strandsim
 {
     
@@ -61,6 +67,8 @@ namespace strandsim
         Mat3x transformationMatrix ;
         
         std::pair<Object, Object> objects;
+
+        bogus::CollisionSolverBase* m_collisionSolver;
         
         void generateTransformationMatrix() ;
         void updateTransformationMatrix( const Mat3x& previous ) ;

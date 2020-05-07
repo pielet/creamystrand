@@ -25,7 +25,7 @@
     <poissonRatio value="0.36" />
     <collisionMultiplier value="1.0"/>
     <attachMultiplier value="1.0" />
-    <density value="1.32" /> 
+    <density value="1.32"/>
     <viscosity value="1e8" />
     <baseRotation value="0.0"/>
     <accumulateWithViscous value="1"/>
@@ -50,8 +50,8 @@
     <logLevel value="4"/>
     <linearizebHat value="1"/>
     <nonlinearIterations value="1"/>
-    <linearIterations value="40"/>
-    <velocityDiffTolerance value="1e-4"/>
+    <linearIterations value="20"/>
+    <velocityDiffTolerance value="1e-2"/>
     <linearSolverType value="direct"/>
     <relaxationFactor value="2.0"/>
     <useCTRodRodCollisions value="0"/>
@@ -64,10 +64,12 @@
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
-    <bogusAlgorithm value="projectedgradient"/>
+    <bogusAlgorithm value="gaussseidel"/>
+
+    <simulationManagerLimitedMemory value="1"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="200"/>
+    <gaussSeidelIterations value="20"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
     <stochasticPruningFraction value="0.8"/>
@@ -196,7 +198,7 @@
   <particle x="0.0 0.1 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 9.5" v="0.0 0.0 0.0" fixed="0"/>
-
+<!--
   <particle x="0.1 0.1 -10.0" v="0.0 0.0 0.0" fixed="3" group="1"/>
   <particle x="0.1 0.1 -9.5" v="0.0 0.0 0.0" fixed="1" group="1"/>
   <particle x="0.1 0.1 -9.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -278,12 +280,12 @@
   <particle x="0.1 0.2 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.1 0.2 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.1 0.2 9.5" v="0.0 0.0 0.0" fixed="0"/>
-
+-->
   <hair params="0" start="0" count="40"/>
   <hair params="0" start="40" count="40"/>
-  
-  <hair params="0" start="80" count="40"/>
-  <hair params="0" start="120" count="40"/>
+<!--
+  <hair params="0" start="80" count="40"/>-->
+  <!--<hair params="0" start="120" count="40"/>-->
 
   <!--<script type="translate" x="-5.0" y="0" z="0" w="0" start="0" end="0.3" group="0"/>-->
   <!--<script type="translate" x="0" y="0" z="-10.0" w="0.0" start="1" end="2" group="1"/>-->

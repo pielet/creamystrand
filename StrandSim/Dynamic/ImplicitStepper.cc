@@ -104,7 +104,6 @@ namespace strandsim
 
 		b += m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(m_A, b, m_dt);
-		m_collisionImpulse.setZero();
 
 		switch (m_linearSolverType)
 		{

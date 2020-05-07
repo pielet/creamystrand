@@ -2,7 +2,7 @@
   <description text="A moving hair ball"/>
            
   <duration time="4.0"/>
-  <integrator type="linearized-implicit-euler" dt="0.01" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -44,35 +44,33 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <solveCollision value="0"/>
-    <logLevel value="1"/>
-    <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="1000"/>
-    <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="1"/>
-    <hairMeshFrictionCoefficient value="1.0"/>
-    <numberOfThreads value="24"/>
-    <percentCTRodRodCollisionsAccept value="100"/>
-    <pruneExternalCollisions value="1"/>
-    <pruneSelfCollisions value="1"/>
-    <rodSubSteps value="1"/>
-    <simulationManagerLimitedMemory value="0"/>
-    <skipFlowFrictions value="1"/>
-    <skipRodMeshCollisions value="0"/>
-    <skipRodRodCollisions value="0"/>
-    <statGathering value="1"/>
-    <stochasticPruningFraction value="0.8"/>
-    <hairHairFrictionCoefficient value="0.16"/>
-    <substeps value="1"/>
-    <useApproxRodElasticFriction value="1"/>
+    <solveCollision value="1"/>
+    <collisionSolverTolerace value="1e-6"/>
+    <logLevel value="5"/>
+    <linearizebHat value="1"/>
+    <nonlinearIterations value="1"/>
+    <linearIterations value="200"/>
+    <velocityDiffTolerance value="1e-4"/>
+    <linearSolverType value="direct"/>
+    <relaxationFactor value="2.0"/>
     <useCTRodRodCollisions value="1"/>
+    <hairMeshFrictionCoefficient value="0.0"/>
+    <hairHairFrictionCoefficient value="0.3"/>
+    <numberOfThreads value="24"/>
+    <pruneExternalCollisions value="1"/>
+    <pruneSelfCollisions value="0"/>
+    <statGathering value="0"/>
     <useImpulseMethod value="0"/>
-    <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
-    <useSoftAttachConstraints value="0"/>
-    <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="projectedgradient"/>
+
+    <simulationManagerLimitedMemory value="1"/>
+
+    <gaussSeidelIterations value="200"/>
+    <gaussSeidelTolerance value="1e-06"/> 
+    <maxNewtonIterations value="10"/>
+    <useLengthProjection value="0"/>
   </SimulationParameters>
 
   <hairobj filename="assets/hair_ball_1k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">

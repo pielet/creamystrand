@@ -7,8 +7,10 @@
 
 namespace bogus
 {
+	class CollisionSolverBase {};
+
 	template <int ndof>
-	class OneCollisionProblem
+	class OneCollisionProblem :public CollisionSolverBase
 	{
 	public:
 		typedef Eigen::Matrix<double, ndof, ndof> MassMat;
@@ -37,6 +39,7 @@ namespace bogus
 			double mu
 		);
 
+
 		~OneCollisionProblem();
 
 		//! Solve the dual friction problem
@@ -49,7 +52,6 @@ namespace bogus
 		MInvType m_MInv;
 		DefGradMat m_defGrad;
 		DefGradMat m_defGradInv;
-		ForceVec m_force;
 
 		// Dual parameters
 		Eigen::Vector3d m_b;

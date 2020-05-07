@@ -8,7 +8,7 @@ namespace bogus
 	template <int ndof> 
 	OneCollisionProblem<ndof>::OneCollisionProblem( const MassMat& M, const DefGradMat& H,
 		const ForceVec& f, const Eigen::Vector3d& uf, const Eigen::Matrix3d& E, double mu ):
-		m_mu(mu), m_defGrad(E.transpose() * H), m_force(f)
+		m_mu(mu), m_defGrad(E.transpose() * H)
 	{
 		m_MInv.compute(M);
 		m_defGradInv.transpose() = H.transpose() * (H * H.transpose()).lu().solve(E);
@@ -24,13 +24,16 @@ namespace bogus
 	}
 
 	template <int ndof>
-	double OneCollisionProblem<ndof>::solve(Eigen::Vector3d& r, ForceVec& v_world, ForceVec& r_world)
+	double OneCollisionProblem<ndof>::solve(Eigen::Vector3d& r, ForceVec& v_world, ForceVec& delta_r_world)
 	{
 		CoulombLaw law(1, &m_mu);
 
 		//if (!law.solveLocal(0, m_W, m_b, r, 1.0)) {
 		//	r *= 0.5;
 		//}
+
+		Eigen::Vector3d old_r = r;
+		m_b -= m_W * old_r;
 
 		if (m_b(0) > 0) {
 			r.setZero();
@@ -47,10 +50,10 @@ namespace bogus
 			}
 		}
 		r = m_W.lu().solve(r);
-		
-		r_world = m_defGradInv.transpose() * r;
-		v_world = m_MInv * (m_force + r_world);
 
+		delta_r_world = m_defGradInv.transpose() * (r - old_r);
+		//delta_r_world = m_defGradInv.transpose() * r;
+		
 		Eigen::Vector3d v = m_W * r + m_b;
 		Eigen::Vector3d s;
 		law.dualityCOV(0, v, s);
