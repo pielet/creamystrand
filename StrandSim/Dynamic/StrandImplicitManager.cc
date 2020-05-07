@@ -1562,7 +1562,7 @@ namespace strandsim
 			int subidx = -1;
 			const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
 
-			std::cout << "Impulse norm: " << Wi << " @ " << i << ", " << subidx << std::endl;
+			ContactStream(g_log, "") << "Impulse norm: " << Wi << " @ " << i << ", " << subidx;
 		}
 
 		//std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;

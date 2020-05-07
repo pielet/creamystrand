@@ -1600,6 +1600,8 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_hairMeshFrictionCoefficient = 0.0;
     m_simulation_params.m_airDrag = 0.0003;
     m_simulation_params.m_solveCollision = true;
+    m_simulation_params.m_energyWithBend = true;
+    m_simulation_params.m_energyWithTwist = true;
 
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
@@ -1641,6 +1643,8 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "airDrag", m_simulation_params.m_airDrag);
     loadParam(nd, "subSteps", m_simulation_params.m_subSteps);
     loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
+    loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
+    loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))

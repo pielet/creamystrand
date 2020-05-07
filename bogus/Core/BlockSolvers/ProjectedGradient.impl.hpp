@@ -129,7 +129,6 @@ struct PgMethod {
 			y = Mx + b ;
 			if( test_residual(pg, law, pgIter, x, y, x_best, min_res) ){
 				pg.dualityCOV(law, y, s);
-				std::cout << "APGD - " << "x: " << x.norm() << " y: " << y.norm() << " y+s:" << (y + s).norm() << " J:" << x.dot(.5 * Mx + b + s) << std::endl;
 				break;
 			}
 
@@ -380,8 +379,6 @@ struct PgMethod< projected_gradient::SPG > {
 			y = Mx + b ;
 			if (test_residual(pg, law, pgIter, x, y, x_best, min_res)) {
 				pg.dualityCOV(law, y, s);
-				std::cout << "SPG - " << "x: " << x.norm() << " y: " << y.norm() << " y+s:" << (y + s).norm() << " J:" << x.dot(.5 * Mx + b + s) << std::endl;
-				std::cout << "x^Ty: " << x.dot(y + s) << std::endl;
 				break;
 			}
 

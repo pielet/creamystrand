@@ -74,6 +74,9 @@ struct SimulationParameters
     
     unsigned m_subSteps;
 
+    bool m_energyWithBend;
+    bool m_energyWithTwist;
+
 	bogus::MecheFrictionProblem::Algorithm m_bogusAlgorithm;
 };
 

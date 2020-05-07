@@ -141,9 +141,9 @@ public:
     void computeDOFMasses();
     void computeFlowMasses();
     void computeViscousForceCoefficients(Scalar dt) ;
-    void computeFutureJacobian( bool withStretch = false, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeLHS( Scalar dt, bool withStretch, bool withViscous, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeFutureForces( bool withStretch = false, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
+    void computeFutureJacobian(bool withStretch = false, bool withBend = false, bool withTwist = false, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout);
+    void computeLHS( Scalar dt, bool withStretch, bool withBend = false, bool withTwist = false, bool withViscous = true, bool dump_data = false, std::ostream& dump_stream = std::cout );
+    void computeFutureForces( bool withStretch = false, bool withBend = false, bool withTwist = false, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
     void computeFutureConservativeEnergy( bool withStretch = false );
     const VecXx& getDOFMasses() const;
 	const VecXx& getFlowMasses() const;
