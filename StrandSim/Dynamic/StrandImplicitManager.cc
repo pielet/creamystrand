@@ -241,7 +241,7 @@ namespace strandsim
 		{
 			printNewtonSolverBreakdownTiming<InfoStream>();
 			print<InfoStream>(m_cdTimings);
-			print<InfoStream>(m_solverStat);
+			print<ContactStream>(m_solverStat);
 		}
 
 		if (m_num_contact_solves > 0)
@@ -2607,14 +2607,14 @@ namespace strandsim
 			<< " Solve: " << stat.m_solveTime << " PostProc: " << stat.m_poseProcessTime
 			<< " Total: " << stat.sum();
 
-		/*for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
+		for (int i = 0; i < stat.m_collisionSize.size(); ++i) {
 			std::cout << "Collision group " << i << " (strands: " << stat.m_collisionSize[i].first 
 				<< " contacts: " << stat.m_collisionSize[i].second << "):\n";
 			int iter = 0;
 			for (auto it = stat.m_solverStat[i].begin(); it != stat.m_solverStat[i].end(); ++it) {
 				std::cout << "\tIter: " << iter++ << " err: " << it->first << " time: " << it->second << '\n';
 			}
-		}*/
+		}
 	}
 
 	template<typename StreamT>
