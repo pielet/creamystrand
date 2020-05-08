@@ -26,7 +26,7 @@ Scalar CollisionDetector::s_maxSizeForElementBBox = 1e2;
 
 CollisionDetector::CollisionDetector( std::vector<ElementProxy*>& elements ) :
         m_elementProxies( elements ), m_bvh(), m_broadPhaseHitCounter( 0 ),
-        m_ignoreCTRodRod(false), m_ignoreContinuousTime( false ), m_ignoreProximity( false ),
+        m_ignoreCTRodRod(false), m_ignoreVertexFace( false ), m_ignoreEdgeFace(false), m_ignoreProximity( false ),
         m_sortedAABBFunctor( NULL ), m_hashMap( NULL ),
         m_numEdgeEdgeColiision(0), m_numEdgeFaceCollision(0), m_numEdgeFaceIntersection(0)
 {
@@ -123,12 +123,13 @@ void CollisionDetector::updateBoundingBox( BVHNodeType& node )
     }
 }
 
-void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreContinuousTime, bool ignoreProximity )
+void CollisionDetector::findCollisions(bool ignoreCTRodRod, bool ignoreVertexFace, bool ignoreEdgeFace, bool ignoreProximity )
 {
     assert( empty() );
 
     m_ignoreCTRodRod = ignoreCTRodRod;
-    m_ignoreContinuousTime = ignoreContinuousTime;
+    m_ignoreVertexFace = ignoreVertexFace;
+    m_ignoreEdgeFace = ignoreEdgeFace;
     m_ignoreProximity = ignoreProximity;
 
     m_broadPhaseHitCounter = 0;
@@ -511,7 +512,7 @@ bool CollisionDetector::appendCollision( EdgeProxy* edge_a, const FaceProxy* tri
 
     std::list<ContinuousTimeCollision*> potentialCollisions;
 
-    if ( triangle_b->allApicesEnabled() )
+    if ( !m_ignoreVertexFace && triangle_b->allApicesEnabled() )
     {
 
         VertexFaceCollision vf1
@@ -525,17 +526,19 @@ bool CollisionDetector::appendCollision( EdgeProxy* edge_a, const FaceProxy* tri
             potentialCollisions.push_back( new VertexFaceCollision( vf2 ) ) ;
     }
 
-    for ( int side = 0; side < 3; ++side )
-    {
-        const short side_p = ( side + 1 ) % 3;
-
-        if ( triangle_b->hasEnabledApex( side ) && triangle_b->hasEnabledApex( side_p ) )
+    if (!m_ignoreEdgeFace) {
+        for (int side = 0; side < 3; ++side)
         {
-            EdgeFaceCollision ef( edge_a->getStrandPointer(), edge_a->getVertexIndex(),
-                                  triangle_b, triangle_b->getVertexIdx( side ),
-                                  triangle_b->getVertexIdx( side_p ), side, side_p ) ;
-            if( ef.analyse() )
-                potentialCollisions.push_back( new EdgeFaceCollision( ef ) ) ;
+            const short side_p = (side + 1) % 3;
+
+            if (triangle_b->hasEnabledApex(side) && triangle_b->hasEnabledApex(side_p))
+            {
+                EdgeFaceCollision ef(edge_a->getStrandPointer(), edge_a->getVertexIndex(),
+                    triangle_b, triangle_b->getVertexIdx(side),
+                    triangle_b->getVertexIdx(side_p), side, side_p);
+                if (ef.analyse())
+                    potentialCollisions.push_back(new EdgeFaceCollision(ef));
+            }
         }
     }
 
@@ -615,7 +618,7 @@ void CollisionDetector::computeCollisions( const BVHNodeType& node_a, const BVHN
             const uint32_t leaf_a_begin = node_a.LeafBegin();
             const uint32_t leaf_a_end = node_a.LeafEnd();
 
-            if( !m_ignoreContinuousTime )
+            if( !(m_ignoreCTRodRod && m_ignoreEdgeFace && m_ignoreVertexFace) )
             {
                 for ( unsigned int i = leaf_a_begin; i < leaf_a_end; ++i )
                     for ( unsigned int j = leaf_a_begin; j < i; ++j )
@@ -639,7 +642,7 @@ void CollisionDetector::computeCollisions( const BVHNodeType& node_a, const BVHN
             const uint32_t leaf_b_begin = node_b.LeafBegin();
             const uint32_t leaf_b_end = node_b.LeafEnd();
 
-            if( !m_ignoreContinuousTime )
+            if( !(m_ignoreCTRodRod && m_ignoreEdgeFace && m_ignoreVertexFace) )
             {
                 for ( unsigned int i = leaf_a_begin; i < leaf_a_end; ++i )
                     for ( unsigned int j = leaf_b_begin; j < leaf_b_end; ++j )

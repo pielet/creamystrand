@@ -50,7 +50,7 @@
     <logLevel value="4"/>
     <linearizebHat value="1"/>
     <nonlinearIterations value="1"/>
-    <linearIterations value="20"/>
+    <linearIterations value="100"/>
     <velocityDiffTolerance value="1e-2"/>
     <linearSolverType value="direct"/>
     <relaxationFactor value="2.0"/>
@@ -68,8 +68,11 @@
 
     <simulationManagerLimitedMemory value="1"/>
 
+    <energyWithBend value="0"/>
+    <energyWithTwist value="0"/>
+
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="20"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
     <stochasticPruningFraction value="0.8"/>

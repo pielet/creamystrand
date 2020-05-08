@@ -2727,7 +2727,7 @@ namespace strandsim
 		//     -> add VertexFaceCollision and EdgeFaceCollision to m_continuousTimeCollisions
 		// ignoreProximity = false : edge-face intersection test (s_doProximityDetection = true) using position before unconstraint update
 		//     -> add EdgeFaceIntersection to m_proximityCollisions
-		m_collisionDetector->findCollisions(false, false, false);
+		m_collisionDetector->findCollisions(false, false, false, false);
 
 		// compact m_continuousTimeCollisions in ProximityCollision, and add these collisions to m_externalContacts
 		doContinuousTimeDetection(m_dt);

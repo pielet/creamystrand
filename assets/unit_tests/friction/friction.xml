@@ -68,6 +68,9 @@
 
     <simulationManagerLimitedMemory value="1"/>
 
+    <energyWithBend value="1"/>
+    <energyWithTwist value="1"/>
+
     <gaussSeidelIterations value="200"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
@@ -172,7 +175,7 @@
     <fixed start="1" end="1" value="1"/>
   </hairobj>
 
-  <!--<script type="translate" x="0" y="0" z="-10" w="0.0" start="0.1" end="0.5" group="1"/>-->
+  <script type="translate" x="0" y="0" z="-10" w="0.0" start="0.1" end="0.5" group="1"/>
 
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1">
   </distancefield>

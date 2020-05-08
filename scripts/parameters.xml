@@ -63,6 +63,8 @@
 	<SimulationParameters>
 		<airDrag value="0.0003"/> 
 		<collisionSolverTolerace value="1e-6"/>
+		<energyWithBend value="1"/>
+    	<energyWithTwist value="1"/>
 		<logLevel value="5"/>  <!-- MsgInfo::kInfo -->
 		<linearIterations value="10"/>
 		<linearizebHat value="0"/>

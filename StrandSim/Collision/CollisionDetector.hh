@@ -36,7 +36,8 @@ public:
     void updateBoundingBox( BVHNodeType& node );
 
     void findCollisions( bool ignoreCTRodRod = false,
-                         bool ignoreContinuousTime = false, 
+                         bool ignoreVertexFace = false,
+                         bool ignoreEdgeFace = false,
                          bool ignoreProximity = false );
 
     void clear();
@@ -85,7 +86,8 @@ protected:
 
     int m_broadPhaseHitCounter;
     bool m_ignoreCTRodRod;
-    bool m_ignoreContinuousTime;
+    bool m_ignoreVertexFace;
+    bool m_ignoreEdgeFace;
     bool m_ignoreProximity;
     static Scalar s_maxSizeForElementBBox;
 

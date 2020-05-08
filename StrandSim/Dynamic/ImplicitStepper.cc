@@ -59,7 +59,7 @@ namespace strandsim
 		m_dynamics.computeViscousForceCoefficients(m_dt);
 
 		// compute A-M
-		m_dynamics.computeFutureJacobian(true, true, true, false, false);
+		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend, false, false);
 		m_A = m_strand.getTotalJacobian();
 		m_A *= m_dt * m_dt;
 
@@ -76,7 +76,7 @@ namespace strandsim
 		//}
 		m_b = m_savedVelocities - m_velocities;
 		m_dynamics.multiplyByMassMatrix(m_b);
-		m_dynamics.computeFutureForces(true, true, true, false, false);
+		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend, false, false);
 		m_b += m_strand.getFutureTotalForces() * m_dt;
 
 		m_dynamics.addMassMatrixTo(m_A);
@@ -154,7 +154,7 @@ namespace strandsim
 			m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 			m_b_hat = m_savedVelocities;
 			m_dynamics.multiplyByMassMatrix(m_b_hat);
-			m_dynamics.computeFutureForces(true, true, true, false, false);
+			m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend, false, false);
 			m_b_hat += m_strand.getFutureTotalForces() * m_dt;
 		}
 

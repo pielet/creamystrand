@@ -56,6 +56,9 @@ struct SimulationParameters
     double m_collisionSolverTolerace;
 
     double m_airDrag ;
+
+    bool m_energyWithBend;
+    bool m_energyWithTwist;
     
     /**
      * Inextensibility 
