@@ -66,13 +66,13 @@
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
-    <simulationManagerLimitedMemory value="1"/>
+    <simulationManagerLimitedMemory value="0"/>
 
-    <energyWithBend value="0"/>
-    <energyWithTwist value="0"/>
+    <energyWithBend value="1"/>
+    <energyWithTwist value="1"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="100"/>
+    <gaussSeidelIterations value="2"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
     <stochasticPruningFraction value="0.8"/>

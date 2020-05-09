@@ -46,10 +46,10 @@
   <SimulationParameters>
     <solveCollision value="1"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <nonlinearIterations value="1"/>
-    <linearIterations value="200"/>
+    <logLevel value="4"/>
+    <linearizebHat value="0"/>
+    <nonlinearIterations value="200"/>
+    <linearIterations value="1"/>
     <velocityDiffTolerance value="1e-4"/>
     <linearSolverType value="direct"/>
     <relaxationFactor value="2.0"/>
@@ -59,15 +59,15 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="1"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="projectedgradient"/>
 
-    <simulationManagerLimitedMemory value="1"/>
+    <simulationManagerLimitedMemory value="0"/>
 
-    <gaussSeidelIterations value="200"/>
+    <gaussSeidelIterations value="400"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="10"/>
     <useLengthProjection value="0"/>

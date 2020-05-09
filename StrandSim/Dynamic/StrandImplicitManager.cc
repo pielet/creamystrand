@@ -25,6 +25,7 @@
 #include "../Collision/VertexFaceCollision.hh"
 #include "../Collision/EdgeFaceCollision.hh"
 #include "../Collision/CollisionUtils.hh"
+#include "../Collision/CollisionSolver.hh"
 #include "../Core/ElasticStrand.hh"
 #include "../Render/StrandRenderer.hh"
 #include "../Utils/SpatialHashMap.hh"
@@ -32,8 +33,6 @@
 #include "../Utils/Memory.hh"
 #include "../Utils/MemUtilities.hh"
 #include "../Utils/MathUtilities.hh"
-
-#include "../../bogus/Interfaces/OneCollisionProblem.hpp"
 
 #include <boost/lexical_cast.hpp>
 
@@ -2635,6 +2634,17 @@ namespace strandsim
 					m_steppers[s]->postSolveLinear();
 				}
 				timings.linearIteration += timer.elapsed();
+
+				Scalar sum_delta_v = 0;
+				int num_nzero = 0;
+				for (int s = 0; s < m_strands.size(); ++s) {
+					if (!isSmall(m_steppers[s]->getVelocityDiff())) {
+						sum_delta_v += m_steppers[s]->getVelocityDiff();
+						++num_nzero;
+					}
+				}
+				if (num_nzero > 0) ContactStream(g_log, "") << "Average dv : " << sum_delta_v / num_nzero;
+
 				all_done = true;
 				for (bool p : passed) {
 					all_done = all_done && p;
@@ -2771,9 +2781,34 @@ namespace strandsim
 			std::sort(m_mutualContacts.begin(), m_mutualContacts.end(), SortByTime());
 		}
 
-#pragma omp parallel for
-		for (int i = 0; i < m_mutualContacts.size(); ++i) {
-			setupDeformationBasis(m_mutualContacts[i]);
+//#pragma omp parallel for
+		for (ProximityCollision& collision: m_mutualContacts) {
+			setupDeformationBasis(collision);
+
+			ImplicitStepper& first_stepper = *m_steppers[collision.objects.first.globalIndex];
+			ImplicitStepper& second_stepper = *m_steppers[collision.objects.second.globalIndex];
+			int first_vert = collision.objects.first.vertex;
+			int second_vert = collision.objects.second.vertex;
+
+			// Assemble
+			Mat14x M = Mat14x::Zero();
+			M.block<7, 7>(0, 0) = first_stepper.getMass().segment<7>(4 * first_vert).asDiagonal();
+			M.block<7, 7>(7, 7) = second_stepper.getMass().segment<7>(4 * second_vert).asDiagonal();
+
+			Mat3x14x H = Mat3x14x::Zero();
+			H.block<3, 7>(0, 0) = MatXx(*collision.objects.first.defGrad);
+			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
+
+			Vec3x uf = Vec3x::Zero();
+
+			Mat3x E = collision.transformationMatrix;
+
+			collision.m_collisionSolver = new MutualContactSolver(M, H, uf, E, collision);
+
+			Vec14x r_world;
+			collision.m_collisionSolver->local2World(r_world);
+			first_stepper.accumulateCollision(first_vert, r_world.segment<7>(0));
+			second_stepper.accumulateCollision(second_vert, r_world.segment<7>(7));
 		}
 
 		// --------------- external ------------------
@@ -2782,15 +2817,29 @@ namespace strandsim
 			pruneExternalCollisions(m_externalContacts);
 		}
 		int nExt = 0;
-#pragma omp parallel for reduction(+: nExt)
+//#pragma omp parallel for reduction(+: nExt)
 		for (int i = 0; i < (int)m_strands.size(); ++i) 
 		{
 			if (m_params.m_useDeterministicSolver && !m_params.m_pruneExternalCollisions) {
 				std::sort(m_externalContacts[i].begin(), m_externalContacts[i].end());
 			}
-			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
-				setupDeformationBasis(m_externalContacts[i][j]);
+			for (ProximityCollision& collision : m_externalContacts[i]) {
+				setupDeformationBasis(collision);
 				++nExt;
+
+				ImplicitStepper& stepper = *m_steppers[collision.objects.first.globalIndex];
+				int vert = collision.objects.first.vertex;
+
+				Mat7x M = stepper.getMass().segment<7>(4 * vert).asDiagonal();
+				Mat3x7x H = MatXx(*collision.objects.first.defGrad);
+				Vec3x uf = -collision.objects.second.freeVel;
+				Mat3x E = collision.transformationMatrix;
+
+				collision.m_collisionSolver = new ExternalContactSolver(M, H, uf, E, collision);
+
+				Vec7x r_world;
+				collision.m_collisionSolver->local2World(r_world);
+				stepper.accumulateCollision(vert, r_world);
 			}
 		}
 
@@ -2814,37 +2863,18 @@ namespace strandsim
 			int first_vert = collision.objects.first.vertex;
 			int second_vert = collision.objects.second.vertex;
 
-			// Assemble
-			Mat14x M = Mat14x::Zero();
-			M.block<7, 7>(0, 0) = first_stepper.getMass().segment<7>(4 * first_vert).asDiagonal();
-			M.block<7, 7>(7, 7) = second_stepper.getMass().segment<7>(4 * second_vert).asDiagonal();
-
-			Mat3x14x H = Mat3x14x::Zero();
-			H.block<3, 7>(0, 0) = MatXx(*collision.objects.first.defGrad);
-			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
-
 			Vec14x f;
 			f.segment<7>(0) = first_stepper.getb_hat().segment<7>(4 * first_vert)
 				+ first_stepper.getCollisionImpulse().segment<7>(4 * first_vert);
 			f.segment<7>(7) = second_stepper.getb_hat().segment<7>(4 * second_vert)
 				+ second_stepper.getCollisionImpulse().segment<7>(4 * second_vert);
 
-			Vec3x uf = Vec3x::Zero();
-
-			Mat3x E = collision.transformationMatrix;
-
-			Scalar mu = collision.mu;
-
-			bogus::MutualContactSolver collision_solver(M, H, f, uf, E, mu);
-
 			// Solve
-			Vec3x force;
-			Vec14x vel, delta_impulse;
-			Scalar res = collision_solver.solve(collision.force, vel, delta_impulse);
+			Scalar res = collision.m_collisionSolver->solve(collision.force, f);
 
 			// Store velocity and impulse
-			first_stepper.accumulateCollision(first_vert, delta_impulse.segment<7>(0));
-			second_stepper.accumulateCollision(second_vert, delta_impulse.segment<7>(7));
+			first_stepper.accumulateCollision(first_vert, f.segment<7>(0));
+			second_stepper.accumulateCollision(second_vert, f.segment<7>(7));
 
 			residuals[i] = res;
 			colPointers[i] = &collision;
@@ -2857,20 +2887,11 @@ namespace strandsim
 				ImplicitStepper& stepper = *m_steppers[collision.objects.first.globalIndex];
 				int vert = collision.objects.first.vertex;
 
-				Mat7x M = stepper.getMass().segment<7>(4 * vert).asDiagonal();
-				Mat3x7x H = MatXx(*collision.objects.first.defGrad);
-				Vec3x uf = -collision.objects.second.freeVel;
-				Mat3x E = collision.transformationMatrix;
-				Scalar mu = collision.mu;
-
 				Vec7x f = stepper.getb_hat().segment<7>(4 * vert) 
 					+ stepper.getCollisionImpulse().segment<7>(4 * vert);
 
-				bogus::ExternalContactSolver solver(M, H, f, uf, E, mu);
-
-				Vec7x vel, delta_impulse;
-				residuals[col_idx] = solver.solve(collision.force, vel, delta_impulse);
-				stepper.accumulateCollision(vert, delta_impulse);
+				residuals[col_idx] = collision.m_collisionSolver->solve(collision.force, f);
+				stepper.accumulateCollision(vert, f);
 
 				colPointers[col_idx++] = &collision;
 			}
@@ -2879,7 +2900,7 @@ namespace strandsim
 		if (g_one_iter) {
 			for (int i = 0; i < residuals.size(); ++i) 
 			{
-				ContactStream(g_log, "") << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
+				InfoStream(g_log, "") << colPointers[i]->force << " @ (" << colPointers[i]->objects.first.globalIndex << ", "
 					<< colPointers[i]->objects.first.vertex << ") (" << colPointers[i]->objects.second.globalIndex
 					<< ", " << colPointers[i]->objects.second.vertex << ") res = " << residuals[i];
 			}
@@ -2892,6 +2913,16 @@ namespace strandsim
 			g_cv.wait(lk, [] {return g_one_iter; });
 		}
 
+		Scalar sum_res = 0;
+		int num_nzero = 0;
+		for (int i = 0; i < residuals.size(); ++i)
+		{
+			if (!isSmall(colPointers[i]->force.norm())) {
+				sum_res += residuals[i] / colPointers[i]->force.norm();
+				++num_nzero;
+			}
+		}
+		ContactStream(g_log, "") << "Average dr / r: " << sum_res / num_nzero;
 		// delete collision with small impulse
 		//m_mutualContacts.erase(std::remove_if(m_mutualContacts.begin(), m_mutualContacts.end(), [&](const ProximityCollision& col) {
 		//	return isSmall(col.force.norm());
@@ -2915,12 +2946,14 @@ namespace strandsim
 
 		for (int i = 0; i < m_mutualContacts.size(); ++i) {
 			colPointers[i] = &m_mutualContacts[i];
+			delete m_mutualContacts[i].m_collisionSolver;
 		}
 
 		int idx = m_mutualContacts.size();
 		for (int i = 0; i < m_strands.size(); ++i) {
 			for (auto& col : m_externalContacts[i]) {
 				colPointers[idx++] = &col;
+				delete col.m_collisionSolver;
 			}
 		}
 
@@ -2938,10 +2971,10 @@ namespace strandsim
 				<< colPointers[i]->objects.second.globalIndex << ", " << colPointers[i]->objects.second.vertex << ")";
 		}
 
-		for (int i = 0; i < m_strands.size(); ++i) {
-			Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
-			ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
-		}
+		//for (int i = 0; i < m_strands.size(); ++i) {
+		//	Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
+		//	ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
+		//}
 	}
 
 } // namespace strandsim

@@ -15,16 +15,11 @@
 #include <unordered_map>
 
 
-namespace bogus
-{
-    class CollisionSolverBase;
-}
-
 namespace strandsim
 {
-    
     class ElasticStrand;
     class ContinuousTimeCollision;
+    class CollisionSolver;
     
     typedef SparseRowMatx DeformationGradient ;
     
@@ -68,7 +63,7 @@ namespace strandsim
         
         std::pair<Object, Object> objects;
 
-        bogus::CollisionSolverBase* m_collisionSolver;
+        CollisionSolver* m_collisionSolver;
         
         void generateTransformationMatrix() ;
         void updateTransformationMatrix( const Mat3x& previous ) ;

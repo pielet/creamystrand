@@ -181,6 +181,8 @@ namespace strandsim
 	typedef Eigen::Matrix<Scalar, 11, 11> Mat11x; ///< 11x11 scalar matrix (stencil for local forces)
 	typedef Eigen::Matrix<Scalar, 14, 14> Mat14x;
 	typedef Eigen::Matrix<Scalar, 3, 7> Mat3x7x;
+	typedef Eigen::Matrix<Scalar, 7, 3> Mat7x3x;
+	typedef Eigen::Matrix<Scalar, 14, 3> Mat14x3x;
 	typedef Eigen::Matrix<Scalar, 3, 14> Mat3x14x;
 	typedef std::vector<Mat11x, Eigen::aligned_allocator<Mat11x> > Mat11xArray; ///< an array of 11d scalar matrices
 	typedef std::pair<Mat11x, Mat11x> Mat11xPair;
