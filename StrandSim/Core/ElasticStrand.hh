@@ -326,35 +326,41 @@ namespace strandsim
         {
             return m_currentState->m_totalForce;
         }
+
+        const JacobianMatrixType& getTotalJacobian() const
+        {
+            return *(m_currentState->m_totalJacobian);
+        }
+
+        JacobianMatrixType& getTotalJacobian()
+        {
+            return *(m_currentState->m_totalJacobian);
+        }
+
+        Scalar getFutureTotalEnergy() const
+        {
+            return m_futureState->m_totalEnergy;
+        }
+
+        const VecXx& getFutureTotalForces() const
+
+        {
+            return m_futureState->m_totalForce;
+        }
         
         VecXx& getFutureTotalForces()
         {
             return m_futureState->m_totalForce;
         }
-        
-        const JacobianMatrixType& getTotalJacobian() const
+       
+        const JacobianMatrixType& getFutureTotalJacobian() const
         {
-            return *( m_currentState->m_totalJacobian );
+            return *(m_futureState->m_totalJacobian);
         }
-        
-        JacobianMatrixType& getTotalJacobian()
+
+        JacobianMatrixType& getFutureTotalJacobian()
         {
-            return *( m_currentState->m_totalJacobian );
-        }
-        
-        Scalar getNewTotalEnergy() const
-        {
-            return m_futureState->m_totalEnergy;
-        }
-        
-        const VecXx& getNewTotalForces() const
-        {
-            return m_futureState->m_totalForce;
-        }
-        
-        VecXx& getNewTotalForces()
-        {
-            return m_futureState->m_totalForce;
+            return *(m_futureState->m_totalJacobian);
         }
         
         void swapStates()

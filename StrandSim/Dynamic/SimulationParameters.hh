@@ -73,7 +73,6 @@ struct SimulationParameters
 
     bool m_useSoftAttachConstraints;
     bool m_solveLiquids;
-    bool m_solveCollision;
 
     /**
      * Linear Solver for one Newton step
@@ -90,6 +89,18 @@ struct SimulationParameters
     unsigned m_subSteps;
 
 	bogus::MecheFrictionProblem::Algorithm m_bogusAlgorithm;
+
+    // ----------------------------------------------------------
+    bool m_solveCollision;
+
+    // Quasi-Newton paramters
+    bool m_useQuasiNewton;
+    int m_windowSize;
+
+    // line search
+    bool m_useLineSearch;
+    Scalar m_ls_alpha;
+    Scalar m_ls_beta;
 };
 
 }

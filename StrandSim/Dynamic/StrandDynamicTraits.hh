@@ -141,14 +141,16 @@ public:
     void computeDOFMasses();
     void computeFlowMasses();
     void computeViscousForceCoefficients(Scalar dt) ;
-    void computeFutureJacobian( bool withStretch = false, bool withTwist = true, bool withBend = true, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeLHS( Scalar dt, bool withStretch, bool withTwist = true, bool withBend = true, bool withViscous = true, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeFutureForces( bool withStretch = false, bool withTwist = true, bool withBend = true, bool withViscous = true, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeFutureConservativeEnergy( bool withStretch = false );
+    void computeFutureJacobian( bool withStretch = true, bool withTwist = true, bool withBend = true, bool withViscous = false, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
+    void computeLHS( Scalar dt, bool withStretch, bool withTwist = true, bool withBend = true, bool withViscous = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
+    void computeFutureForces( bool withStretch = true, bool withTwist = true, bool withBend = true, bool withViscous = false, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
+    void computeFutureStrandEnergy( bool withStretch = true );
+    const VecXx& getExternalForce();
     const VecXx& getDOFMasses() const;
 	const VecXx& getFlowMasses() const;
     void addMassMatrixTo( JacobianMatrixType& J, Scalar multiplier = 1.0 ) const;
     void multiplyByMassMatrix( VecXx& F, Scalar multiplier = 1.0 ) const;
+    void multiplyByMassMatrixInverse( VecXx& F, Scalar multiplier = 1.0 ) const;
 	void multiplyByFlowMatrix( VecXx& F ) const;
 
     void acceptGuess();

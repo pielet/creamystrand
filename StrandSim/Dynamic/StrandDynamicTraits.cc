@@ -391,19 +391,33 @@ namespace strandsim {
 		m_futureForcesUpToDate = true;
 	}
 	
-	void StrandDynamicTraits::computeFutureConservativeEnergy( bool withStretch )
+	void StrandDynamicTraits::computeFutureStrandEnergy( bool withStretch )
 	{
-		StrandState& futureState = *m_strand.m_futureState ;
+		StrandState& futureState = *m_strand.m_futureState;
+        futureState.m_totalEnergy = 0;
 		
         if(withStretch)
             m_strand.accumulateE< StretchingForce<NonViscous> > ( futureState ) ;
         
 		m_strand.accumulateE< TwistingForce<NonViscous> > ( futureState ) ;
 		m_strand.accumulateE< BendingForce<NonViscous> > ( futureState ) ;
-		m_strand.accumulateE< GravitationForce > ( futureState ) ;
+		//m_strand.accumulateE< GravitationForce > ( futureState ) ;
 		
-		m_strand.accumulateRuntimeForces( RuntimeForceBase::E, futureState );
+		// m_strand.accumulateRuntimeForces( RuntimeForceBase::E, futureState );
 	}
+
+    const VecXx& StrandDynamicTraits::getExternalForce()
+    {
+        StrandState& futureState = *m_strand.m_futureState;
+        futureState.m_totalForce.setZero();
+
+        m_strand.accumulateF< GravitationForce >(futureState);
+        m_strand.accumulateF< AirDragForce >(futureState);
+        m_strand.accumulateRuntimeForces(RuntimeForceBase::EF, futureState);
+        m_strand.accumulateF< FixingForce<NonViscous> >(futureState);
+
+        return futureState.m_totalForce;
+    }
 	
 	void StrandDynamicTraits::addMassMatrixTo( JacobianMatrixType& J, Scalar multiplier ) const
 	{
@@ -422,6 +436,11 @@ namespace strandsim {
 	{
 		tmp.array() *= (m_DOFmasses * multiplier).array();
 	}
+
+    void StrandDynamicTraits::multiplyByMassMatrixInverse(VecXx& tmp, Scalar multiplier) const
+    {
+        tmp.array() /= m_DOFmasses.array();
+    }
 	
 	void StrandDynamicTraits::acceptGuess()
 	{

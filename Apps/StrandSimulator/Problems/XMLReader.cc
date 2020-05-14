@@ -1608,6 +1608,13 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::DIRECT;
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
+    m_simulation_params.m_useQuasiNewton = true;
+    m_simulation_params.m_windowSize = 5;
+
+    m_simulation_params.m_useLineSearch = true;
+    m_simulation_params.m_ls_alpha = 0.03;
+    m_simulation_params.m_ls_beta = 0.5;
+
     if(!m_scene_node)
         return;
     

@@ -60,7 +60,7 @@ namespace strandsim
 
 		// compute A-M
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend, false, false);
-		m_A = m_strand.getTotalJacobian();
+		m_A = m_strand.getFutureTotalJacobian();
 		m_A *= m_dt * m_dt;
 
 		//// compute b
