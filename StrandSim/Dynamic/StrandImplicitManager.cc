@@ -1169,6 +1169,7 @@ namespace strandsim
 						if (!passed[i] && !all_done[i]) {
 							m_steppers[i]->prepareNewtonIteration();
 							all_done[i] = m_steppers[i]->performNewtonIteration();
+							std::cout << m_steppers[i]->getNewtonResidual() << std::endl;
 						}
 					}
 
@@ -1178,7 +1179,6 @@ namespace strandsim
 							done = done && all_done[i];
 					}
 
-					// std::cout << "step dynamics iter: " << iter << std::endl;
 					++iter;
 
 					if (done) break;

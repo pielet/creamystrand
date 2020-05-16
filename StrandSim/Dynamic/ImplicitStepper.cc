@@ -1070,6 +1070,7 @@ namespace strandsim
 
             m_strand.dynamics().getAccelerations() = ( m_newVelocities - m_velocities ) / m_dt;
 
+			std::cout << "!! newton fail !!\n";
             // Dump Data
 //            prepareNewtonIteration();
 //

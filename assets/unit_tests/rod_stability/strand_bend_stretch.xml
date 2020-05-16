@@ -52,10 +52,11 @@
   </CollisionParameters>
 
   <SimulationParameters>
+    <solveCollision value="0"/>
     <airDrag value="0.0003"/> 
     <gaussSeidelIterations value="75"/>
     <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="1000"/>
+    <maxNewtonIterations value="100"/>
     <hairMeshFrictionCoefficient value="0.0"/>
     <numberOfThreads value="24"/>
     <percentCTRodRodCollisionsAccept value="100"/>
