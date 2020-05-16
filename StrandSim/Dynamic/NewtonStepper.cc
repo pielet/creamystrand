@@ -28,7 +28,7 @@ namespace strandsim
 		m_dt = dt;
 
 		m_savedVelocities = m_velocities;
-		m_velocities.setZero(); // v_{t+1}^0 = v_t
+		//m_velocities.setZero(); // v_{t+1}^0 = v_t
 		//m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
@@ -53,12 +53,17 @@ namespace strandsim
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 
+		std::cout << "Before fixing:\n";
+		std::cout << "hessian:\n" << hessian << std::endl;
+		std::cout << "gradient:\n" << -gradient << std::endl;
+
 		VecXx b = -gradient;
 		hessian.multiply(b, 1., m_velocities);
 		m_dynamics.getScriptingController()->fixLHSAndRHS(hessian, b, m_dt);
 		JacobianSolver solver(hessian);
 		solver.solve(m_velocities, b);
 
+		std::cout << "After solving:\n" << std::endl;
 		std::cout << "Hessain: \n" << hessian << std::endl;
 		std::cout << "gradient: \n" << b << std::endl;
 		std::cout << "new vel\n" << m_velocities << std::endl;
