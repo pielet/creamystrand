@@ -38,6 +38,9 @@ namespace strandsim
 	{
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
+		std::cout << "Current:\n" << m_strand.getCurrentDegreesOfFreedom() << std::endl;
+		std::cout << "Future:\n" << m_strand.getFutureDegreesOfFreedom() << std::endl;
+
 		// gradient
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
@@ -53,9 +56,9 @@ namespace strandsim
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 
-		std::cout << "Before fixing:\n";
-		std::cout << "hessian:\n" << hessian << std::endl;
-		std::cout << "gradient:\n" << -gradient << std::endl;
+		//std::cout << "Before fixing:\n";
+		//std::cout << "hessian:\n" << hessian << std::endl;
+		//std::cout << "gradient:\n" << -gradient << std::endl;
 
 		VecXx b = -gradient;
 		hessian.multiply(b, 1., m_velocities);
@@ -64,7 +67,7 @@ namespace strandsim
 		solver.solve(m_velocities, b);
 
 		std::cout << "After solving:\n" << std::endl;
-		std::cout << "Hessain: \n" << hessian << std::endl;
+		//std::cout << "Hessain: \n" << hessian << std::endl;
 		std::cout << "gradient: \n" << b << std::endl;
 		std::cout << "new vel\n" << m_velocities << std::endl;
 

@@ -10,10 +10,15 @@ def gen_random_dir(length, last_dir):
         len_dir = sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2])
         dir = list(map(lambda x: x * length / len_dir, dir))
         cos_angle = dir[0] * last_dir[0] + dir[1] * last_dir[1] + dir[2] * last_dir[2]
-        if cos_angle > 0.8:
+        if cos_angle > 0:
             break
     return dir
 
+def gen_random_pos():
+    pos = []
+    for i in range(3):
+        pos.append(random() * 2 - 1.)
+    return pos
 
 n_node = 40
 length = 0.5
@@ -21,14 +26,15 @@ length = 0.5
 point_list = []
 point_list.append([-1, 1, 1])
 for i in range(n_node - 1):
-    current_p = point_list[-1]
-    dir = gen_random_dir(length, current_p)
-    next_p = []
-    for j in range(3):
-        next_p.append(current_p[j] + dir[j])
+    #current_p = point_list[-1]
+    #dir = gen_random_dir(length, current_p)
+    #next_p = []
+    #for j in range(3):
+    #    next_p.append(current_p[j] + dir[j])
+    next_p = gen_random_pos()
     point_list.append(next_p)
 
-with open("./random_init.ply", 'w') as f:
+with open("../assets/unit_tests/rod_stability/random_init.ply", 'w') as f:
     f.write('''ply
 format ascii 1.0
 comment created by ADONIS
