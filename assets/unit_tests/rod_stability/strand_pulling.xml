@@ -51,6 +51,16 @@
   </CollisionParameters>
 
   <SimulationParameters>
+    <useQuasiNewton value="1"/>
+    <windowSize value="5"/>
+
+    <useLineSearch value="1"/>
+    <lineSearchAlpha value="0.03"/>
+    <lineSearchBeta value="0.5"/>
+
+    <solveCollision value="0"/>
+    <nonlinearIterations value="10"/>
+    
     <airDrag value="0.0003"/> 
     <gaussSeidelIterations value="75"/>
     <gaussSeidelTolerance value="1e-06"/> 

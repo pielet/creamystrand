@@ -2,6 +2,7 @@
 #define _NEWTON_STEPPER_HH_
 
 #include "../Core/Definitions.hh"
+#include "ImplicitStepper.hh"
 
 namespace strandsim
 {
@@ -9,7 +10,7 @@ namespace strandsim
 	class StrandDynamicTraits;
 	struct SimulationParameters;
 
-	class NewtonStepper
+	class NewtonStepper :public ImplicitStepper
 	{
 	public:
 		NewtonStepper(ElasticStrand& strand, const SimulationParameters& params);
@@ -17,15 +18,15 @@ namespace strandsim
 
 		virtual void prepareStep(Scalar dt);
 		virtual bool performOneIteration();
-		void postStep();
+		virtual void postStep();
 
 	protected:
 		Scalar evaluateObjectValue(const VecXx& v);
 		Scalar lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir);
 		
-		ElasticStrand& m_strand;
+		//ElasticStrand& m_strand;
 		StrandDynamicTraits& m_dynamics;
-		const SimulationParameters& m_params;
+		//const SimulationParameters& m_params;
 
 		Scalar m_dt;
 		VecXx m_velocities;

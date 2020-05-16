@@ -52,6 +52,16 @@
   </CollisionParameters>
 
   <SimulationParameters>
+    <useQuasiNewton value="1"/>
+    <windowSize value="5"/>
+
+    <useLineSearch value="1"/>
+    <lineSearchAlpha value="0.03"/>
+    <lineSearchBeta value="0.5"/>
+
+    <solveCollision value="0"/>
+    <nonlinearIterations value="10"/>
+
     <airDrag value="0.0003"/> 
     <gaussSeidelIterations value="75"/>
     <gaussSeidelTolerance value="1e-06"/> 
@@ -77,7 +87,7 @@
     <useNonlinearContacts value="0"/>
     <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
-    <solveLiquids value="1"/>
+    <solveLiquids value="0"/>
   </SimulationParameters>
 
   <particle h="0.0" x="0.0 9.75 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>

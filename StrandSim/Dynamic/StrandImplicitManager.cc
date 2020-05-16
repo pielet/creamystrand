@@ -15,6 +15,8 @@
 #include "MeshScriptingController.hh"
 #include "FluidScriptingController.hh"
 #include "ImplicitStepper.hh"
+#include "NewtonStepper.hh"
+#include "QuasiNewtonStepper.hh"
 #include "StrandDynamicTraits.hh"
 #include "DOFScriptingController.hh"
 #include "../Collision/CollisionDetector.hh"
@@ -123,7 +125,14 @@ namespace strandsim
 			ElasticStrand* strand = m_strands[i];
 			strand->clearSharedRuntimeForces();
 
-			ImplicitStepper* stepper = new ImplicitStepper(*strand, m_params);
+			ImplicitStepper* stepper;
+			std::cout << m_params.m_useQuasiNewton;
+			if (m_params.m_useQuasiNewton) {
+				stepper = new QuasiNewtonStepper(*strand, m_params);
+			}
+			else {
+				stepper = new NewtonStepper(*strand, m_params);
+			}
 			m_steppers.push_back(stepper);
 			strand->setStepper(stepper);
 
@@ -2594,7 +2603,7 @@ namespace strandsim
 		step_prepare(m_dt);
 #pragma omp parallel for
 		for (int i = 0; i < m_steppers.size();++i) {
-			m_steppers[i]->initSolver(m_dt);
+			m_steppers[i]->prepareStep(m_dt);
 		}
 		timings.prepare += timer.elapsed();
 
@@ -2615,95 +2624,65 @@ namespace strandsim
 		}
 
 		std::cout << "[Step Dynamics]" << std::endl;
-		for (int k = 0; k < m_params.m_nonlinearIterations; ++k) {
+		std::vector<bool> pass(m_steppers.size(), false);
+		int k = 0;
+		for (k; k < m_params.m_nonlinearIterations; ++k) {
 			timer.restart();
 #pragma omp parallel for
 			for (int i = 0; i < m_steppers.size(); ++i) {
-				m_steppers[i]->linearize();
+				if (!pass[i])
+					pass[i] = m_steppers[i]->performOneIteration();
 			}
 			timings.dynamics += timer.elapsed();
 
-			std::vector<bool> passed(m_strands.size(), false);
 			bool all_done = true;
-
-			for (int i = 0; i < m_params.m_linearIterations; ++i) {
-				timer.restart();
-#pragma omp parallel for
-				for (int s = 0; s < m_steppers.size(); ++s) {
-					passed[s] = m_steppers[s]->solveLinear();
-					m_steppers[s]->postSolveLinear();
-				}
-				timings.linearIteration += timer.elapsed();
-
-				Scalar sum_delta_v = 0;
-				int num_nzero = 0;
-				for (int s = 0; s < m_strands.size(); ++s) {
-					if (!isSmall(m_steppers[s]->getVelocityDiff())) {
-						sum_delta_v += m_steppers[s]->getVelocityDiff();
-						++num_nzero;
-					}
-				}
-				if (num_nzero > 0) ContactStream(g_log, "") << "Average dv : " << sum_delta_v / num_nzero;
-
-				all_done = true;
-				for (bool p : passed) {
-					all_done = all_done && p;
-				}
-				if (all_done) break;
-
-				if (g_one_iter) {
-					if (m_substep_callback) m_substep_callback->executeCallback();
-					std::vector<Scalar> delta_v(m_strands.size());
-					for (int s = 0; s < m_strands.size(); ++s) {
-						delta_v[s] = m_steppers[s]->getVelocityDiff();
-					}
-					residualStats("Iter", delta_v);
-					{
-						std::unique_lock<std::mutex> lk(g_iter_mutex);
-						g_one_iter = false;
-					}
-					std::unique_lock<std::mutex> lk(g_iter_mutex);
-					g_cv.wait(lk, [] {return g_one_iter; });
-				}
-
-				if (m_params.m_solveCollision) {
-					if (m_params.m_useCTRodRodCollisions && i == 0 && k == 0) {
-						timer.restart();
-						step_prepareCollision();
-
-						step_continousCollisionDetection();
-						timings.continousTimeCollisions += timer.elapsed();
-
-						timer.restart();
-						step_processCollisions();
-						timings.processCollisions += timer.elapsed();
-					}
-
-					if (m_statTotalContacts > 0) {
-						timer.restart();
-						step_solveCollisions();
-						timings.solve += timer.elapsed();
-					}
-				}
+			for (bool p : pass) {
+				all_done = all_done && p;
 			}
 			if (all_done) break;
+
+			if (g_one_iter) {
+				if (m_substep_callback) m_substep_callback->executeCallback();
+				{
+					std::unique_lock<std::mutex> lk(g_iter_mutex);
+					g_one_iter = false;
+				}
+				std::unique_lock<std::mutex> lk(g_iter_mutex);
+				g_cv.wait(lk, [] {return g_one_iter; });
+			}
+
+			if (m_params.m_solveCollision) {
+				if (m_params.m_useCTRodRodCollisions && k == 0) {
+					timer.restart();
+					step_prepareCollision();
+
+					step_continousCollisionDetection();
+					timings.continousTimeCollisions += timer.elapsed();
+
+					timer.restart();
+					step_processCollisions();
+					timings.processCollisions += timer.elapsed();
+				}
+
+				if (m_statTotalContacts > 0) {
+					timer.restart();
+					step_solveCollisions();
+					timings.solve += timer.elapsed();
+				}
+			}
+		}
+
+		std::cout << "Total iteration number: " << k << std::endl;
+
+		std::cout << "[Step Post Iteration]" << std::endl;
+#pragma omp parallel for
+		for (int i = 0; i < m_steppers.size(); ++i) {
+			m_steppers[i]->postStep();
 		}
 
 		m_timings.back().push_back(timings);
 
-		step_postCollision();
-
-		std::vector<Scalar> residuals(m_strands.size());
-		std::vector<Scalar> delta_v(m_strands.size());
-		int numUnsolved = 0;
-		for (int i = 0; i < m_strands.size(); ++i) {
-			residuals[i] = m_steppers[i]->getBestResidual();
-			delta_v[i] = m_steppers[i]->getVelocityDiff();
-			if (delta_v[i] > m_params.m_velocityDiffTolerance) ++numUnsolved;
-		}
-		std::cout << "Unsolved Strand: " << numUnsolved << std::endl;
-		residualStats("Nonlinear Solver Residual", residuals);
-		residualStats("Nonlinear Solver Delta v", delta_v);
+		// step_postCollision();
 
 		printMemStats();
 	}
@@ -2784,31 +2763,6 @@ namespace strandsim
 //#pragma omp parallel for
 		for (ProximityCollision& collision: m_mutualContacts) {
 			setupDeformationBasis(collision);
-
-			ImplicitStepper& first_stepper = *m_steppers[collision.objects.first.globalIndex];
-			ImplicitStepper& second_stepper = *m_steppers[collision.objects.second.globalIndex];
-			int first_vert = collision.objects.first.vertex;
-			int second_vert = collision.objects.second.vertex;
-
-			// Assemble
-			Mat14x M = Mat14x::Zero();
-			M.block<7, 7>(0, 0) = first_stepper.getMass().segment<7>(4 * first_vert).asDiagonal();
-			M.block<7, 7>(7, 7) = second_stepper.getMass().segment<7>(4 * second_vert).asDiagonal();
-
-			Mat3x14x H = Mat3x14x::Zero();
-			H.block<3, 7>(0, 0) = MatXx(*collision.objects.first.defGrad);
-			H.block<3, 7>(0, 7) = -MatXx(*collision.objects.second.defGrad);
-
-			Vec3x uf = Vec3x::Zero();
-
-			Mat3x E = collision.transformationMatrix;
-
-			collision.m_collisionSolver = new MutualContactSolver(M, H, uf, E, collision);
-
-			Vec14x r_world;
-			collision.m_collisionSolver->local2World(r_world);
-			first_stepper.accumulateCollision(first_vert, r_world.segment<7>(0));
-			second_stepper.accumulateCollision(second_vert, r_world.segment<7>(7));
 		}
 
 		// --------------- external ------------------
@@ -2826,20 +2780,6 @@ namespace strandsim
 			for (ProximityCollision& collision : m_externalContacts[i]) {
 				setupDeformationBasis(collision);
 				++nExt;
-
-				ImplicitStepper& stepper = *m_steppers[collision.objects.first.globalIndex];
-				int vert = collision.objects.first.vertex;
-
-				Mat7x M = stepper.getMass().segment<7>(4 * vert).asDiagonal();
-				Mat3x7x H = MatXx(*collision.objects.first.defGrad);
-				Vec3x uf = -collision.objects.second.freeVel;
-				Mat3x E = collision.transformationMatrix;
-
-				collision.m_collisionSolver = new ExternalContactSolver(M, H, uf, E, collision);
-
-				Vec7x r_world;
-				collision.m_collisionSolver->local2World(r_world);
-				stepper.accumulateCollision(vert, r_world);
 			}
 		}
 
@@ -2853,49 +2793,7 @@ namespace strandsim
 		std::vector<ProximityCollision*> colPointers(m_statTotalContacts);
 		std::vector<Scalar> residuals(m_statTotalContacts);
 
-		//auto rng = std::default_random_engine{};
-		//std::shuffle(m_mutualContacts.begin(), m_mutualContacts.end(), rng);
-
-		for (int i = 0; i < m_mutualContacts.size(); ++i) {
-			ProximityCollision& collision = m_mutualContacts[i];
-			ImplicitStepper& first_stepper = *m_steppers[collision.objects.first.globalIndex];
-			ImplicitStepper& second_stepper = *m_steppers[collision.objects.second.globalIndex];
-			int first_vert = collision.objects.first.vertex;
-			int second_vert = collision.objects.second.vertex;
-
-			Vec14x f;
-			f.segment<7>(0) = first_stepper.getb_hat().segment<7>(4 * first_vert)
-				+ first_stepper.getCollisionImpulse().segment<7>(4 * first_vert);
-			f.segment<7>(7) = second_stepper.getb_hat().segment<7>(4 * second_vert)
-				+ second_stepper.getCollisionImpulse().segment<7>(4 * second_vert);
-
-			// Solve
-			Scalar res = collision.m_collisionSolver->solve(collision.force, f);
-
-			// Store velocity and impulse
-			first_stepper.accumulateCollision(first_vert, f.segment<7>(0));
-			second_stepper.accumulateCollision(second_vert, f.segment<7>(7));
-
-			residuals[i] = res;
-			colPointers[i] = &collision;
-		}
-
-		int col_idx = m_mutualContacts.size();
-		for (int i = 0; i < m_strands.size(); ++i) {
-			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
-				ProximityCollision& collision = m_externalContacts[i][j];
-				ImplicitStepper& stepper = *m_steppers[collision.objects.first.globalIndex];
-				int vert = collision.objects.first.vertex;
-
-				Vec7x f = stepper.getb_hat().segment<7>(4 * vert) 
-					+ stepper.getCollisionImpulse().segment<7>(4 * vert);
-
-				residuals[col_idx] = collision.m_collisionSolver->solve(collision.force, f);
-				stepper.accumulateCollision(vert, f);
-
-				colPointers[col_idx++] = &collision;
-			}
-		}
+		
 		
 		if (g_one_iter) {
 			for (int i = 0; i < residuals.size(); ++i) 

@@ -9,11 +9,13 @@ namespace strandsim
 {
 
 	NewtonStepper::NewtonStepper(ElasticStrand& strand, const SimulationParameters& params) :
-		m_strand(strand), m_dynamics(strand.dynamics()), m_params(params)
+		ImplicitStepper(strand, params), m_dynamics(strand.dynamics())
 	{
 		int ndof = strand.getCurrentDegreesOfFreedom().rows();
 		m_velocities = VecXx::Zero(ndof);
 		m_savedVelocities = VecXx::Zero(ndof);
+
+		m_dynamics.computeDOFMasses();
 	}
 
 	NewtonStepper::~NewtonStepper()
@@ -27,28 +29,31 @@ namespace strandsim
 
 		m_savedVelocities = m_velocities;
 		// m_velocities.setZero(); // v_{t+1}^0 = v_t
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 	}
 
 	bool NewtonStepper::performOneIteration()
 	{
-		m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom() + m_velocities * m_dt);
+		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
 		// gradient
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
-		m_dynamics.computeFutureForces();
+		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt;
+		if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
 
 		// hessian
-		m_dynamics.computeFutureJacobian();
+		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 
-		// fix point
-		m_dynamics.getScriptingController()->fixLHSAndRHS(hessian, gradient, m_dt);
+		// fix hessian
+		m_dynamics.getScriptingController()->fixLHS(hessian);
+		m_dynamics.getScriptingController()->fixRHS(gradient);
 
 		// solve linear equation
 		VecXx descent_dir = VecXx::Zero(m_velocities.size());
@@ -60,6 +65,7 @@ namespace strandsim
 		// line search
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
 		m_velocities += step_size * descent_dir;
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.getFutureState().freeCachedQuantities();
 
@@ -104,8 +110,11 @@ namespace strandsim
 		}
 	}
 
-	Scalar NewtonStepper::evaluateObjectValue(const VecXx& v)
+	Scalar NewtonStepper::evaluateObjectValue(const VecXx& vel)
 	{
+		VecXx v = vel;
+		m_dynamics.getScriptingController()->enforceVelocities(v, m_dt);
+
 		// internal energy
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + v * m_dt);
 		m_dynamics.computeFutureStrandEnergy();

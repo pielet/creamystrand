@@ -1659,6 +1659,13 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
     loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
 
+    loadParam(nd, "useQuasiNewton", m_simulation_params.m_useQuasiNewton);
+    loadParam(nd, "windowSize", m_simulation_params.m_windowSize);
+
+    loadParam(nd, "useLineSearch", m_simulation_params.m_useLineSearch);
+    loadParam(nd, "lineSearchAlpha", m_simulation_params.m_ls_alpha);
+    loadParam(nd, "lineSearchBeta", m_simulation_params.m_ls_beta);
+
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))
 	{
@@ -1936,7 +1943,6 @@ void XMLReader::loadCheckpoint( rapidxml::xml_node<>* node, int& current_frame, 
 				m_strands[i]->setCurrentAreaDegreesOfFreedom(data.m_currentAreaDOFs[i]);
 				m_strands[i]->setFutureAreaDegreesOfFreedom(data.m_currentAreaDOFs[i]);
 				m_strands[i]->getStepper()->velocities() = data.m_velocities[i];
-				m_strands[i]->getStepper()->newVelocities() = data.m_velocities[i];
 				m_strands[i]->dynamics().getDisplacements() = data.m_velocities[i] * m_dt;
 				m_strands[i]->getReservoir() = data.m_flow_reservoirs[i];
 				

@@ -2,6 +2,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "SimulationParameters.hh"
 #include "StrandDynamicTraits.hh"
+#include "DOFScriptingController.hh"
 #include "../Utils/SymmetricBandMatrixSolver.hh"
 
 namespace strandsim
@@ -31,15 +32,18 @@ namespace strandsim
 		m_last_gradient.setZero();
 
 		m_savedVelocities = m_velocities;
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, dt);
 
 		m_isFirstIter = true;
 
 		// compute initial hessian
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 		m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom() + m_velocities * m_dt);
+		m_dynamics.computeFutureJacobian();
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
+		m_dynamics.getScriptingController()->fixLHS(hessian);
 
 		m_directSolver.store(hessian);	// pre-fab
 	}
@@ -52,6 +56,20 @@ namespace strandsim
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces();
 		gradient -= m_dt * m_strand.getFutureTotalForces();
+		m_dynamics.getScriptingController()->fixRHS(gradient);
+
+		if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
+
+		// debug
+		//m_dynamics.computeFutureJacobian();
+		//JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
+		//hessian *= m_dt * m_dt;
+		//m_dynamics.addMassMatrixTo(hessian);
+		//m_dynamics.getScriptingController()->fixLHS(hessian);
+		//JacobianSolver solver(hessian);
+		//VecXx real_descent_dir = VecXx::Zero(m_velocities.size());
+		//solver.solve(real_descent_dir, gradient);
+		//real_descent_dir = -real_descent_dir;
 
 		// update queue
 		if (!m_isFirstIter)
@@ -102,6 +120,12 @@ namespace strandsim
 		// line search
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
 		m_velocities += step_size * descent_dir;
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
+
+		// debug
+		//std::cout << descent_dir.dot(real_descent_dir) / descent_dir.norm() / real_descent_dir.norm() << std::endl;
+		
+		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
 		m_strand.getFutureState().freeCachedQuantities();
 
