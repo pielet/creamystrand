@@ -57,8 +57,9 @@ namespace strandsim
 		m_dynamics.computeFutureForces();
 		gradient -= m_dt * m_strand.getFutureTotalForces();
 		m_dynamics.getScriptingController()->fixRHS(gradient);
+		if (isSmall(gradient.squaredNorm() / gradient.size())) return true;
 
-		if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
+		//if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
 
 		// debug
 		//m_dynamics.computeFutureJacobian();

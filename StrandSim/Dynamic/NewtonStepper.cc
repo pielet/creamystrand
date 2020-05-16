@@ -43,7 +43,7 @@ namespace strandsim
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt;
-		if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
+		if (isSmall(gradient.squaredNorm())) return true;
 
 		// hessian
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
@@ -51,34 +51,42 @@ namespace strandsim
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 
-		// fix hessian
-		m_dynamics.getScriptingController()->fixLHS(hessian);
-		m_dynamics.getScriptingController()->fixRHS(gradient);
+		VecXx b = -gradient;
+		hessian.multiply(b, 1., m_velocities);
+		m_dynamics.getScriptingController()->fixLHSAndRHS(hessian, b, m_dt);
+		JacobianSolver solver(hessian);
+		solver.solve(m_velocities, b);
 
-		// solve linear equation
-		VecXx descent_dir = VecXx::Zero(m_velocities.size());
-		JacobianSolver directSolver;
-		directSolver.store(hessian);
-		directSolver.solve(descent_dir, gradient);
-		descent_dir = -descent_dir;
+		//// fix points
+		//m_dynamics.getScriptingController()->fixRHS(gradient);
+		//m_dynamics.getScriptingController()->fixLHS(hessian);
 
-		// line search
-		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
-		m_velocities += step_size * descent_dir;
-		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
+		//// solve linear equation
+		//VecXx descent_dir = VecXx::Zero(m_velocities.size());
+		//JacobianSolver directSolver;
+		//directSolver.store(hessian);
+		//directSolver.solve(descent_dir, gradient);
+		//descent_dir = -descent_dir;
 
-		m_strand.getFutureState().freeCachedQuantities();
+		//// line search
+		//Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
+		//m_velocities += step_size * descent_dir;
+		//m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
-		if (isSmallSquare(descent_dir.dot(-gradient)))
-			return true;
-		else
-			return false;
+		//m_strand.getFutureState().freeCachedQuantities();
+
+		//if (descent_dir.dot(-gradient) < SMALL_NUMBER<Scalar>())
+		//	return true;
+		//else
+		//	return false;
+
+		return false;
 	}
 
 	void NewtonStepper::postStep()
 	{
 		VecXx displacements = m_velocities * m_dt;
-		//m_dynamics.getScriptingController()->enforceDisplacements(displacements);
+		m_dynamics.getScriptingController()->enforceDisplacements(displacements);
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 
 		m_dynamics.getDisplacements() = displacements;

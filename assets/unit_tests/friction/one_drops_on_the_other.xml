@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <useQuasiNewton value="1"/>
+    <useQuasiNewton value="0"/>
     <windowSize value="5"/>
 
     <useLineSearch value="1"/>
