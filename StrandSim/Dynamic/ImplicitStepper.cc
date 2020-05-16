@@ -836,7 +836,7 @@ namespace strandsim
 		
 		Lhs().multiply( m_rhs, 1., m_newVelocities );
 		dynamics.getScriptingController()->fixLHSAndRHS( Lhs(), m_rhs, m_dt / m_fraction );
-		
+
 		m_timer.restart();
 		m_linearSolver.store( Lhs() );
 		m_timings.m_storeAndFab += m_timer.elapsed();
@@ -846,6 +846,10 @@ namespace strandsim
 		m_timer.restart();
 		m_linearSolver.solve( newVelocities(), rhs() );
 		m_timings.m_solve += m_timer.elapsed();
+
+		std::cout << "hessian:\n" << Lhs() << std::endl;
+		std::cout << "gradient:\n" << m_rhs << std::endl;
+		std::cout << "new vel:\n" << newVelocities() << std::endl;
         
         // check_isnan("ni_velocity", m_newVelocities);
 		
