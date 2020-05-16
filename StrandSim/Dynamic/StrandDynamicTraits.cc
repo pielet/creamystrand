@@ -300,6 +300,8 @@ namespace strandsim {
                 }
             }
         }
+
+		//std::cout << "add stretch:\n" << futureState.m_totalForce << std::endl;
         
 		if (withTwist) {
 			m_strand.accumulateF< TwistingForce<NonViscous> >(futureState);
@@ -311,6 +313,8 @@ namespace strandsim {
 				}
 			}
 		}
+
+		//std::cout << "add twist:\n" << futureState.m_totalForce << std::endl;
         
 		if (withBend) {
 			m_strand.accumulateF< BendingForce<NonViscous> >(futureState);
@@ -322,6 +326,9 @@ namespace strandsim {
 				}
 			}
 		}
+
+		//std::cout << "add bend:\n" << futureState.m_totalForce << std::endl;
+
 		if ( withViscous )
 		{
 			if ( !butOnlyForBendingModes )
@@ -386,6 +393,9 @@ namespace strandsim {
                 dump_stream << "[" << m_strand.getGlobalIndex() << "] FF11 = " << futureF.transpose() << std::endl;
             }
         }
+
+		//std::cout << "add gravition:\n" << futureState.m_totalForce << std::endl;
+
         // check_isnan("force_9", futureF);
         
         /*m_strand.accumulateF< FluidPressureForce > ( futureState ) ;

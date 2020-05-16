@@ -67,7 +67,7 @@
     <skipFlowFrictions value="1"/>
     <skipRodMeshCollisions value="0"/>
     <skipRodRodCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <stochasticPruningFraction value="0.8"/>
     <hairHairFrictionCoefficient value="0.16"/>
     <substeps value="1"/>

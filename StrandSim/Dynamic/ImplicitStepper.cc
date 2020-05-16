@@ -503,6 +503,11 @@ namespace strandsim
 		m_timer.restart();
 		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, m_params.m_energyWithBend, m_params.m_energyWithTwist, false, false, dump_data, stream );
 		m_timings.m_computeFutureForces += m_timer.elapsed();
+
+		if (m_params.m_statGathering)
+		{
+			std::cout << "Force:\n" << m_strand.getFutureTotalForces() << std::endl;
+		}
 		
 		m_timer.restart();
 		VecXx forces = m_strand.getFutureTotalForces() ;
@@ -727,6 +732,10 @@ namespace strandsim
 		
 		// update masses
 		m_strand.dynamics().computeDOFMasses();
+
+		if (m_params.m_statGathering) {
+			std::cout << "mass:\n" << m_strand.dynamics().getDOFMasses() << std::endl;
+		}
 		
 		if ( m_params.m_useImpulseMethod )
 		{
