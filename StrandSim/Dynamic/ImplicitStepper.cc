@@ -576,7 +576,7 @@ namespace strandsim
 		m_timings.m_computeJ += m_timer.elapsed();
 
 		m_timer.restart();
-		JacobianMatrixType& J = m_strand.getTotalJacobian(); // LHS = M - h^2 J
+		JacobianMatrixType& J = m_strand.getFutureTotalJacobian(); // LHS = M - h^2 J
 		J *= m_dt * m_dt;
 		m_timings.m_addM += m_timer.elapsed();
 		
@@ -781,21 +781,32 @@ namespace strandsim
 		
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		const Scalar minAlpha = .01 ; // Minimum step length
+
+		if (m_params.m_statGathering)
+		{
+			std::cout << "Current:\n" << m_strand.getCurrentDegreesOfFreedom() << std::endl;
+			std::cout << "Future\n" << m_strand.getFutureDegreesOfFreedom() << std::endl;
+		}
 		
 		m_prevRhs = m_rhs ;
 		Timer tt("RHS", false);
 		computeRHS();
 		m_timings.m_computeRHS += tt.elapsed();
+
+		VecXx residual = m_rhs;
+
+		dynamics.getScriptingController()->fixRHS(residual);
+		const Scalar err = residual.squaredNorm() / residual.size();
+		
+		if (!m_newtonIter)
+		{
+			m_minErr = min(m_minErr, err);
+		}
         
         // check_isnan("ni_rhs", rhs());
 		
 		if( m_newtonIter )
 		{
-			VecXx residual = m_rhs ;
-			
-			dynamics.getScriptingController()->fixRHS( residual );
-			const Scalar err = residual.squaredNorm() / residual.size() ;
-
 			if( err < m_minErr )
 			{
 				m_minErr = err ;
@@ -836,12 +847,12 @@ namespace strandsim
 		
 		Lhs().multiply( m_rhs, 1., m_newVelocities );
 
-		if (m_params.m_statGathering)
-		{
-			std::cout << "Before fixing:\n";
-			std::cout << "hessian:\n" << Lhs() << std::endl;
-			std::cout << "gradient:\n" << m_rhs << std::endl;
-		}
+		//if (m_params.m_statGathering)
+		//{
+		//	std::cout << "Before fixing:\n";
+		//	std::cout << "hessian:\n" << Lhs() << std::endl;
+		//	std::cout << "gradient:\n" << m_rhs << std::endl;
+		//}
 		dynamics.getScriptingController()->fixLHSAndRHS( Lhs(), m_rhs, m_dt / m_fraction );
 
 		m_timer.restart();
@@ -856,8 +867,8 @@ namespace strandsim
 
 		if (m_params.m_statGathering)
 		{
-			std::cout << "After solving:\n";
-			std::cout << "hessian:\n" << Lhs() << std::endl;
+			//std::cout << "After solving:\n";
+			//std::cout << "hessian:\n" << Lhs() << std::endl;
 			std::cout << "gradient:\n" << m_rhs << std::endl;
 			std::cout << "new vel:\n" << newVelocities() << std::endl;
 		}

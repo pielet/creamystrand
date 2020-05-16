@@ -332,9 +332,14 @@ namespace strandsim
             return *( m_currentState->m_totalJacobian );
         }
         
+        JacobianMatrixType& getFutureTotalJacobian()
+        {
+            return *( m_futureState->m_totalJacobian );
+        }
+
         JacobianMatrixType& getTotalJacobian()
         {
-            return *( m_currentState->m_totalJacobian );
+            return *(m_currentState->m_totalJacobian);
         }
         
         Scalar getNewTotalEnergy() const
