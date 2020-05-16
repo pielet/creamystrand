@@ -60,7 +60,7 @@ namespace strandsim
 		solver.solve(m_velocities, b);
 
 		std::cout << "Hessain: \n" << hessian << std::endl;
-		std::cout << "gradient: \n" << gradient << std::endl;
+		std::cout << "gradient: \n" << b << std::endl;
 		std::cout << "new vel\n" << m_velocities << std::endl;
 
 		//// fix points
