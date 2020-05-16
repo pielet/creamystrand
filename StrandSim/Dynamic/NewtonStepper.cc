@@ -28,8 +28,8 @@ namespace strandsim
 		m_dt = dt;
 
 		m_savedVelocities = m_velocities;
-		// m_velocities.setZero(); // v_{t+1}^0 = v_t
-		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
+		m_velocities.setZero(); // v_{t+1}^0 = v_t
+		//m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 	}
@@ -43,7 +43,9 @@ namespace strandsim
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt;
-		if (isSmall(gradient.squaredNorm())) return true;
+
+		std::cout << gradient.squaredNorm() / gradient.size() << std::endl;
+		if (isSmall(gradient.squaredNorm() / gradient.size())) return true;
 
 		// hessian
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
@@ -56,6 +58,10 @@ namespace strandsim
 		m_dynamics.getScriptingController()->fixLHSAndRHS(hessian, b, m_dt);
 		JacobianSolver solver(hessian);
 		solver.solve(m_velocities, b);
+
+		std::cout << "Hessain: \n" << hessian << std::endl;
+		std::cout << "gradient: \n" << gradient << std::endl;
+		std::cout << "new vel\n" << m_velocities << std::endl;
 
 		//// fix points
 		//m_dynamics.getScriptingController()->fixRHS(gradient);
