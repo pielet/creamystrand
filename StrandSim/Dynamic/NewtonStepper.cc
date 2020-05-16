@@ -69,7 +69,7 @@ namespace strandsim
 
 		m_strand.getFutureState().freeCachedQuantities();
 
-		if (descent_dir.dot(-gradient) < square(SMALL_NUMBER<Scalar>()))
+		if (isSmallSquare(descent_dir.dot(-gradient)))
 			return true;
 		else
 			return false;

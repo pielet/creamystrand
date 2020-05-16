@@ -242,6 +242,12 @@ namespace strandsim
 	{
 		return fabs( x ) < SMALL_NUMBER<ScalarT>();
 	}
+
+	template<typename ScalarT>
+	EIGEN_STRONG_INLINE bool isSmallSquare(ScalarT x)
+	{
+		return fabs(x) < square(SMALL_NUMBER<ScalarT>());
+	}
 	
 	template<typename NormableT>
 	EIGEN_STRONG_INLINE bool isClose( const NormableT& x1, const NormableT& x2 )
