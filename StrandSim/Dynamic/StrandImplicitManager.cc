@@ -126,7 +126,6 @@ namespace strandsim
 			strand->clearSharedRuntimeForces();
 
 			ImplicitStepper* stepper;
-			std::cout << m_params.m_useQuasiNewton;
 			if (m_params.m_useQuasiNewton) {
 				stepper = new QuasiNewtonStepper(*strand, m_params);
 			}

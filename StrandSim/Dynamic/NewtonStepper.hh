@@ -31,6 +31,12 @@ namespace strandsim
 		Scalar m_dt;
 		VecXx m_velocities;
 		VecXx m_savedVelocities;
+
+		int m_iteration;
+		VecXx m_bestVelocities;
+		Scalar m_bestErr;
+		Scalar m_prevErr;
+		Scalar m_alpha;
 	};
 }
 

@@ -27,9 +27,14 @@ namespace strandsim
 	{
 		m_dt = dt;
 
+		m_iteration = 0;
+		m_bestErr = 1e99;
+		m_bestVelocities = m_velocities;
+		m_prevErr = 1e99;
+		m_alpha = 1.;
+
 		m_savedVelocities = m_velocities;
-		//m_velocities.setZero(); // v_{t+1}^0 = v_t
-		//m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 	}
@@ -38,67 +43,70 @@ namespace strandsim
 	{
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
-		std::cout << "Current:\n" << m_strand.getCurrentDegreesOfFreedom() << std::endl;
-		std::cout << "Future:\n" << m_strand.getFutureDegreesOfFreedom() << std::endl;
-
 		// gradient
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt;
+		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
 
-		std::cout << gradient.squaredNorm() / gradient.size() << std::endl;
-		if (isSmall(gradient.squaredNorm() / gradient.size())) return true;
+		// check convergence
+		Scalar err = gradient.squaredNorm() / gradient.size();
+		std::cout << "  err: " << err << std::endl;
+		if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
+			return true;
+
+		// update saved info
+		if (m_iteration)
+		{
+			if (err < m_prevErr)
+				m_alpha = std::min(1.0, 1.5 * m_alpha);
+			else
+				m_alpha = std::max(0.01, 0.5 * m_alpha);
+
+			if (err < m_bestErr)
+			{
+				m_bestErr = err;
+				m_bestVelocities = m_velocities;
+			}
+		}
+		m_prevErr = err;
 
 		// hessian
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
+		m_dynamics.getScriptingController()->fixLHS(hessian);  // fix points
 
-		//std::cout << "Before fixing:\n";
-		//std::cout << "hessian:\n" << hessian << std::endl;
-		//std::cout << "gradient:\n" << -gradient << std::endl;
+		// solve linear equation
+		VecXx descent_dir = VecXx::Zero(m_velocities.size());
+		JacobianSolver directSolver;
+		directSolver.store(hessian);
+		directSolver.solve(descent_dir, gradient);
+		descent_dir = -descent_dir;
 
-		VecXx b = -gradient;
-		hessian.multiply(b, 1., m_velocities);
-		m_dynamics.getScriptingController()->fixLHSAndRHS(hessian, b, m_dt);
-		JacobianSolver solver(hessian);
-		solver.solve(m_velocities, b);
+		// line search
+		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
+		m_velocities += step_size * descent_dir;
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
-		std::cout << "After solving:\n" << std::endl;
-		//std::cout << "Hessain: \n" << hessian << std::endl;
-		std::cout << "gradient: \n" << b << std::endl;
-		std::cout << "new vel\n" << m_velocities << std::endl;
+		std::cout <<"alpha: " << step_size;
 
-		//// fix points
-		//m_dynamics.getScriptingController()->fixRHS(gradient);
-		//m_dynamics.getScriptingController()->fixLHS(hessian);
+		if (isSmall(step_size)) return true;
 
-		//// solve linear equation
-		//VecXx descent_dir = VecXx::Zero(m_velocities.size());
-		//JacobianSolver directSolver;
-		//directSolver.store(hessian);
-		//directSolver.solve(descent_dir, gradient);
-		//descent_dir = -descent_dir;
+		m_strand.getFutureState().freeCachedQuantities();
 
-		//// line search
-		//Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
-		//m_velocities += step_size * descent_dir;
-		//m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
-
-		//m_strand.getFutureState().freeCachedQuantities();
-
-		//if (descent_dir.dot(-gradient) < SMALL_NUMBER<Scalar>())
-		//	return true;
-		//else
-		//	return false;
+		++m_iteration;
 
 		return false;
 	}
 
 	void NewtonStepper::postStep()
 	{
+		if (m_iteration == m_params.m_nonlinearIterations)
+			m_velocities = m_bestVelocities;
+
 		VecXx displacements = m_velocities * m_dt;
 		m_dynamics.getScriptingController()->enforceDisplacements(displacements);
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
@@ -128,7 +136,7 @@ namespace strandsim
 			return alpha;
 		}
 		else {
-			return 1.0;
+			return m_alpha;
 		}
 	}
 

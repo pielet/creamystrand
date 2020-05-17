@@ -23,18 +23,13 @@ namespace strandsim
 
 	void QuasiNewtonStepper::prepareStep(Scalar dt)
 	{
-		m_dt = dt;
+		NewtonStepper::prepareStep(dt);
 
 		m_v_queue.clear();
 		m_g_queue.clear();
 
 		m_last_v.setZero();
 		m_last_gradient.setZero();
-
-		m_savedVelocities = m_velocities;
-		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, dt);
-
-		m_isFirstIter = true;
 
 		// compute initial hessian
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
@@ -57,24 +52,28 @@ namespace strandsim
 		m_dynamics.computeFutureForces();
 		gradient -= m_dt * m_strand.getFutureTotalForces();
 		m_dynamics.getScriptingController()->fixRHS(gradient);
-		if (isSmall(gradient.squaredNorm() / gradient.size())) return true;
+		
+		// check convergence
+		Scalar err = gradient.squaredNorm() / gradient.size();
+		std::cout << "  err: " << err << std::endl;
+		if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
+			return true;
 
-		//if (gradient.squaredNorm() < square(SMALL_NUMBER<Scalar>())) return true;
-
-		// debug
-		//m_dynamics.computeFutureJacobian();
-		//JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
-		//hessian *= m_dt * m_dt;
-		//m_dynamics.addMassMatrixTo(hessian);
-		//m_dynamics.getScriptingController()->fixLHS(hessian);
-		//JacobianSolver solver(hessian);
-		//VecXx real_descent_dir = VecXx::Zero(m_velocities.size());
-		//solver.solve(real_descent_dir, gradient);
-		//real_descent_dir = -real_descent_dir;
-
-		// update queue
-		if (!m_isFirstIter)
+		// update saved info
+		if (m_iteration)
 		{
+			if (err < m_prevErr)
+				m_alpha = std::min(1.0, 1.5 * m_alpha);
+			else
+				m_alpha = std::max(0.01, 0.5 * m_alpha);
+
+			if (err < m_bestErr)
+			{
+				m_bestErr = err;
+				m_bestVelocities = m_velocities;
+			}
+
+			// update queue
 			m_v_queue.push_back(m_velocities - m_last_v);
 			m_g_queue.push_back(gradient - m_last_gradient);
 
@@ -84,9 +83,8 @@ namespace strandsim
 				m_g_queue.pop_front();
 			}
 		}
-
-		m_isFirstIter = false;
-
+		m_prevErr = err;
+		
 		m_last_v = m_velocities;
 		m_last_gradient = gradient;
 
@@ -123,17 +121,15 @@ namespace strandsim
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
-		// debug
-		//std::cout << descent_dir.dot(real_descent_dir) / descent_dir.norm() / real_descent_dir.norm() << std::endl;
-		
-		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		std::cout << "alpha: " << step_size;
+
+		if (isSmall(step_size)) return true;
 
 		m_strand.getFutureState().freeCachedQuantities();
 
-		if (descent_dir.dot(-gradient) < square(SMALL_NUMBER<Scalar>()))
-			return true;
-		else
-			return false;
+		++m_iteration;
+
+		return false;
 	}
 
 }
