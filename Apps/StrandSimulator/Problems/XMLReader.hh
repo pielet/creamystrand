@@ -189,6 +189,8 @@ protected:
     
     void executeHairPose();
 
+	virtual void setup(int& current_frame, int& current_check_point);
+
     std::string m_filename;
 	double m_end_time;
     std::vector<char> m_xmlchars;

@@ -121,7 +121,7 @@ namespace strandsim
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
-		std::cout << step_size << std::endl;
+		//std::cout << step_size << std::endl;
 
 		// if (isSmall(step_size)) return true;
 

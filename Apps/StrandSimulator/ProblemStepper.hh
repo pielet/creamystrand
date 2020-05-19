@@ -176,7 +176,7 @@ public:
     
     virtual void projectConstraint(const std::vector<ImplicitStepper*>& steppers);
     
-    void setup(int& current_frame, int& current_check_point);
+    virtual void setup(int& current_frame, int& current_check_point) {};
     
     bool step(); // take single step of problem
 

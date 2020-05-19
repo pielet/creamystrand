@@ -33,6 +33,7 @@ class ImplicitStepper;
 class DOFScriptingController;
 class CollisionDetector;
 class ElementProxy;
+struct DistanceFieldObject;
 class MeshScriptingController;
 class FluidScriptingController;
 class ConstraintScriptingController;
@@ -162,6 +163,7 @@ public:
 
     StrandImplicitManager( const std::vector<ElasticStrand*>& strands,
             const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& collision_free,
+            const std::vector<DistanceFieldObject>& fields,
             const std::vector< std::shared_ptr<MeshScriptingController> >& meshScripting_controllers,
             const std::vector< std::shared_ptr<FluidScriptingController> >& fluidScripting_controllers,
             const std::vector<ConstraintScriptingController*>& constraintScripting_controllers,
@@ -245,6 +247,8 @@ private:
     void step_prepareCollision();
     //! Does continous collision detection
     void step_continousCollisionDetection();
+    //! Vertex-face collision detection of distance field objects
+    void step_vertexFaceCollisionDetection();
     //! Sorts and prunes collisions set
     void step_processCollisions();
     //! Solves collisions and updates collision impulses
@@ -293,6 +297,7 @@ private:
 
     const std::vector<ElasticStrand*>& m_strands;
     std::vector<ImplicitStepper*> m_steppers;
+    const std::vector< DistanceFieldObject >& m_distanceFields;
     const std::vector< std::shared_ptr<MeshScriptingController> >& m_meshScriptingControllers;
     const std::vector< std::shared_ptr<FluidScriptingController> >& m_fluidScriptingControllers;
     const std::vector<ConstraintScriptingController*>& m_constraintScriptingControllers;

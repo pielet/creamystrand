@@ -1183,6 +1183,18 @@ void XMLReader::executeHairPose()
     }
 }
 
+void XMLReader::setup(int& current_frame, int& current_check_point)
+{
+    setSimulationParameters();  // load <SimulationParameters>
+    setupStrands();     // load remained parameters in xml
+    setupMeshes();  // do nothing
+
+    if (m_isSimulated)
+        m_stepper = new StrandImplicitManager(m_strands, m_collision_free, m_fields, m_meshScripting_controllers, m_fluidScripting_controllers, m_constraintScripting_controllers, m_t, m_dt, m_simulation_params, this);
+
+    setupAfterInit(current_frame, current_check_point);
+}
+
 bool XMLReader::executeScript(int total_substep_id, const Scalar substep_dt)
 {
     const int num_scripts = (int) m_scripts.size();
@@ -1603,6 +1615,13 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_energyWithBend = true;
     m_simulation_params.m_energyWithTwist = true;
 
+    m_simulation_params.m_nonlinearIterations = 10;
+    m_simulation_params.m_useQuasiNewton = true;
+    m_simulation_params.m_windowSize = 5;
+    m_simulation_params.m_useLineSearch = true;
+    m_simulation_params.m_ls_alpha = 0.03;
+    m_simulation_params.m_ls_beta = 0.5;
+
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
     if(!m_scene_node)
@@ -1642,9 +1661,16 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "hairMeshFrictionCoefficient", m_simulation_params.m_hairMeshFrictionCoefficient);
     loadParam(nd, "airDrag", m_simulation_params.m_airDrag);
     loadParam(nd, "subSteps", m_simulation_params.m_subSteps);
-    loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
+    loadParam(nd, "m_useCTRodRodCollisions", m_simulation_params.m_solveCollision);
     loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
     loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
+
+    loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
+    loadParam(nd, "useQuasiNewton", m_simulation_params.m_useQuasiNewton);
+    loadParam(nd, "windowSize", m_simulation_params.m_windowSize);
+    loadParam(nd, "useLineSearch", m_simulation_params.m_useLineSearch);
+    loadParam(nd, "lineSearchAlpha", m_simulation_params.m_ls_alpha);
+    loadParam(nd, "lineSearchBeta", m_simulation_params.m_ls_beta);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))

@@ -19,6 +19,7 @@
 #include "QuasiNewtonStepper.hh"
 #include "StrandDynamicTraits.hh"
 #include "DOFScriptingController.hh"
+#include "DistanceFieldObject.hh"
 #include "../Collision/CollisionDetector.hh"
 #include "../Collision/ElementProxy.hh"
 #include "../Collision/EdgeFaceIntersection.hh"
@@ -65,6 +66,7 @@ namespace strandsim
 
 	StrandImplicitManager::StrandImplicitManager(const std::vector<ElasticStrand*>& strands,
 		const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& collision_free,
+		const std::vector<DistanceFieldObject>& fields, 
 		const std::vector< std::shared_ptr<MeshScriptingController> >& meshScripting_controllers,
 		const std::vector< std::shared_ptr<FluidScriptingController> >& fluidScripting_controllers,
 		const std::vector<ConstraintScriptingController*>& constraintScripting_controllers,
@@ -75,6 +77,7 @@ namespace strandsim
 		, m_strands(strands)
 		, m_collision_free(collision_free)
 		, m_steppers()
+		,m_distanceFields(fields)
 		, m_meshScriptingControllers(meshScripting_controllers)
 		, m_fluidScriptingControllers(fluidScripting_controllers)
 		, m_constraintScriptingControllers(constraintScripting_controllers)
@@ -2658,7 +2661,8 @@ namespace strandsim
 					{
 						m_steppers[i]->rewind();
 					}
-					step_continousCollisionDetection();
+					//step_continousCollisionDetection();
+					step_vertexFaceCollisionDetection();
 					timings.continousTimeCollisions += timer.elapsed();
 
 					timer.restart();
@@ -2700,6 +2704,35 @@ namespace strandsim
 		}
 
 		m_statTotalContacts = 0;
+	}
+
+	void StrandImplicitManager::step_vertexFaceCollisionDetection()
+	{
+#pragma omp parallel for
+		for (int i = 0; i < m_strands.size(); ++i)
+		{
+			for (int vid = 0; vid < m_strands[i]->getNumVertices(); ++vid)
+			{
+				for (const auto& df : m_distanceFields)
+				{
+					Vec3x normal, freevel;
+					if (df.checkCollision(m_strands[i]->getVertex(vid), normal, freevel))
+					{
+						ProximityCollision collision;
+
+						collision.normal = normal;
+						collision.mu = sqrt(df.mesh_controller->getDefaultFrictionCoefficient() 
+							* m_strands[i]->collisionParameters().frictionCoefficient(vid));
+
+						collision.objects.second.globalIndex = -1;
+						collision.objects.second.vertex = -1;
+						collision.objects.second.freeVel = freevel;
+
+						addExternalContact(i, vid, 0, collision);
+					}
+				}
+			}
+		}
 	}
 	
 	void StrandImplicitManager::step_continousCollisionDetection()

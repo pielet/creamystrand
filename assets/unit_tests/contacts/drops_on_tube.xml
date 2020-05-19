@@ -2,7 +2,7 @@
   <description text="A hair bundle drops on the other."/>
 
   <duration time="2.0"/>
-  <integrator type="linearized-implicit-euler" dt="0.005" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -56,7 +56,7 @@
 
     <useSoftAttachConstraints value="1"/>
 
-    <solveCollision value="0"/>
+    <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
 
     <maxNewtonIterations value="100"/>
@@ -134,12 +134,9 @@
   <hair params="0" start="0" count="40"/>
 
 
-  <!--<script type="translate" x="-5.0" y="0" z="0" w="0" start="0" end="0.3" group="0"/>-->
+  <script type="translate" x="0.0" y="0" z="5.0" w="0" start="0" end="1.0" group="1"/>
 
-  <script type="translate" x="0" y="0" z="-10.0" w="0.0" start="0" end="0.05" group="1"/>
-  <script type="rotate" x="0.0" y="1.0" z="0.0" w="-1.5707963268" ox="0.0" oy="0.0" oz="0.0" start="0.05" end=".1" group="1" global="1"/> 
-
-  <distancefield usage="solid" type="cylinder" cx="0.0" cy="-0.5" cz="0.0" rx="0.0" ry="0.0" rz="1.0" rw="1.5708" radius="0.5" corner="0.1" halflength="5.0" group="1"/>
+  <distancefield usage="solid" type="cylinder" cx="0.0" cy="-0.5" cz="0.0" rx="0.0" ry="0.0" rz="1.0" rw="1.5708" radius="0.5" corner="0.0" halflength="5.0" group="1"/>
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>
 
 </scene>  

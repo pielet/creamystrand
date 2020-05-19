@@ -220,7 +220,7 @@ namespace strandsim
 		}
 	}
 
-	bool DistanceFieldObject::checkCollision(const Vec3x& pos, Vec3x& normal, Scalar& mu, Vec3x& freeVel)
+	bool DistanceFieldObject::checkCollision(const Vec3x& pos, Vec3x& normal, Vec3x& freeVel) const
 	{
 		if (usage == DFU_SOLID && type == DFT_CYLINDER)
 		{
@@ -235,8 +235,7 @@ namespace strandsim
 				if (p_n.squaredNorm() < radius * radius)
 				{
 					normal = p_n.normalized();
-					mu = mesh_controller->getDefaultFrictionCoefficient();
-					freeVel = Vec3x::Zero();
+					freeVel = V;
 
 					return true;
 				}
