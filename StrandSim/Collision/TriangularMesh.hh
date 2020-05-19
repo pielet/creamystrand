@@ -226,7 +226,7 @@ namespace strandsim
             for( unsigned i = 0; i < nv(); ++i )
             {
                 Vec3x vert = getVertex(i);
-                Vec3x vertNext = transformation * Vec3x((vert - center).array() * scaling.array()) + center + translate;
+                Vec3x vertNext = transformation * Vec3x((vert - center).array() * scaling.array()) + translate;
                 setVertex(i, vertNext);
                 setDisplacement( i, (vertNext-m_stored_vertices[i]) );
             }

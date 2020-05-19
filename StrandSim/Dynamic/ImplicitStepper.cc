@@ -22,6 +22,17 @@ namespace strandsim
 
 	}
 
+	void ImplicitStepper::rewind()
+	{
+		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
+	}
+
+	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
+	{
+		m_collisionImpulse.segment<3>(4 * vid) += r;
+	}
+
 	Scalar ImplicitStepper::maxCollisionImpulseNorm(int& idx) const
 	{
 		Scalar maxlen = 0.;

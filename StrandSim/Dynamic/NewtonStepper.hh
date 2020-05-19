@@ -28,8 +28,6 @@ namespace strandsim
 		StrandDynamicTraits& m_dynamics;
 		//const SimulationParameters& m_params;
 
-		Scalar m_dt;
-		VecXx m_velocities;
 		VecXx m_savedVelocities;
 
 		int m_iteration;

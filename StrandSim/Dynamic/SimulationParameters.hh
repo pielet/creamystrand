@@ -59,6 +59,10 @@ struct SimulationParameters
 
     bool m_energyWithBend;
     bool m_energyWithTwist;
+
+    unsigned m_maxNewtonIterations;
+    unsigned m_gaussSeidelIterations;
+    Scalar m_gaussSeidelTolerance;
     
     /**
      * Inextensibility 

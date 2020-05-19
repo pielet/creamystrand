@@ -20,6 +20,7 @@ namespace strandsim
     class TriangularMesh;
     class TriangularMeshFlow;
     class FluidScriptingController;
+    struct DistanceFieldObject;
 }
 
 namespace strandsim {
@@ -37,10 +38,20 @@ public:
                          int endMeshFrame);
 
     virtual ~SimpleMeshController();
-    
+
     virtual void isStaticMesh( const bool i_isStaticMesh );
 
     virtual bool execute( bool updateLevelSet );
+
+    void setDistanceField(DistanceFieldObject* dfp)
+    {
+        m_distanceField = dfp;
+    }
+
+    virtual DistanceFieldObject* getDistanceField() const
+    {
+        return m_distanceField;
+    }
 
     const std::shared_ptr<TriangularMesh> getCurrentMesh() const
     {
@@ -181,6 +192,8 @@ private:
     std::shared_ptr<TriangularMesh> m_currentMesh;
     
     std::shared_ptr<TriangularMeshFlow> m_meshFlow;
+
+    DistanceFieldObject* m_distanceField;
     
     std::string m_base_szfn;
 

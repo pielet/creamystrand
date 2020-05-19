@@ -56,7 +56,7 @@ public:
 
         for ( IndexType vtx = ForceT::s_first; vtx < state.m_numVertices - ForceT::s_last;
                 ++vtx )
-                {
+        {
             energy += ForceT::localEnergy( strand, state, vtx );
         }
     }

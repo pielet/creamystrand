@@ -9,6 +9,7 @@
 
 #include "XMLReader.hh"
 #include "../../../StrandSim/Dynamic/ImplicitStepper.hh"
+#include "../../../StrandSim/Dynamic/LiquidSimulator.hh"
 #include "../../../StrandSim/Dynamic/DistanceFieldObject.hh"
 #include "../../../StrandSim/Forces/FluidDragForce.hh"
 #include "../../../StrandSim/Forces/FluidPressureForce.hh"
@@ -1583,13 +1584,12 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_percentCTRodRodCollisionsAccept = 100.;
     m_simulation_params.m_useNonlinearContacts = false;
     m_simulation_params.m_solveLiquids = true;
-    m_simulation_params.m_solveCollision = true;
     m_simulation_params.m_useAdditionalExternalFailSafe = false;
     m_simulation_params.m_useImpulseMethod = false;
-    m_simulation_params.m_linearIterations = 10;
-    m_simulation_params.m_nonlinearIterations = 1;
-    m_simulation_params.m_collisionSolverTolerace = 1e-6;
+    m_simulation_params.m_maxNewtonIterations = 10000;
     m_simulation_params.m_simulationManager_limitedMemory = false;
+    m_simulation_params.m_gaussSeidelIterations = 75;
+    m_simulation_params.m_gaussSeidelTolerance = 1e-4;
     m_simulation_params.m_pruneSelfCollisions = true;
     m_simulation_params.m_pruneExternalCollisions = true;
     m_simulation_params.m_stochasticPruning = 0.8;
@@ -1599,22 +1599,12 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_hairHairFrictionCoefficient = 0.3;
     m_simulation_params.m_hairMeshFrictionCoefficient = 0.0;
     m_simulation_params.m_airDrag = 0.0003;
-    m_simulation_params.m_relaxationFactor = 1.0;
-    m_simulation_params.m_velocityDiffTolerance = 1e-6;
-    m_simulation_params.m_linearizebHat = false;
+    m_simulation_params.m_solveCollision = true;
     m_simulation_params.m_energyWithBend = true;
     m_simulation_params.m_energyWithTwist = true;
 
-    m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::DIRECT;
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
-    m_simulation_params.m_useQuasiNewton = true;
-    m_simulation_params.m_windowSize = 5;
-
-    m_simulation_params.m_useLineSearch = true;
-    m_simulation_params.m_ls_alpha = 0.03;
-    m_simulation_params.m_ls_beta = 0.5;
-
     if(!m_scene_node)
         return;
     
@@ -1637,12 +1627,12 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "percentCTRodRodCollisionsAccept", m_simulation_params.m_percentCTRodRodCollisionsAccept);
     loadParam(nd, "useNonlinearContacts", m_simulation_params.m_useNonlinearContacts);
     loadParam(nd, "solveLiquids", m_simulation_params.m_solveLiquids);
-    loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
     loadParam(nd, "useAdditionalExternalFailSafe", m_simulation_params.m_useAdditionalExternalFailSafe);
     loadParam(nd, "useImpulseMethod", m_simulation_params.m_useImpulseMethod);
-    loadParam(nd, "linearIterations", m_simulation_params.m_linearIterations);
-    loadParam(nd, "collisionSolverTolerance", m_simulation_params.m_collisionSolverTolerace);
+    loadParam(nd, "maxNewtonIterations", m_simulation_params.m_maxNewtonIterations);
     loadParam(nd, "simulationManagerLimitedMemory", m_simulation_params.m_simulationManager_limitedMemory);
+    loadParam(nd, "gaussSeidelIterations", m_simulation_params.m_gaussSeidelIterations);
+    loadParam(nd, "gaussSeidelTolerance", m_simulation_params.m_gaussSeidelTolerance);
     loadParam(nd, "pruneSelfCollisions", m_simulation_params.m_pruneSelfCollisions);
     loadParam(nd, "pruneExternalCollisions", m_simulation_params.m_pruneExternalCollisions);
     loadParam(nd, "stochasticPruning", m_simulation_params.m_stochasticPruning);
@@ -1652,19 +1642,9 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "hairMeshFrictionCoefficient", m_simulation_params.m_hairMeshFrictionCoefficient);
     loadParam(nd, "airDrag", m_simulation_params.m_airDrag);
     loadParam(nd, "subSteps", m_simulation_params.m_subSteps);
-    loadParam(nd, "relaxationFactor", m_simulation_params.m_relaxationFactor);
-    loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
-    loadParam(nd, "velocityDiffTolerance", m_simulation_params.m_velocityDiffTolerance);
-    loadParam(nd, "linearizebHat", m_simulation_params.m_linearizebHat);
+    loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
     loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
     loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
-
-    loadParam(nd, "useQuasiNewton", m_simulation_params.m_useQuasiNewton);
-    loadParam(nd, "windowSize", m_simulation_params.m_windowSize);
-
-    loadParam(nd, "useLineSearch", m_simulation_params.m_useLineSearch);
-    loadParam(nd, "lineSearchAlpha", m_simulation_params.m_ls_alpha);
-    loadParam(nd, "lineSearchBeta", m_simulation_params.m_ls_beta);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))
@@ -1679,19 +1659,6 @@ void XMLReader::setSimulationParameters()
 			exit(1);
 		}
 	}
-
-    if ((subnd = nd->first_node("LinearSolverType")))
-    {
-        std::string attribute(subnd->first_attribute("value")->value());
-        if (attribute == "direct") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::DIRECT;
-        else if (attribute == "jacobi") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::JACOBI;
-        else if (attribute == "gaussseidel") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::GAUSS_SEIDEL;
-        else if (attribute == "conjgrad") m_simulation_params.m_linearSolverType = ImplicitStepper::LinearSolverType::CONJ_GRAD;
-        else {
-            std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSE:" << outputmod::endred << " Invalid simulation parameter 'LinearSolverType' specified. Exiting." << std::endl;
-            exit(1);
-        }
-    }
 }
 
 void XMLReader::setRodCollisionParameters( CollisionParameters& param, const ElasticStrandParameters& strand_param )
@@ -1944,6 +1911,7 @@ void XMLReader::loadCheckpoint( rapidxml::xml_node<>* node, int& current_frame, 
 				m_strands[i]->setFutureAreaDegreesOfFreedom(data.m_currentAreaDOFs[i]);
 				m_strands[i]->getStepper()->velocities() = data.m_velocities[i];
 				m_strands[i]->dynamics().getDisplacements() = data.m_velocities[i] * m_dt;
+				m_strands[i]->getStepper()->flowComponents() = data.m_flow_components[i];
 				m_strands[i]->getReservoir() = data.m_flow_reservoirs[i];
 				
 				const int num_verts = m_strands[i]->getNumVertices();

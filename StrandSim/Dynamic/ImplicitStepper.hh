@@ -5,7 +5,6 @@
 #include <omp.h>
 #endif
 #include "../Core/Definitions.hh"
-#include "../Utils/SymmetricBandMatrixSolver.hh"
 
 namespace strandsim
 {
@@ -25,6 +24,9 @@ namespace strandsim
 		virtual bool performOneIteration() = 0;
 		virtual void postStep() = 0;
 
+		void rewind();
+
+		void accumulateCollisionImpulse(int vid, const Vec3x& r);
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
 
@@ -45,6 +47,8 @@ namespace strandsim
 		ElasticStrand& m_strand;
 		const SimulationParameters& m_params;
 		
+		Scalar m_dt;
+
 		VecXx m_velocities;
 		VecXx m_collisionImpulse;
 

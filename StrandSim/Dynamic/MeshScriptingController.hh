@@ -16,13 +16,16 @@ namespace strandsim
 {
 
 class TriangularMesh;
-    class TriangularMeshFlow;
+class TriangularMeshFlow;
+class DistanceFieldObject;
 
 class MeshScriptingController: public ScriptingController, public std::enable_shared_from_this<MeshScriptingController>
 {
 public:
     MeshScriptingController( Scalar time, Scalar dt );
     virtual ~MeshScriptingController();
+
+    virtual DistanceFieldObject* getDistanceField() const = 0;
 
     virtual void createInitialLevelSet() = 0;
 
@@ -68,7 +71,6 @@ public:
             unsigned vertex )
     {
     }
-
 };
 
 }

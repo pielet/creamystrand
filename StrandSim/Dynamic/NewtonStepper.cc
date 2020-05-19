@@ -33,10 +33,14 @@ namespace strandsim
 		m_prevErr = 1e99;
 		m_alpha = 1.;
 
+		m_collisionImpulse.setZero();
+
 		m_savedVelocities = m_velocities;
+		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
+
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
-		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
+		m_dynamics.computeViscousForceCoefficients(dt);  // used for updating dt (air draging force);
 	}
 
 	bool NewtonStepper::performOneIteration()
@@ -47,14 +51,13 @@ namespace strandsim
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
-		gradient -= m_strand.getFutureTotalForces() * m_dt;
+		gradient -= m_strand.getFutureTotalForces() * m_dt + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
 
 		// check convergence
 		Scalar err = gradient.squaredNorm() / gradient.size();
-		std::cout << "  err: " << err << std::endl;
-		if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
-			return true;
+		//if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
+		//	return true;
 
 		// update saved info
 		if (m_iteration)
@@ -90,12 +93,11 @@ namespace strandsim
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
-
-		std::cout <<"alpha: " << step_size;
-
-		if (isSmall(step_size)) return true;
+		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
 		m_strand.getFutureState().freeCachedQuantities();
+
+		//if (isSmall(step_size)) return true;
 
 		++m_iteration;
 
@@ -123,11 +125,12 @@ namespace strandsim
 
 			do {
 				alpha *= m_params.m_ls_beta;
-				if (alpha < 1e-5) break;
+				if (alpha < 1e-5) break; 
 
 				next_obj_value = evaluateObjectValue(current_v + alpha * descent_dir);
 				rhs = current_obj_value + m_params.m_ls_alpha * alpha * gradient_dir.dot(descent_dir);
-			
+				
+				//std::cout << "next: " << next_obj_value << "  current: " << current_obj_value << "  rhs: " << rhs << std::endl;
 			} while (next_obj_value > rhs);
 
 			if (alpha < 1e-5)
@@ -151,9 +154,9 @@ namespace strandsim
 		Scalar g = m_strand.getFutureTotalEnergy();
 
 		// inertia term
-		VecXx u_t = m_dynamics.getExternalForce();
+		VecXx u_t = m_dynamics.getExternalForce() * m_dt + m_collisionImpulse;
 		m_dynamics.multiplyByMassMatrixInverse(u_t);
-		u_t = v - (m_savedVelocities + m_dt * u_t);
+		u_t = v - (m_savedVelocities + u_t);
 		VecXx delta_v = u_t;
 		m_dynamics.multiplyByMassMatrix(u_t);
 

@@ -53,7 +53,9 @@
     <lineSearchBeta value="0.5"/>
 
     <solveCollision value="0"/>
-    <nonlinearIterations value="10"/>
+    <nonlinearIterations value="100"/>
+
+    <useSoftAttachConstraints value="1"/>
 
     <collisionSolverTolerace value="1e-6"/>
     <logLevel value="5"/>

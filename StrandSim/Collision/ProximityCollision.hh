@@ -19,9 +19,6 @@ namespace strandsim
 {
     class ElasticStrand;
     class ContinuousTimeCollision;
-    class CollisionSolver;
-    
-    typedef SparseRowMatx DeformationGradient ;
     
     struct ProximityCollision
     {
@@ -33,15 +30,14 @@ namespace strandsim
             int vertex;
             Scalar abscissa;
             
-            DeformationGradient* defGrad;
             Vec3x freeVel;
             
-            Object() : globalIndex(0), vertex(0), abscissa(0), defGrad( NULL ) {}
+            Object() : globalIndex(0), vertex(0), abscissa(0) {}
             
             unsigned long computeSizeInBytes() const
             {
                 unsigned long total = 0;
-                total += sizeof(int) + sizeof(int) + sizeof(Scalar) + sizeof(DeformationGradient*);
+                total += sizeof(int) + sizeof(int) + sizeof(Scalar);
                 total += freeVel.size() * sizeof( Vec3x::Scalar );
                 return total;
             }
@@ -62,8 +58,6 @@ namespace strandsim
         Mat3x transformationMatrix ;
         
         std::pair<Object, Object> objects;
-
-        CollisionSolver* m_collisionSolver;
         
         void generateTransformationMatrix() ;
         void updateTransformationMatrix( const Mat3x& previous ) ;

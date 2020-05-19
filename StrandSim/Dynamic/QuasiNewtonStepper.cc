@@ -32,7 +32,7 @@ namespace strandsim
 		m_last_gradient.setZero();
 
 		// compute initial hessian
-		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
+		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, dt);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom() + m_velocities * m_dt);
 		m_dynamics.computeFutureJacobian();
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
@@ -50,14 +50,13 @@ namespace strandsim
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces();
-		gradient -= m_dt * m_strand.getFutureTotalForces();
+		gradient -= m_dt * m_strand.getFutureTotalForces() + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);
 		
 		// check convergence
 		Scalar err = gradient.squaredNorm() / gradient.size();
-		std::cout << "  err: " << err << std::endl;
-		if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
-			return true;
+		//if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
+		//	return true;
 
 		// update saved info
 		if (m_iteration)
@@ -121,9 +120,10 @@ namespace strandsim
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
-		std::cout << "alpha: " << step_size;
+		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		std::cout << step_size << std::endl;
 
-		if (isSmall(step_size)) return true;
+		// if (isSmall(step_size)) return true;
 
 		m_strand.getFutureState().freeCachedQuantities();
 

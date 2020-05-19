@@ -270,7 +270,7 @@ private:
     void makeExternalContact(ProximityCollision& c, bool onFirstObject);
 
     //! Computes the deformation gradient of a strand at one contact point, ie dq/dx
-    void computeDeformationGradient( ProximityCollision::Object &object ) const;
+    //void computeDeformationGradient( ProximityCollision::Object &object ) const;
     //! Setup the local frame for one contact and calls computeDeformationGradient() for each object
     void setupDeformationBasis( ProximityCollision &collision ) const;
 
@@ -281,6 +281,9 @@ private:
     void pruneCollisions( const ProximityCollisions &origMutualCollisions,
             ProximityCollisions &mutualCollisions, const Scalar stochasticPruning );
 
+    //! solve individual collision in local coordinate
+    Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
+    
     void exportStrandRestShapes( const std::string& fileName ) const;
 
     Scalar m_time; //!< Current time

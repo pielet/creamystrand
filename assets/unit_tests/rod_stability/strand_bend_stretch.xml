@@ -52,22 +52,26 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <useQuasiNewton value="1"/>
+    <useQuasiNewton value="0"/>
     <windowSize value="5"/>
 
-    <useLineSearch value="0"/>
+    <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
+
+    <useSoftAttachConstraints value="1"/>
 
     <solveCollision value="0"/>
     <nonlinearIterations value="100"/>
 
+    <maxNewtonIterations value="100"/>
+
+    <energyWithBend value="1"/>
+    <energyWithTwist value="1"/>
+
     <airDrag value="0.0003"/> 
     <gaussSeidelIterations value="75"/>
     <gaussSeidelTolerance value="1e-06"/> 
-
-    <maxNewtonIterations value="100"/>
-
     <hairMeshFrictionCoefficient value="0.0"/>
     <numberOfThreads value="24"/>
     <percentCTRodRodCollisionsAccept value="100"/>
@@ -87,7 +91,6 @@
     <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
-    <useSoftAttachConstraints value="0"/>
     <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
   </SimulationParameters>

@@ -52,8 +52,12 @@
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
+    <useSoftAttachConstraints value="1"/>
+
     <solveCollision value="0"/>
-    <nonlinearIterations value="10"/>
+    <nonlinearIterations value="100"/>
+
+    <maxNewtonIterations value="100"/>
 
     <collisionSolverTolerace value="1e-6"/>
     <logLevel value="4"/>
@@ -81,8 +85,7 @@
 
     <airDrag value="0.0005"/> 
     <gaussSeidelIterations value="2"/>
-    <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="100"/>
+    <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
@@ -213,8 +216,8 @@
   <particle x="9.0 0.0 0.1" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="9.5 0.0 0.1" v="0.0 0.0 0.0" fixed="1" group="0"/>
 -->
-  <particle x="0.0 0.1 -10.0" v="0.0 0.0 0.0" fixed="1"/>
-  <particle x="0.0 0.1 -9.5" v="0.0 0.0 0.0" fixed="1"/>
+  <particle x="0.0 0.1 -10.0" v="0.0 0.0 0.0" fixed="1" group="1"/>
+  <particle x="0.0 0.1 -9.5" v="0.0 0.0 0.0" fixed="1" group="1"/>
   <particle x="0.0 0.1 -9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 -8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 -8.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -339,9 +342,6 @@
 -->
   <hair params="0" start="0" count="40"/>
 
-  <pose time="0.0" path="scripts/random_init.ply" cx="0.0" cy="0.0" cz="0.0">
-  </pose>
-
 <!--
   <hair params="0" start="40" count="40"/>
 
@@ -349,7 +349,7 @@
   <!--<hair params="0" start="120" count="40"/>-->
 
   <!--<script type="translate" x="-5.0" y="0" z="0" w="0" start="0" end="0.3" group="0"/>-->
-  <!--<script type="translate" x="0" y="0" z="-10.0" w="0.0" start="1" end="2" group="1"/>-->
+  <script type="translate" x="0" y="0" z="-10.0" w="0.0" start="1" end="2" group="1"/>
 
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>
 

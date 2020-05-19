@@ -204,6 +204,7 @@ namespace strandsim
             }
             
             mesh_controller->setMesh(newMesh);
+			mesh_controller->setDistanceField(this);
             
             if(type_ == DFT_FILE)
             {
@@ -217,6 +218,31 @@ namespace strandsim
 			else
 				mesh_controller->updateMeshNormalArea();
 		}
+	}
+
+	bool DistanceFieldObject::checkCollision(const Vec3x& pos, Vec3x& normal, Scalar& mu, Vec3x& freeVel)
+	{
+		if (usage == DFU_SOLID && type == DFT_CYLINDER)
+		{
+			Scalar radius = parameter(0);
+			Scalar halfLength = parameter(2);
+			Vec3x dir = rot * Vec3x::Unit(1);
+
+			Scalar p_t = (pos - center).dot(dir);
+			if (p_t < halfLength && p_t > -halfLength)
+			{
+				Vec3x p_n = pos - center - p_t * dir;
+				if (p_n.squaredNorm() < radius * radius)
+				{
+					normal = p_n.normalized();
+					mu = mesh_controller->getDefaultFrictionCoefficient();
+					freeVel = Vec3x::Zero();
+
+					return true;
+				}
+			}
+		}
+		return false;
 	}
     
     void DistanceFieldObject::init_mesh_flow( const std::shared_ptr<FluidScriptingController>& fluid_controller,
@@ -342,13 +368,6 @@ namespace strandsim
 		} else {
 			omega.setZero();
 		}
-		
-		center = future_center;
-		rot = future_rot;
-        
-        parameter(0) *= future_scale(0);
-        parameter(1) *= future_scale(1);
-        parameter(2) *= future_scale(2);
         
         i_frame++;
         
@@ -371,7 +390,13 @@ namespace strandsim
             mesh_controller->getCurrentMesh()->updateFaceNormalArea();
             mesh_controller->transformFlow();
         }
-        
+
+		center = future_center;
+		rot = future_rot;
+
+		parameter(0) *= future_scale(0);
+		parameter(1) *= future_scale(1);
+		parameter(2) *= future_scale(2);
 //        future_scale.setOnes();
 	}
 	

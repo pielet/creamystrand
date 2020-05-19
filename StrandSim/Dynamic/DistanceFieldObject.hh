@@ -85,6 +85,8 @@ namespace strandsim
         
         virtual void resample_internal( const std::vector< DistanceFieldObject >& solid, const Scalar& dx, const VecXx& exist, VecXx& additional, int bucket_num_nodes) const;
         
+        bool checkCollision(const Vec3x& pos, Vec3x& normal, Scalar& mu, Vec3x& freeVel);
+
         void process_file_mesh(const std::string& szfn_cache);
         void init_mesh_flow( const std::shared_ptr<FluidScriptingController>& fluid_controller,
                             const double& init_flow_height );

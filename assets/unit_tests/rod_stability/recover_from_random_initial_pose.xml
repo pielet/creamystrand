@@ -48,12 +48,14 @@
     <useQuasiNewton value="1"/>
     <windowSize value="5"/>
 
-    <useLineSearch value="0"/>
+    <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
     <solveCollision value="0"/>
     <nonlinearIterations value="100"/>
+
+    <useSoftAttachConstraints value="1"/>
 
     <collisionSolverTolerace value="1e-6"/>
     <logLevel value="4"/>

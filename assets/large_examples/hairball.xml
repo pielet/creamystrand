@@ -44,7 +44,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="5"/>
 
     <useLineSearch value="1"/>
@@ -54,11 +54,11 @@
     <solveCollision value="0"/>
     <nonlinearIterations value="100"/>
 
-    <solveCollision value="1"/>
+    <useSoftAttachConstraints value="1"/>
+
     <collisionSolverTolerace value="1e-6"/>
     <logLevel value="5"/>
     <linearizebHat value="0"/>
-    <nonlinearIterations value="200"/>
     <linearIterations value="1"/>
     <velocityDiffTolerance value="1e-4"/>
     <linearSolverType value="direct"/>
@@ -79,7 +79,7 @@
 
     <gaussSeidelIterations value="400"/>
     <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="10"/>
+    <maxNewtonIterations value="50"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
 

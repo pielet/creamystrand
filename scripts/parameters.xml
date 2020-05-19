@@ -41,7 +41,7 @@
 		<accumulateViscousOnlyForBendingModes value="0"/>
 		<frictionAngle value="40.0"/>
 		<stretchMultiplier value="1.0"/>
-		<fixingMultiplier value="1.0"/>
+		<fixingMultiplier value="1.0"/>  <!-- fix string stiffness / stretch stiffness -->
 		<minBendingAngle value="45"/>  <!-- degeree -->
 		<minBendingMultiplier value="1.0"/>
 		<maxFlowGradientRatio value="10.0"/>
@@ -143,6 +143,7 @@
 	<!-- solid objects -->
 		<!-- [usage] solid/source/terminator -->
 		<!-- [type] sphere/box/capsule/cylinder/file/sequence -->
+		<!-- [global = 0] 0/1 global rotation: whether rotate before initial rotation -->
 	<!-- every group has at most one distance field -->
 	<distancefield usage="solid" type="file" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" group="1" filename="assets/bowl.obj" cached="1" dx="0.25"/>
 	<distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="6.0" group="0" sampled="0" inverted="1"/> 
