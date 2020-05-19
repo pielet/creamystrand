@@ -13,6 +13,7 @@
 #include "../Control/RoundCylinder.hh"
 #include "../Control/ObjParser.hh"
 #include "../Forces/Bridson/array3.hh"
+#include "../Utils/Distances.hh"
 #include "../Utils/MathUtilities.hh"
 #include "../Utils/ThreadUtils.hh"
 #include "../Forces/Bridson/array3_utils.hh"
@@ -220,7 +221,7 @@ namespace strandsim
 		}
 	}
 
-	bool DistanceFieldObject::checkCollision(const Vec3x& pos, Vec3x& normal, Vec3x& freeVel) const
+	bool DistanceFieldObject::vertexInSolid(const Vec3x& pos, Vec3x& normal, Vec3x& freeVel) const
 	{
 		if (usage == DFU_SOLID && type == DFT_CYLINDER)
 		{
@@ -239,6 +240,33 @@ namespace strandsim
 
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	bool DistanceFieldObject::checkEdgeCollision(const Vec3x& p1, const Vec3x& p2, Vec3x& normal, Vec3x& freeVel, Scalar& alpha) const
+	{
+		if (usage == DFU_SOLID && type == DFT_CYLINDER)
+		{
+			Scalar radius = parameter(0);
+			Scalar halfLength = parameter(2);
+			Vec3x dir = rot * Vec3x::Unit(1);
+
+			Scalar s, t;
+			Vec3x p_on_edge, p_on_cylinder;
+			Scalar sqDist = ClosestPtSegmentSegment(p1, p2,
+				center + halfLength * dir, center - halfLength * dir, s, t, p_on_edge, p_on_cylinder);
+
+			if (s < 0 || t < 0) return false;
+
+			if (sqDist < radius * radius)
+			{
+				normal = (p_on_edge - p_on_cylinder).normalized();
+				freeVel = V;
+				alpha = s;
+
+				return true;
 			}
 		}
 		return false;

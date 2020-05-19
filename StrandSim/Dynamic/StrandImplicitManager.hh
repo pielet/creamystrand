@@ -249,6 +249,8 @@ private:
     void step_continousCollisionDetection();
     //! Vertex-face collision detection of distance field objects
     void step_vertexFaceCollisionDetection();
+    //! Edge-face collision detection
+    void step_edgeFaceCollisionDetection();
     //! Sorts and prunes collisions set
     void step_processCollisions();
     //! Solves collisions and updates collision impulses

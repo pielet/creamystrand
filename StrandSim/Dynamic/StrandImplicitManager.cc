@@ -2661,8 +2661,9 @@ namespace strandsim
 					{
 						m_steppers[i]->rewind();
 					}
-					//step_continousCollisionDetection();
-					step_vertexFaceCollisionDetection();
+					step_continousCollisionDetection();
+					//step_vertexFaceCollisionDetection();
+					//step_edgeFaceCollisionDetection();
 					timings.continousTimeCollisions += timer.elapsed();
 
 					timer.restart();
@@ -2716,7 +2717,7 @@ namespace strandsim
 				for (const auto& df : m_distanceFields)
 				{
 					Vec3x normal, freevel;
-					if (df.checkCollision(m_strands[i]->getVertex(vid), normal, freevel))
+					if (df.vertexInSolid(m_strands[i]->getVertex(vid), normal, freevel))
 					{
 						ProximityCollision collision;
 
@@ -2729,6 +2730,36 @@ namespace strandsim
 						collision.objects.second.freeVel = freevel;
 
 						addExternalContact(i, vid, 0, collision);
+					}
+				}
+			}
+		}
+	}
+
+	void StrandImplicitManager::step_edgeFaceCollisionDetection()
+	{
+#pragma omp parallel for
+		for (int i = 0; i < m_strands.size(); ++i)
+		{
+			for (int eid = 0; eid < m_strands[i]->getNumEdges(); ++eid)
+			{
+				for (const auto& df : m_distanceFields)
+				{
+					Vec3x normal, freevel;
+					Scalar alpha;
+					if (df.checkEdgeCollision(m_strands[i]->getVertex(eid), m_strands[i]->getVertex(eid + 1), normal, freevel, alpha))
+					{
+						ProximityCollision collision;
+
+						collision.normal = normal;
+						collision.mu = sqrt(df.mesh_controller->getDefaultFrictionCoefficient()
+							* m_strands[i]->collisionParameters().frictionCoefficient(eid));
+
+						collision.objects.second.globalIndex = -1;
+						collision.objects.second.vertex = -1;
+						collision.objects.second.freeVel = freevel;
+
+						addExternalContact(i, eid, alpha, collision);
 					}
 				}
 			}
@@ -2753,7 +2784,7 @@ namespace strandsim
 		//	   -> add EdgeFaceCollision to m_continuousTimeCollisions
 		// ignoreProximity = false : edge-face intersection test (s_doProximityDetection = true) using position before unconstraint update
 		//     -> add EdgeFaceIntersection to m_proximityCollisions
-		m_collisionDetector->findCollisions(true, false, true, true);
+		m_collisionDetector->findCollisions(false, true, true, true);
 
 		// compact m_continuousTimeCollisions in ProximityCollision, and add these collisions to m_externalContacts
 		doContinuousTimeDetection(m_dt);
@@ -2850,6 +2881,34 @@ namespace strandsim
 		std::vector<ProximityCollision*> colPointers(m_statTotalContacts);
 		int n_col = 0;
 
+		for (int i = 0; i < m_mutualContacts.size(); ++i)
+		{
+			ProximityCollision& collision = m_mutualContacts[i];
+
+			int sid_1 = collision.objects.first.globalIndex;
+			int sid_2 = collision.objects.second.globalIndex;
+			int vid_1 = collision.objects.first.vertex;
+			int vid_2 = collision.objects.second.vertex;
+
+			Scalar alpha_1 = collision.objects.first.abscissa;
+			Scalar alpha_2 = collision.objects.second.abscissa;
+
+			const VecXx& vel_1 = m_steppers[sid_1]->velocities();
+			const VecXx& vel_2 = m_steppers[sid_2]->velocities();
+
+			Vec3x v_world = (1 - alpha_1) * vel_1.segment<3>(4 * vid_1) + alpha_1 * vel_1.segment<3>(4 * vid_1 + 4)
+				- ((1 - alpha_2) * vel_2.segment<3>(4 * vid_2) + alpha_2 * vel_2.segment<3>(4 * vid_2 + 4));
+			Vec3x r_world = solveOneCollision(v_world, m_strands[sid_1]->getVertexMass(vid_1), collision.transformationMatrix, collision.mu);
+
+			collision.force += r_world;
+			ContactStream(g_log, "") << "delta r: " << r_world;
+			r_world *= 0.5;
+			m_steppers[sid_1]->accumulateCollisionImpulse(vid_1, (1 - alpha_1) * r_world);
+			m_steppers[sid_1]->accumulateCollisionImpulse(vid_1, alpha_1 * r_world);
+			m_steppers[sid_2]->accumulateCollisionImpulse(vid_2, (alpha_2 - 1) * r_world);
+			m_steppers[sid_2]->accumulateCollisionImpulse(vid_2, -alpha_2 * r_world);
+		}
+
 #pragma omp parallel for 
 		for (int i = 0; i < m_strands.size(); ++i)
 		{
@@ -2866,7 +2925,7 @@ namespace strandsim
 
 					m_steppers[sid]->accumulateCollisionImpulse(vid, r_world);
 					collision.force += r_world;
-					std::cout << "delta r:" << r_world << std::endl;
+					ContactStream(g_log, "") << "delta_r: " << r_world;
 					colPointers[n_col++] = &collision;
 				}
 				else {
@@ -2878,7 +2937,7 @@ namespace strandsim
 					m_steppers[sid]->accumulateCollisionImpulse(vid, (1 - alpha) * r_world);
 					m_steppers[sid]->accumulateCollisionImpulse(vid + 1, alpha * r_world);
 					collision.force += r_world;
-					std::cout << "delta r:" << r_world << std::endl;
+					ContactStream(g_log, "") << "delta_r: " << r_world;
 					colPointers[n_col++] = &collision;
 				}
 			}
