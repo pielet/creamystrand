@@ -13,6 +13,8 @@ namespace strandsim
 		m_velocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
 		m_collisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows()))
 	{
+		m_collisionTimes.resize(strand.getNumVertices(), 0);
+
 		omp_init_lock(&m_lock);
 	}
 
@@ -22,15 +24,9 @@ namespace strandsim
 
 	}
 
-	void ImplicitStepper::rewind()
-	{
-		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
-		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
-	}
-
 	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
 	{
-		m_collisionImpulse.segment<3>(4 * vid) += r;
+		m_collisionImpulse.segment<3>(4 * vid) += r;// / m_collisionTimes[vid];
 	}
 
 	Scalar ImplicitStepper::maxCollisionImpulseNorm(int& idx) const

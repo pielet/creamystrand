@@ -2,7 +2,7 @@
   <description text="A hair bundle drops on the other."/>
 
   <duration time="2.0"/>
-  <integrator type="linearized-implicit-euler" dt="0.005" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <nonlinearIterations value="20"/>
+    <nonlinearIterations value="301"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>

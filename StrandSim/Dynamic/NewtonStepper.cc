@@ -34,6 +34,8 @@ namespace strandsim
 		m_alpha = 1.;
 
 		m_collisionImpulse.setZero();
+		for (int i = 0; i < m_collisionTimes.size(); ++i)
+			m_collisionTimes[i] = 0;
 
 		m_savedVelocities = m_velocities;
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
@@ -114,6 +116,15 @@ namespace strandsim
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 
 		m_dynamics.getDisplacements() = displacements;
+	}
+
+	void NewtonStepper::rewind()
+	{
+		VecXx displacements = m_velocities * m_dt;
+		m_dynamics.getScriptingController()->enforceDisplacements(displacements);
+		m_dynamics.getDisplacements() = displacements;
+		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
+		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
 	}
 	
 	Scalar NewtonStepper::lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir)

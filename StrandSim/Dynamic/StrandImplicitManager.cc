@@ -2041,6 +2041,23 @@ namespace strandsim
 		}
 	};
 
+	void StrandImplicitManager::updateCollisionTimes(const ProximityCollisions& mutualContacts)
+	{
+		for (int i = 0; i < mutualContacts.size(); ++i)
+		{
+			const ProximityCollision& col = mutualContacts[i];
+			const int s1 = col.objects.first.globalIndex;
+			const int s2 = col.objects.second.globalIndex;
+			const int v1 = col.objects.first.vertex;
+			const int v2 = col.objects.second.vertex;
+
+			++m_steppers[s1]->getCollisionTimes()[v1];
+			++m_steppers[s1]->getCollisionTimes()[v1 + 1];
+			++m_steppers[s2]->getCollisionTimes()[v2];
+			++m_steppers[s2]->getCollisionTimes()[v2 + 1];
+		}
+	}
+
 	void StrandImplicitManager::pruneCollisions(const ProximityCollisions& origMutualCollisions,
 		ProximityCollisions& mutualCollisions, const Scalar stochasticPruning)
 	{
@@ -2784,7 +2801,7 @@ namespace strandsim
 		//	   -> add EdgeFaceCollision to m_continuousTimeCollisions
 		// ignoreProximity = false : edge-face intersection test (s_doProximityDetection = true) using position before unconstraint update
 		//     -> add EdgeFaceIntersection to m_proximityCollisions
-		m_collisionDetector->findCollisions(false, true, true, true);
+		m_collisionDetector->findCollisions(false, false, true, true);
 
 		// compact m_continuousTimeCollisions in ProximityCollision, and add these collisions to m_externalContacts
 		doContinuousTimeDetection(m_dt);
@@ -2831,6 +2848,7 @@ namespace strandsim
 		for (int i = 0; i < m_mutualContacts.size(); ++i) {
 			setupDeformationBasis(m_mutualContacts[i]);
 		}
+		updateCollisionTimes(m_mutualContacts);
 
 		// --------------- external ------------------
 		if (m_params.m_pruneExternalCollisions) 

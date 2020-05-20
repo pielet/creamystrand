@@ -287,6 +287,9 @@ private:
     void pruneCollisions( const ProximityCollisions &origMutualCollisions,
             ProximityCollisions &mutualCollisions, const Scalar stochasticPruning );
 
+    //! Updates collision times
+    void updateCollisionTimes(const ProximityCollisions& mutualContacts);
+
     //! solve individual collision in local coordinate
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
     
