@@ -1041,6 +1041,7 @@ void XMLReader::initGroups( int num_group )
     m_groups.resize( num_group );
     m_group_fields.resize( num_group );
     m_group_sources.resize( num_group );
+    m_group_terminators.resize( num_group );
     m_group_pos.resize( num_group, Vec3x::Zero() );
     m_group_scale.resize( num_group, Vec3x::Ones() );
     m_group_rot.resize( num_group, Eigen::Quaternion<double>::Identity() );
@@ -1069,14 +1070,31 @@ void XMLReader::initGroups( int num_group )
             exit(-1);
         }
     }
+
+    const int num_ternimators = (int)m_terminators.size();
+    for (int i = 0; i < num_ternimators; ++i)
+    {
+        m_group_terminators[m_terminators[i].group].push_back(i);
+        if (m_group_terminators[m_terminators[i].group].size() > 1) {
+            std::cout << "Error: More than 1 ternimator in the same group!" << std::endl;
+            exit(-1);
+        }
+
+        if (m_group_fields[m_terminators[i].group].size() > 0) {
+            std::cout << "Error: Terminator group is overlapping with field group!" << std::endl;
+            exit(-1);
+        }
+    }
     
     // we assume one group has at most one solid object
     for(int i = 0; i < num_group; ++i)
     {
-        if(m_group_fields[i].size() > 0)
-            m_group_pos[i] = m_fields[ m_group_fields[i][0] ].center;
-        else if(m_group_sources[i].size() > 0)
-            m_group_pos[i] = m_sources[ m_group_sources[i][0] ].center;
+        if (m_group_fields[i].size() > 0)
+            m_group_pos[i] = m_fields[m_group_fields[i][0]].center;
+        else if (m_group_sources[i].size() > 0)
+            m_group_pos[i] = m_sources[m_group_sources[i][0]].center;
+        else if (m_group_terminators[i].size() > 0)
+            m_group_pos[i] = m_terminators[m_group_terminators[i][0]].center;
     }
     
     m_group_prev_pos = m_group_pos;
@@ -1248,6 +1266,12 @@ bool XMLReader::executeScript(int total_substep_id, const Scalar substep_dt)
         for(int fidx : source_indices)
         {
             m_sources[fidx].advance(substep_dt, total_substep_id);
+        }
+
+        const std::vector<int>& term_idx = m_group_terminators[i];
+        for (int fidx : term_idx)
+        {
+            m_terminators[fidx].advance(substep_dt, total_substep_id);
         }
         
         const std::vector< std::pair<int, int> >& group = m_groups[i];
@@ -3197,6 +3221,11 @@ void XMLReader::apply_global_scaling(int group_idx, const Vec3x& mul)
     {
         m_sources[i].apply_global_scaling(mul);
     }
+
+    for (int i : m_group_terminators[group_idx])
+    {
+        m_terminators[i].apply_global_scaling(mul);
+    }
 }
 
 void XMLReader::apply_local_scaling(int group_idx, const Vec3x& mul)
@@ -3209,6 +3238,11 @@ void XMLReader::apply_local_scaling(int group_idx, const Vec3x& mul)
     for(int i : m_group_sources[group_idx])
     {
         m_sources[i].apply_local_scaling(mul);
+    }
+
+    for (int i : m_group_terminators[group_idx])
+    {
+        m_terminators[i].apply_local_scaling(mul);
     }
 }
 
@@ -3223,6 +3257,11 @@ void XMLReader::apply_global_rotation(int group_idx, const Eigen::Quaternion<dou
     {
         m_sources[i].apply_global_rotation(rot);
     }
+
+    for (int i : m_group_terminators[group_idx])
+    {
+        m_terminators[i].apply_global_rotation(rot);
+    }
 }
 
 void XMLReader::apply_local_rotation(int group_idx, const Eigen::Quaternion<double>& rot)
@@ -3234,7 +3273,12 @@ void XMLReader::apply_local_rotation(int group_idx, const Eigen::Quaternion<doub
     
     for(int i : m_group_sources[group_idx])
     {
-        m_sources[i].apply_global_rotation(rot);
+        m_sources[i].apply_local_rotation(rot);
+    }
+
+    for (int i : m_group_terminators[group_idx])
+    {
+        m_terminators[i].apply_local_rotation(rot);
     }
 }
 
@@ -3248,6 +3292,11 @@ void XMLReader::apply_translation(int group_idx, const Vec3x& t)
     for(int i : m_group_sources[group_idx])
     {
         m_sources[i].apply_translation(t);
+    }
+
+    for (int i : m_group_terminators[group_idx])
+    {
+        m_terminators[i].apply_translation(t);
     }
 }
 

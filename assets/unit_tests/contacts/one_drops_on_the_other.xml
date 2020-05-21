@@ -45,9 +45,9 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <nonlinearIterations value="301"/>
+    <nonlinearIterations value="40"/>
 
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>
@@ -61,7 +61,7 @@
 
     <maxNewtonIterations value="100"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="4"/>
+    <logLevel value="5"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <velocityDiffTolerance value="1e-2"/>

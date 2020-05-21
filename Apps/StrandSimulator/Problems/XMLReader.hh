@@ -218,6 +218,7 @@ protected:
 
     std::vector< std::vector< int > > m_group_fields;
     std::vector< std::vector< int > > m_group_sources;
+	std::vector< std::vector<int> > m_group_terminators;
 	std::vector< Vec3x > m_group_pos;
     std::vector< Vec3x > m_group_scale;
 	std::vector< Eigen::Quaternion<double> > m_group_rot;

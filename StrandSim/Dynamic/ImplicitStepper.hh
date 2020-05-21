@@ -26,11 +26,9 @@ namespace strandsim
 
 		virtual void rewind() = 0;
 
-		void accumulateCollisionImpulse(int vid, const Vec3x& r);
+		void accumulateCollisionImpulse(int vid, const Vec3x& r, Scalar decay);
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
-
-		std::vector<int>& getCollisionTimes() { return m_collisionTimes; }
 
 		void finalize() {}
 
@@ -53,7 +51,6 @@ namespace strandsim
 
 		VecXx m_velocities;
 		VecXx m_collisionImpulse;
-		std::vector<int> m_collisionTimes;
 
 		bool m_notSPD;
 	};

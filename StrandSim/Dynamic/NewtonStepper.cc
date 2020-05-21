@@ -34,8 +34,6 @@ namespace strandsim
 		m_alpha = 1.;
 
 		m_collisionImpulse.setZero();
-		for (int i = 0; i < m_collisionTimes.size(); ++i)
-			m_collisionTimes[i] = 0;
 
 		m_savedVelocities = m_velocities;
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
@@ -96,7 +94,7 @@ namespace strandsim
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
-
+		
 		m_strand.getFutureState().freeCachedQuantities();
 
 		//if (isSmall(step_size)) return true;
@@ -108,8 +106,8 @@ namespace strandsim
 
 	void NewtonStepper::postStep()
 	{
-		if (m_iteration == m_params.m_nonlinearIterations)
-			m_velocities = m_bestVelocities;
+		//if (m_iteration == m_params.m_nonlinearIterations)
+		//	m_velocities = m_bestVelocities;
 
 		VecXx displacements = m_velocities * m_dt;
 		m_dynamics.getScriptingController()->enforceDisplacements(displacements);
