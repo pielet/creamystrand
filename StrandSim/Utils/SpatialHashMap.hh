@@ -96,8 +96,7 @@ public:
 
     //! Compute possible collision pairs on a list of objects (or all if objects is NULL )
     /*! \param selfCollisions Whether to include self-collisions as well */
-    void compute( Result &result, const std::list<DataT *> * objects =
-            NULL ) const;
+    void compute( Result &result, const std::list<DataT *> * objects =  NULL ) const;
 
     //! Clears the hashmap
     void clear();

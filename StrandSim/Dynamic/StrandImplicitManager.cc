@@ -28,6 +28,7 @@
 #include "../Collision/VertexFaceCollision.hh"
 #include "../Collision/EdgeFaceCollision.hh"
 #include "../Collision/CollisionUtils.hh"
+#include "../Collision/GridTransfer.hh"
 #include "../Core/ElasticStrand.hh"
 #include "../Render/StrandRenderer.hh"
 #include "../Utils/SpatialHashMap.hh"
