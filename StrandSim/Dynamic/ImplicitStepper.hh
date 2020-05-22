@@ -37,7 +37,7 @@ namespace strandsim
 		VecXx flowComponents() const { return VecXx::Ones(m_velocities.size()); }	// for StrandRender::computeFlowQuads and ProblemStepper::dumpRods
 
 		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
-		const Vec3x getVelocity(int vid) const { return m_velocities.segment<3>(4 * vid); }
+		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }
 		VecXx& velocities() { return m_velocities; }
 		const VecXx& velocities() const { return m_velocities; }
 

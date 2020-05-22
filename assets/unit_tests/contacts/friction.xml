@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <nonlinearIterations value="200"/>
+    <nonlinearIterations value="100"/>
 
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>

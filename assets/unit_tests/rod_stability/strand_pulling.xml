@@ -51,42 +51,49 @@
   </CollisionParameters>
 
   <SimulationParameters>
+     <nonlinearIterations value="40"/>
+
     <useQuasiNewton value="1"/>
-    <windowSize value="5"/>
+    <windowSize value="0"/>
 
     <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
-    <solveCollision value="0"/>
-    <nonlinearIterations value="10"/>
-    
-    <airDrag value="0.0003"/> 
-    <gaussSeidelIterations value="75"/>
-    <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="1000"/>
-    <hairMeshFrictionCoefficient value="0.0"/>
+    <useSoftAttachConstraints value="1"/>
+
+    <solveCollision value="1"/>
+    <useCTRodRodCollisions value="1"/>
+
+    <maxNewtonIterations value="100"/>
+    <collisionSolverTolerace value="1e-6"/>
+    <logLevel value="4"/>
+    <linearizebHat value="1"/>
+    <linearIterations value="100"/>
+    <velocityDiffTolerance value="1e-2"/>
+    <linearSolverType value="direct"/>
+    <relaxationFactor value="2.0"/>
+    <hairMeshFrictionCoefficient value="0.3"/>
+    <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>
-    <percentCTRodRodCollisionsAccept value="100"/>
-    <pruneExternalCollisions value="1"/>
-    <pruneSelfCollisions value="1"/>
-    <rodSubSteps value="1"/>
-    <simulationManagerLimitedMemory value="0"/>
-    <skipFlowFrictions value="1"/>
-    <skipRodMeshCollisions value="0"/>
-    <skipRodRodCollisions value="0"/>
+    <pruneExternalCollisions value="0"/>
+    <pruneSelfCollisions value="0"/>
     <statGathering value="0"/>
-    <stochasticPruningFraction value="0.8"/>
-    <hairHairFrictionCoefficient value="0.16"/>
-    <substeps value="1"/>
-    <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
-    <useImpulseMethod value="1"/>
-    <useLengthProjection value="0"/>
+    <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
-    <useSoftAttachConstraints value="0"/>
-    <usePreFilterGeometry value="0"/>
     <solveLiquids value="0"/>
+    <bogusAlgorithm value="gaussseidel"/>
+
+    <simulationManagerLimitedMemory value="0"/>
+
+    <energyWithBend value="1"/>
+    <energyWithTwist value="1"/>
+
+    <airDrag value="0.0005"/> 
+    <gaussSeidelIterations value="2"/>
+    <gaussSeidelTolerance value="1e-06"/>
+    <stochasticPruningFraction value="0.8"/>
+    <useLengthProjection value="0"/>
   </SimulationParameters>
 
   <particle x="-9.75 0.01 0.0" v="0.0 0.0 0.0" fixed="3" group="0"/>

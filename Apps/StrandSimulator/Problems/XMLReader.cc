@@ -2761,6 +2761,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
             int start;
             int end;
             unsigned fixed;
+            int group;
         };
         
         std::vector< setFlow > flow_settings;
@@ -2802,7 +2803,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
         std::vector< setFixed > fix_settings;
         for( rapidxml::xml_node<>* subnd = nd->first_node("fixed"); subnd; subnd = subnd->next_sibling("fixed") )
         {
-            setFixed s = {0, 0, 0U};
+            setFixed s = {0, 0, 0U, -1};
             
             if( subnd->first_attribute("start") )
             {
@@ -2826,6 +2827,15 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
             {
                 std::string attribute(subnd->first_attribute("value")->value());
                 if( !stringutils::extractFromString(attribute,s.fixed) )
+                {
+                    exit(1);
+                }
+            }
+
+            if (subnd->first_attribute("group"))
+            {
+                std::string attribute(subnd->first_attribute("group")->value());
+                if (!stringutils::extractFromString(attribute, s.group))
                 {
                     exit(1);
                 }
@@ -2937,7 +2947,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
                     }
                     
                     if(m_fixed[particle_indices[i]]) {
-                        const int group_idx = m_particle_groups[particle_indices[i]];
+                        const int group_idx = (s.group >= 0)? s.group: m_particle_groups[particle_indices[i]];
                         assert(group_idx >= 0 && group_idx < (int) m_groups.size());
                         
                         m_groups[group_idx].push_back(std::pair<int, int>(numstrands, i));
@@ -3451,10 +3461,10 @@ void Script::stepScript( const double& dt, const double& current_time )
                 
                 if(transform_global) {
                     prot = qrot * prot;
-                    m_scene->apply_global_rotation( group_index, qrot );
+                    //m_scene->apply_global_rotation( group_index, qrot );
                 } else {
                     prot *= qrot;
-                    m_scene->apply_local_rotation( group_index, qrot );
+                    //m_scene->apply_local_rotation( group_index, qrot );
                 }
                 
                 if(transform_with_origin) {

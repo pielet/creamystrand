@@ -4,12 +4,12 @@
 
 namespace strandsim
 {
-	GridTransfer::GridTransfer(Scalar gridSize, int gridNum = 10) : m_gridSize(gridSize), m_invGridSize(1. / gridSize)
+	GridTransfer::GridTransfer(Scalar gridSize, int gridNum) : m_gridSize(gridSize), m_invGridSize(1. / gridSize)
 	{
 		m_grids.reserve(gridNum);
 	}
 
-	GridTransfer::GridTransfer(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper, Scalar gridSize, int gridNum = 10) :
+	GridTransfer::GridTransfer(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper, Scalar gridSize, int gridNum) :
 		m_gridSize(gridSize), m_invGridSize(1. / gridSize)
 	{
 		m_grids.reserve(gridNum);
@@ -45,6 +45,7 @@ namespace strandsim
 							else {
 								GridMap::mapped_type g_value;
 								g_value.second = getWeight(i, j, k, pos);
+								if (isSmall(g_value.second)) continue;
 								g_value.first = g_value.second * vel;
 								m_grids.insert(GridMap::value_type(Grid(i, j, k), g_value));
 							}
