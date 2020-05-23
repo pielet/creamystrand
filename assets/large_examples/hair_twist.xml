@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
            
-  <duration time="2.0"/>
+  <duration time="4.0"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -45,9 +45,9 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <nonlinearIterations value="50"/>
+    <nonlinearIterations value="100"/>
 
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>
@@ -61,7 +61,7 @@
 
     <maxNewtonIterations value="100"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="5"/>
+    <logLevel value="4"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <velocityDiffTolerance value="1e-2"/>
@@ -78,18 +78,18 @@
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
-    <simulationManagerLimitedMemory value="0"/>
+    <simulationManagerLimitedMemory value="1"/>
 
     <energyWithBend value="1"/>
     <energyWithTwist value="1"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="2"/>
+    <gaussSeidelIterations value="500"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
-
+<!--
   <particle x="0.0 -10.0 0.75" v="0.0 0.0 0.0" fixed="1" group="3"/>
   <particle x="0.0 -9.5 0.75" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 -9.0 0.75" v="0.0 0.0 0.0" fixed="0"/>
@@ -174,28 +174,30 @@
 
   <hair params="0" start="0" count="40"/>
   <hair params="0" start="40" count="40"/>
-
-<!--
-  <hairobj filename="assets/strands.obj" params="0" x="0.0" y="-0.5" z="0.75" rx="0.0" ry="0.0" rz="1.0" rw="1.5707963268">
+-->
+  <hairobj filename="assets/strands.obj" params="0" x="0.0" y="-0.5" z="0.5" rx="0.0" ry="0.0" rz="1.0" rw="1.5707963268">
     <fixed start="0" end="0" value="1" group="1"/>
     <fixed start="40" end="40" value="1" group="3"/>
   </hairobj>
 
-  <hairobj filename="assets/strands.obj" params="0" x="0.0" y="-0.5" z="-0.75" rx="0.0" ry="0.0" rz="1.0" rw="1.5707963268">
+  <hairobj filename="assets/strands.obj" params="0" x="0.0" y="-0.5" z="-0.5" rx="0.0" ry="0.0" rz="1.0" rw="1.5707963268">
     <fixed start="0" end="0" value="1" group="2"/>
     <fixed start="40" end="40" value="1" group="4"/>
   </hairobj>
--->
-  <script type="rotate" x="0.0" y="1.0" z="0.0" w="80" ox="0.0" oy="0.0" oz="0.0" start="0.25" end="2.0" group="3"/>
-  <script type="rotate" x="0.0" y="1.0" z="0.0" w="80" ox="0.0" oy="0.0" oz="0.0" start="0.25" end="2.0" group="4"/>
 
-  <script type="translate" x="0.0" y ="1.0" z="0.0" start="0.0" end="0.25" group="3"/>
-  <script type="translate" x="0.0" y ="1.0" z="0.0" start="0.0" end="0.25" group="4"/>
+  <script type="rotate" x="0.0" y="1.0" z="0.0" w="1.57" ox="0.0" oy="0.0" oz="0.0" start="0.0" end="0.2" group="3"/>
+  <script type="rotate" x="0.0" y="1.0" z="0.0" w="1.57" ox="0.0" oy="0.0" oz="0.0" start="0.0" end="0.2" group="4"/>
 
-  <distancefield usage="terminator" type="sphere" cx="0.0" cy="5.0" cz="0.75" radius="0.5" group="1"/>
-  <distancefield usage="terminator" type="sphere" cx="0.0" cy="5.0" cz="-0.75" radius="0.5" group="2"/>
-  <distancefield usage="terminator" type="sphere" cx="0.0" cy="-5.0" cz="0.75" radius="0.5" group="3"/>
-  <distancefield usage="terminator" type="sphere" cx="0.0" cy="-5.0" cz="-0.75" radius="0.5" group="4"/>
+  <script type="translate" x="0.0" y="0.2" z="0.0" start="0.2" end="0.25" group="3"/>
+  <script type="translate" x="0.0" y="0.2" z="0.0" start="0.2" end="0.25" group="4"/>
+
+  <script type="rotate" x="0.0" y="1.0" z="0.0" w="30" ox="0.0" oy="0.0" oz="0.0" start="0.25" end="4.0" group="3"/>
+  <script type="rotate" x="0.0" y="1.0" z="0.0" w="30" ox="0.0" oy="0.0" oz="0.0" start="0.25" end="4.0" group="4"/>
+
+  <distancefield usage="terminator" type="sphere" cx="0.0" cy="5.0" cz="0.5" radius="0.5" group="1"/>
+  <distancefield usage="terminator" type="sphere" cx="0.0" cy="5.0" cz="-0.5" radius="0.5" group="2"/>
+  <distancefield usage="terminator" type="sphere" cx="0.0" cy="-5.0" cz="0.5" radius="0.5" group="3"/>
+  <distancefield usage="terminator" type="sphere" cx="0.0" cy="-5.0" cz="-0.5" radius="0.5" group="4"/>
 
   <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="5" inverted="1">
   </distancefield>

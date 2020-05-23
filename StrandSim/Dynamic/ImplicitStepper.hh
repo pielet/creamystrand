@@ -26,7 +26,7 @@ namespace strandsim
 
 		virtual void rewind() = 0;
 
-		void accumulateCollisionImpulse(int vid, const Vec3x& r, Scalar decay);
+		void accumulateCollisionImpulse(int vid, const Vec3x& r);
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
 

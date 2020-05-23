@@ -2947,11 +2947,11 @@ namespace strandsim
 
 			collision.force += r_world;
 
-			m_steppers[s1]->accumulateCollisionImpulse(v1, (1 - alpha_1) * r_world, 1.0);
-			m_steppers[s1]->accumulateCollisionImpulse(v1, alpha_1 * r_world, 1.0);
-			m_steppers[s2]->accumulateCollisionImpulse(v2, (alpha_2 - 1) * r_world, 1.0);
-			m_steppers[s2]->accumulateCollisionImpulse(v2, -alpha_2 * r_world, 1.0);
-
+			m_steppers[s1]->accumulateCollisionImpulse(v1, (1 - alpha_1) * r_world);
+			m_steppers[s1]->accumulateCollisionImpulse(v1 + 1, alpha_1 * r_world);
+			m_steppers[s2]->accumulateCollisionImpulse(v2, (alpha_2 - 1) * r_world);
+			m_steppers[s2]->accumulateCollisionImpulse(v2 + 1, -alpha_2 * r_world);
+			
 			//const Vec3x cp1 = (1 - alpha_1) * m_strands[s1]->getVertex(v1) + alpha_1 * m_strands[s1]->getVertex(v1 + 1);
 			//const Vec3x cp2 = (1 - alpha_2) * m_strands[s2]->getVertex(v2) + alpha_2 * m_strands[s2]->getVertex(v2 + 1);
 
@@ -2997,7 +2997,7 @@ namespace strandsim
 					r_world /= m_collisionTimes[sid][vid];
 					ContactStream(g_log, "") << "delta_r: " << r_world;
 
-					m_steppers[sid]->accumulateCollisionImpulse(vid, r_world, 1.0);
+					m_steppers[sid]->accumulateCollisionImpulse(vid, r_world);
 					collision.force += r_world;
 				}
 				else {
@@ -3009,8 +3009,8 @@ namespace strandsim
 					r_world /= m_collisionTimes[sid][vid];
 					ContactStream(g_log, "") << "delta_r: " << r_world;
 
-					m_steppers[sid]->accumulateCollisionImpulse(vid, (1 - alpha) * r_world, 1.0);
-					m_steppers[sid]->accumulateCollisionImpulse(vid + 1, alpha * r_world, 1.0);
+					m_steppers[sid]->accumulateCollisionImpulse(vid, (1 - alpha) * r_world);
+					m_steppers[sid]->accumulateCollisionImpulse(vid + 1, alpha * r_world);
 					collision.force += r_world;
 				}
 			}
@@ -3089,10 +3089,10 @@ namespace strandsim
 				<< colPointers[i]->objects.second.globalIndex << ", " << colPointers[i]->objects.second.vertex << ")";
 		}
 
-		//for (int i = 0; i < m_strands.size(); ++i) {
-		//	Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
-		//	ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
-		//}
+		for (int i = 0; i < m_strands.size(); ++i) {
+			Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
+			ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
+		}
 	}
 
 } // namespace strandsim

@@ -51,7 +51,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-     <nonlinearIterations value="40"/>
+    <nonlinearIterations value="50"/>
 
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>
@@ -67,7 +67,7 @@
 
     <maxNewtonIterations value="100"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="4"/>
+    <logLevel value="5"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <velocityDiffTolerance value="1e-2"/>
@@ -84,7 +84,7 @@
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
-    <simulationManagerLimitedMemory value="0"/>
+    <simulationManagerLimitedMemory value="1"/>
 
     <energyWithBend value="1"/>
     <energyWithTwist value="1"/>
