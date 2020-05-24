@@ -123,6 +123,7 @@ struct Script
 	
 	XMLReader* m_scene;
 
+	bool only_translation;
 	bool transform_global;
     bool transform_with_origin;
     bool used;

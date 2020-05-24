@@ -78,7 +78,7 @@
 		<skipRodMeshCollisions value="0"/>  <!-- continuous collision detection and intersection test -->
 		<skipRodRodCollisions value="0"/>   <!-- hair-hair proximity test -->
 		<solveCollision value="1"/>
-		<statGathering value="0"/>
+		<statGathering value="0"/>  <!-- 1 for collision solver iteration error, 2 for max node impulse norm -->
 		<stochasticPruningFraction value="0.8"/>  <!-- the larger, the more likely to be pruned -->
 		<substeps value="1"/>
 		<useAdditionalExternalFailSafe value="0"/>  <!-- redo collision resolve again without mutual collisions -->

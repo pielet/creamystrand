@@ -1169,7 +1169,6 @@ namespace strandsim
 						if (!passed[i] && !all_done[i]) {
 							m_steppers[i]->prepareNewtonIteration();
 							all_done[i] = m_steppers[i]->performNewtonIteration();
-							std::cout << m_steppers[i]->getNewtonResidual() << std::endl;
 						}
 					}
 
@@ -1556,13 +1555,14 @@ namespace strandsim
 			}
 		}
 
+		if (m_params.m_statGathering == 2) {
+			for (int i = 0; i < (int)m_steppers.size(); i++)
+			{
+				int subidx = -1;
+				const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
 
-		for (int i = 0; i < (int)m_steppers.size(); i++)
-		{
-			int subidx = -1;
-			const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
-
-			ContactStream(g_log, "") << "Impulse norm: " << Wi << " @ " << i << ", " << subidx;
+				ContactStream(g_log, "") << "Impulse norm: " << Wi << " @ " << i << ", " << subidx;
+			}
 		}
 
 		//std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
@@ -1960,9 +1960,15 @@ namespace strandsim
 				ProximityCollision& col = *colPointers[i];
 				col.force = impulses.segment<3>(i * 3); // ??? Missing Adhesion forces
 				m_collisionDatabase.insert(col);
-				std::cout << col.force << " @ (" << col.objects.first.globalIndex << ", " << col.objects.first.vertex
-					<< ") (" << col.objects.second.globalIndex << " , " << col.objects.second.vertex << ")" << std::endl;
 			}
+		}
+
+		for (int i = 0; i < colPointers.size(); ++i)
+		{
+			if (!colPointers[i]) continue;
+			ProximityCollision& col = *colPointers[i];
+			ContactStream(g_log, "") << col.force << " @ (" << col.objects.first.globalIndex << ", " << col.objects.first.vertex
+				<< ") (" << col.objects.second.globalIndex << " , " << col.objects.second.vertex << ")";
 		}
 
 		//        std::cout << "[PPBFP 6]" << std::endl;

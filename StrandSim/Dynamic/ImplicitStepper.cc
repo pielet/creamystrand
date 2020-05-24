@@ -503,11 +503,6 @@ namespace strandsim
 		m_timer.restart();
 		dynamics.computeFutureForces( !m_params.m_usePreFilterGeometry, m_params.m_energyWithBend, m_params.m_energyWithTwist, false, false, dump_data, stream );
 		m_timings.m_computeFutureForces += m_timer.elapsed();
-
-		if (m_params.m_statGathering)
-		{
-			std::cout << "Force:\n" << m_strand.getFutureTotalForces() << std::endl;
-		}
 		
 		m_timer.restart();
 		VecXx forces = m_strand.getFutureTotalForces() ;
@@ -732,10 +727,6 @@ namespace strandsim
 		
 		// update masses
 		m_strand.dynamics().computeDOFMasses();
-
-		if (m_params.m_statGathering) {
-			std::cout << "mass:\n" << m_strand.dynamics().getDOFMasses() << std::endl;
-		}
 		
 		if ( m_params.m_useImpulseMethod )
 		{
@@ -790,12 +781,6 @@ namespace strandsim
 		
 		StrandDynamicTraits& dynamics = m_strand.dynamics() ;
 		const Scalar minAlpha = .01 ; // Minimum step length
-
-		if (m_params.m_statGathering)
-		{
-			std::cout << "Current:\n" << m_strand.getCurrentDegreesOfFreedom() << std::endl;
-			std::cout << "Future\n" << m_strand.getFutureDegreesOfFreedom() << std::endl;
-		}
 		
 		m_prevRhs = m_rhs ;
 		Timer tt("RHS", false);
@@ -856,12 +841,6 @@ namespace strandsim
 		
 		Lhs().multiply( m_rhs, 1., m_newVelocities );
 
-		//if (m_params.m_statGathering)
-		//{
-		//	std::cout << "Before fixing:\n";
-		//	std::cout << "hessian:\n" << Lhs() << std::endl;
-		//	std::cout << "gradient:\n" << m_rhs << std::endl;
-		//}
 		dynamics.getScriptingController()->fixLHSAndRHS( Lhs(), m_rhs, m_dt / m_fraction );
 
 		m_timer.restart();
@@ -873,14 +852,6 @@ namespace strandsim
 		m_timer.restart();
 		m_linearSolver.solve( newVelocities(), rhs() );
 		m_timings.m_solve += m_timer.elapsed();
-
-		if (m_params.m_statGathering)
-		{
-			//std::cout << "After solving:\n";
-			//std::cout << "hessian:\n" << Lhs() << std::endl;
-			std::cout << "gradient:\n" << m_rhs << std::endl;
-			std::cout << "new vel:\n" << newVelocities() << std::endl;
-		}
         
         // check_isnan("ni_velocity", m_newVelocities);
 		
@@ -1105,7 +1076,6 @@ namespace strandsim
 
             m_strand.dynamics().getAccelerations() = ( m_newVelocities - m_velocities ) / m_dt;
 
-			std::cout << "!! newton fail !!\n";
             // Dump Data
 //            prepareNewtonIteration();
 //

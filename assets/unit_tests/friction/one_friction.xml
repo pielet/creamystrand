@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <logLevel value="5"/>
+    <logLevel value="4"/>
     <airDrag value="0.0005"/> 
     <solveCollision value="1"/>
     <gaussSeidelIterations value="200"/>

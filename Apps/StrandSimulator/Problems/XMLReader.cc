@@ -2462,6 +2462,17 @@ void XMLReader::loadScripts( rapidxml::xml_node<>* node)
                 exit(1);
             }
         }
+
+        scr.only_translation = false;
+        if (nd->first_attribute("trans"))
+        {
+            std::string attribute(nd->first_attribute("trans")->value());
+            if (!stringutils::extractFromString(attribute, scr.only_translation))
+            {
+                std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSER:" << outputmod::endred << " Failed to parse value of global attribute for script. Value must be boolean. Exiting." << std::endl;
+                exit(1);
+            }
+        }
         
         scr.m_scene = this;
         m_scripts.push_back(scr);
@@ -2717,6 +2728,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
             int start;
             int end;
             unsigned fixed;
+            int group;
         };
         
         std::vector< setFlow > flow_settings;
@@ -2758,7 +2770,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
         std::vector< setFixed > fix_settings;
         for( rapidxml::xml_node<>* subnd = nd->first_node("fixed"); subnd; subnd = subnd->next_sibling("fixed") )
         {
-            setFixed s = {0, 0, 0U};
+            setFixed s = {0, 0, 0U, -1};
             
             if( subnd->first_attribute("start") )
             {
@@ -2782,6 +2794,15 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
             {
                 std::string attribute(subnd->first_attribute("value")->value());
                 if( !stringutils::extractFromString(attribute,s.fixed) )
+                {
+                    exit(1);
+                }
+            }
+
+            if (subnd->first_attribute("group"))
+            {
+                std::string attribute(subnd->first_attribute("group")->value());
+                if (!stringutils::extractFromString(attribute, s.group))
                 {
                     exit(1);
                 }
@@ -2893,7 +2914,7 @@ void XMLReader::loadHairs( rapidxml::xml_node<>* node )
                     }
                     
                     if(m_fixed[particle_indices[i]]) {
-                        const int group_idx = m_particle_groups[particle_indices[i]];
+                        const int group_idx = (s.group >= 0)? s.group: m_particle_groups[particle_indices[i]];
                         assert(group_idx >= 0 && group_idx < (int) m_groups.size());
                         
                         m_groups[group_idx].push_back(std::pair<int, int>(numstrands, i));
@@ -3382,12 +3403,13 @@ void Script::stepScript( const double& dt, const double& current_time )
                     m_scene->m_group_prev_pos[ group_index ] = trans;
                 }
                 
-                if(transform_global) {
+                if (transform_global) {
                     prot = qrot * prot;
-                    m_scene->apply_global_rotation( group_index, qrot );
-                } else {
+                    if (!only_translation) m_scene->apply_global_rotation(group_index, qrot);
+                }
+                else {
                     prot *= qrot;
-                    m_scene->apply_local_rotation( group_index, qrot );
+                    if (!only_translation) m_scene->apply_local_rotation(group_index, qrot);
                 }
                 
                 if(transform_with_origin) {
