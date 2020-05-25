@@ -20,6 +20,7 @@ namespace strandsim
 		virtual bool performOneIteration();
 		virtual void postStep();
 		virtual void rewind();
+		virtual void accumulateCollisionImpulse(int vid, const Vec3x& r);
 
 	protected:
 		Scalar evaluateObjectValue(const VecXx& v);
@@ -30,12 +31,9 @@ namespace strandsim
 		//const SimulationParameters& m_params;
 
 		VecXx m_savedVelocities;
+		VecXx m_prevVelocities;
 
 		int m_iteration;
-		VecXx m_bestVelocities;
-		Scalar m_bestErr;
-		Scalar m_prevErr;
-		Scalar m_alpha;
 	};
 }
 

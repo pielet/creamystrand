@@ -22,11 +22,6 @@ namespace strandsim
 
 	}
 
-	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
-	{
-		m_collisionImpulse.segment<3>(4 * vid) += r;
-	}
-
 	Scalar ImplicitStepper::maxCollisionImpulseNorm(int& idx) const
 	{
 		Scalar maxlen = 0.;

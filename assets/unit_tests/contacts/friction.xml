@@ -45,9 +45,9 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <nonlinearIterations value="40"/>
+    <maxNewtonIterations value="100"/>
 
-    <useQuasiNewton value="1"/>
+    <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>
@@ -58,13 +58,13 @@
 
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
+    <velocityDiffTolerance value="1e-6"/>
 
-    <maxNewtonIterations value="100"/>
+    <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="4"/>
+    <logLevel value="5"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
-    <velocityDiffTolerance value="1e-2"/>
     <linearSolverType value="direct"/>
     <relaxationFactor value="2.0"/>
     <hairMeshFrictionCoefficient value="0.3"/>
@@ -89,6 +89,7 @@
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
+
 <!--
   <particle x="0.0 1.0 -10.0" v="0.0 0.0 0.0" fixed="3" group="1"/>
   <particle x="0.0 1.0 -9.5" v="0.0 0.0 0.0" fixed="1" group="1"/>

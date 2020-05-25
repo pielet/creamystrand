@@ -125,6 +125,7 @@ struct Script
 
 	bool transform_global;
     bool transform_with_origin;
+	bool only_translation;
     bool used;
 	
 	std::vector<double> base_vertices;

@@ -254,7 +254,7 @@ private:
     //! Sorts and prunes collisions set
     void step_processCollisions();
     //! Solves collisions and updates collision impulses
-    void step_solveCollisions();
+    void step_solveCollisions(bool commitVelocities);
     //! Updates collision database and prints collision info
     void step_postCollision();
 

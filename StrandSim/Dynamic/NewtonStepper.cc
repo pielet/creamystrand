@@ -14,6 +14,7 @@ namespace strandsim
 		int ndof = strand.getCurrentDegreesOfFreedom().rows();
 		m_velocities = VecXx::Zero(ndof);
 		m_savedVelocities = VecXx::Zero(ndof);
+		m_prevVelocities = VecXx::Zero(ndof);
 
 		m_dynamics.computeDOFMasses();
 	}
@@ -28,14 +29,11 @@ namespace strandsim
 		m_dt = dt;
 
 		m_iteration = 0;
-		m_bestErr = 1e99;
-		m_bestVelocities = m_velocities;
-		m_prevErr = 1e99;
-		m_alpha = 1.;
 
 		m_collisionImpulse.setZero();
 
 		m_savedVelocities = m_velocities;
+		m_prevVelocities = m_velocities;
 		m_strand.setSavedDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom());
 
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
@@ -53,27 +51,6 @@ namespace strandsim
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
-
-		// check convergence
-		Scalar err = gradient.squaredNorm() / gradient.size();
-		//if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
-		//	return true;
-
-		// update saved info
-		if (m_iteration)
-		{
-			if (err < m_prevErr)
-				m_alpha = std::min(1.0, 1.5 * m_alpha);
-			else
-				m_alpha = std::max(0.01, 0.5 * m_alpha);
-
-			if (err < m_bestErr)
-			{
-				m_bestErr = err;
-				m_bestVelocities = m_velocities;
-			}
-		}
-		m_prevErr = err;
 
 		// hessian
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
@@ -97,18 +74,17 @@ namespace strandsim
 		
 		m_strand.getFutureState().freeCachedQuantities();
 
-		//if (isSmall(step_size)) return true;
-
-		++m_iteration;
+		VecXx velDiff = m_velocities - m_prevVelocities;
+		m_prevVelocities = m_velocities;
+		m_dynamics.getScriptingController()->fixRHS(velDiff);
+		
+		if (velDiff.norm() / velDiff.size() < m_params.m_velocityDiffTolerance) return true;
 
 		return false;
 	}
 
 	void NewtonStepper::postStep()
 	{
-		//if (m_iteration == m_params.m_nonlinearIterations)
-		//	m_velocities = m_bestVelocities;
-
 		VecXx displacements = m_velocities * m_dt;
 		m_dynamics.getScriptingController()->enforceDisplacements(displacements);
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
@@ -123,6 +99,11 @@ namespace strandsim
 		m_dynamics.getDisplacements() = displacements;
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
+	}
+
+	void NewtonStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
+	{
+		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 	
 	Scalar NewtonStepper::lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir)
@@ -148,7 +129,7 @@ namespace strandsim
 			return alpha;
 		}
 		else {
-			return m_alpha;
+			return 1.0;
 		}
 	}
 

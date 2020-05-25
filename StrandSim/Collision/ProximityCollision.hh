@@ -28,23 +28,24 @@ namespace strandsim
         {
             int globalIndex;
             int vertex;
+            Vec3x force;
             Scalar abscissa;
-            
+
             Vec3x freeVel;
-            
-            Object() : globalIndex(0), vertex(0), abscissa(0) {}
-            
+
+            Object() : globalIndex(0), vertex(0), abscissa(0), force(Vec3x::Zero()) {}
+
             unsigned long computeSizeInBytes() const
             {
                 unsigned long total = 0;
                 total += sizeof(int) + sizeof(int) + sizeof(Scalar);
-                total += freeVel.size() * sizeof( Vec3x::Scalar );
+                total += freeVel.size() * sizeof(Vec3x::Scalar) + force.size() * sizeof(Vec3x::Scalar);
                 return total;
             }
         };
         
         ProximityCollision(): 
-            m_originalCTCollision( NULL ), mu(0.), distance(0.), relative_vel(0.)
+            m_originalCTCollision( NULL ), mu(0.), distance(0.), relative_vel(0.), force(Vec3x::Zero())
         {
         }
         

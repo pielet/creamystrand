@@ -17,7 +17,10 @@ namespace strandsim
 		~GridTransfer();
 
 		void buildGrid(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper);
+		void insertParticle(const Vec3x& pos, const Vec3x& vel);
+		void finalize();
 		Vec3x getValue(const Vec3x& pos);
+		void clear() { m_grids.clear(); }
 
 	private:
 		struct Grid

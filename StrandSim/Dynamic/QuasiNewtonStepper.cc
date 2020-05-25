@@ -52,7 +52,7 @@ namespace strandsim
 		m_dynamics.computeFutureForces();
 		gradient -= m_dt * m_strand.getFutureTotalForces() + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);
-		
+
 		// check convergence
 		Scalar err = gradient.squaredNorm() / gradient.size();
 		//if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
@@ -61,17 +61,6 @@ namespace strandsim
 		// update saved info
 		if (m_iteration)
 		{
-			if (err < m_prevErr)
-				m_alpha = std::min(1.0, 1.5 * m_alpha);
-			else
-				m_alpha = std::max(0.01, 0.5 * m_alpha);
-
-			if (err < m_bestErr)
-			{
-				m_bestErr = err;
-				m_bestVelocities = m_velocities;
-			}
-
 			// update queue
 			m_v_queue.push_back(m_velocities - m_last_v);
 			m_g_queue.push_back(gradient - m_last_gradient);
@@ -82,8 +71,7 @@ namespace strandsim
 				m_g_queue.pop_front();
 			}
 		}
-		m_prevErr = err;
-		
+
 		m_last_v = m_velocities;
 		m_last_gradient = gradient;
 
@@ -95,10 +83,9 @@ namespace strandsim
 			VecXx v_i = m_v_queue[m_v_queue.size() - i - 1];
 			VecXx g_i = m_g_queue[m_g_queue.size() - i - 1];
 			Scalar vi_dot_gi = v_i.dot(g_i);
-			if (vi_dot_gi < square(SMALL_NUMBER<Scalar>()))
-			{
-				return false;
-			}
+
+			if (isSmallSquare(vi_dot_gi)) continue;
+
 			pho[i] = 1. / vi_dot_gi;
 			alpha[i] = v_i.dot(gradient) * pho[i];
 			gradient -= alpha[i] * g_i;
@@ -111,6 +98,9 @@ namespace strandsim
 		{
 			VecXx v_i = m_v_queue[m_v_queue.size() - i - 1];
 			VecXx g_i = m_g_queue[m_g_queue.size() - i - 1];
+
+			if (isSmallSquare(v_i.dot(g_i))) continue;
+
 			descent_dir += v_i * (alpha[i] - g_i.dot(descent_dir) * pho[i]);
 		}
 		descent_dir = -descent_dir;
@@ -121,13 +111,16 @@ namespace strandsim
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
-		//std::cout << step_size << std::endl;
-
-		// if (isSmall(step_size)) return true;
 
 		m_strand.getFutureState().freeCachedQuantities();
 
 		++m_iteration;
+
+		VecXx velDiff = m_velocities - m_prevVelocities;
+		m_prevVelocities = m_velocities;
+		m_dynamics.getScriptingController()->fixRHS(velDiff);
+
+		if (velDiff.norm() / velDiff.size() < m_params.m_velocityDiffTolerance) return true;
 
 		return false;
 	}

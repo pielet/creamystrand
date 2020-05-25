@@ -30,40 +30,16 @@ namespace strandsim
 				const Vec3x pos = strand[sidx]->getVertex(vidx);
 				const Vec3x vel = stepper[sidx]->getVelocity(vidx);
 
-				const int min_i = std::floor(pos(0)) - 1;
-				const int min_j = std::floor(pos(1)) - 1;
-				const int min_k = std::floor(pos(2)) - 1;
-
-				for (int i = min_i; i < min_i + 4; ++i) {
-					for (int j = min_j; j < min_j + 4; ++j) {
-						for (int k = min_k; k < min_k + 4; ++k) {
-							auto grid_iter = m_grids.find(Grid(i, j, k));
-							if (grid_iter != m_grids.end()) {
-								grid_iter->second.second += getWeight(i, j, k, pos);
-								grid_iter->second.first += getWeight(i, j, k, pos) * vel;
-							}
-							else {
-								GridMap::mapped_type g_value;
-								g_value.second = getWeight(i, j, k, pos);
-								if (isSmall(g_value.second)) continue;
-								g_value.first = g_value.second * vel;
-								m_grids.insert(GridMap::value_type(Grid(i, j, k), g_value));
-							}
-						}
-					}
-				}
+				insertParticle(pos, vel);
 			}
 		}
 		
-		for (auto iter = m_grids.begin(); iter != m_grids.end(); ++iter)
-		{
-			iter->second.first /= iter->second.second;
-		}
+		finalize();
 	}
 
-	Vec3x GridTransfer::getValue(const Vec3x& pos)
+	void GridTransfer::insertParticle(const Vec3x& p, const Vec3x& vel)
 	{
-		Vec3x vel = Vec3x::Zero();
+		const Vec3x pos = p * m_invGridSize;
 
 		const int min_i = std::floor(pos(0)) - 1;
 		const int min_j = std::floor(pos(1)) - 1;
@@ -74,7 +50,44 @@ namespace strandsim
 				for (int k = min_k; k < min_k + 4; ++k) {
 					auto grid_iter = m_grids.find(Grid(i, j, k));
 					if (grid_iter != m_grids.end()) {
-						vel += getWeight(i, j, k, pos) * grid_iter->second.first;
+						grid_iter->second.second += getWeight(i, j, k, pos);
+						grid_iter->second.first += getWeight(i, j, k, pos) * vel;
+					}
+					else {
+						GridMap::mapped_type g_value;
+						g_value.second = getWeight(i, j, k, pos);
+						if (isSmall(g_value.second)) continue;
+						g_value.first = g_value.second * vel;
+						m_grids.insert(GridMap::value_type(Grid(i, j, k), g_value));
+					}
+				}
+			}
+		}
+	}
+
+	void GridTransfer::finalize()
+	{
+		for (auto iter = m_grids.begin(); iter != m_grids.end(); ++iter)
+		{
+			iter->second.first /= iter->second.second;
+		}
+	}
+
+	Vec3x GridTransfer::getValue(const Vec3x& pos)
+	{
+		Vec3x vel = Vec3x::Zero();
+
+		Vec3x p = pos * m_invGridSize;
+		const int min_i = std::floor(p(0)) - 1;
+		const int min_j = std::floor(p(1)) - 1;
+		const int min_k = std::floor(p(2)) - 1;
+
+		for (int i = min_i; i < min_i + 4; ++i) {
+			for (int j = min_j; j < min_j + 4; ++j) {
+				for (int k = min_k; k < min_k + 4; ++k) {
+					auto grid_iter = m_grids.find(Grid(i, j, k));
+					if (grid_iter != m_grids.end()) {
+						vel += getWeight(i, j, k, p) * grid_iter->second.first;
 					}
 				}
 			}
@@ -86,12 +99,11 @@ namespace strandsim
 	Scalar GridTransfer::getWeight(int i, int j, int k, const Vec3x& pos)
 	{
 		Vec3x grid_pos = Vec3x(i, j, k);
-		grid_pos *= m_gridSize;
 
 		Scalar weight = 1.;
 		for (int i = 0; i < 3; ++i)
 		{
-			weight *= quadraticKernel((pos(i) - grid_pos(i)) * m_invGridSize);
+			weight *= quadraticKernel(pos(i) - grid_pos(i));	// pos is normalized
 		}
 
 		return weight;

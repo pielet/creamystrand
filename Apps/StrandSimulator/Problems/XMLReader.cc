@@ -1622,7 +1622,7 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_solveLiquids = true;
     m_simulation_params.m_useAdditionalExternalFailSafe = false;
     m_simulation_params.m_useImpulseMethod = false;
-    m_simulation_params.m_maxNewtonIterations = 10000;
+    m_simulation_params.m_maxNewtonIterations = 1000;
     m_simulation_params.m_simulationManager_limitedMemory = false;
     m_simulation_params.m_gaussSeidelIterations = 75;
     m_simulation_params.m_gaussSeidelTolerance = 1e-4;
@@ -1639,6 +1639,7 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_energyWithBend = true;
     m_simulation_params.m_energyWithTwist = true;
 
+    m_simulation_params.m_velocityDiffTolerance = 1e-6;
     m_simulation_params.m_nonlinearIterations = 10;
     m_simulation_params.m_useQuasiNewton = true;
     m_simulation_params.m_windowSize = 5;
@@ -1689,6 +1690,7 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
     loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
 
+    loadParam(nd, "velocityDiffTolerance", m_simulation_params.m_velocityDiffTolerance);
     loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
     loadParam(nd, "useQuasiNewton", m_simulation_params.m_useQuasiNewton);
     loadParam(nd, "windowSize", m_simulation_params.m_windowSize);
@@ -2501,6 +2503,17 @@ void XMLReader::loadScripts( rapidxml::xml_node<>* node)
         {
             std::string attribute(nd->first_attribute("global")->value());
             if( !stringutils::extractFromString(attribute,scr.transform_global) )
+            {
+                std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSER:" << outputmod::endred << " Failed to parse value of global attribute for script. Value must be boolean. Exiting." << std::endl;
+                exit(1);
+            }
+        }
+
+        scr.only_translation = false;
+        if (nd->first_attribute("trans"))
+        {
+            std::string attribute(nd->first_attribute("trans")->value());
+            if (!stringutils::extractFromString(attribute, scr.only_translation))
             {
                 std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSER:" << outputmod::endred << " Failed to parse value of global attribute for script. Value must be boolean. Exiting." << std::endl;
                 exit(1);
@@ -3461,10 +3474,10 @@ void Script::stepScript( const double& dt, const double& current_time )
                 
                 if(transform_global) {
                     prot = qrot * prot;
-                    //m_scene->apply_global_rotation( group_index, qrot );
+                    if (!only_translation) m_scene->apply_global_rotation( group_index, qrot );
                 } else {
                     prot *= qrot;
-                    //m_scene->apply_local_rotation( group_index, qrot );
+                    if (!only_translation) m_scene->apply_local_rotation( group_index, qrot );
                 }
                 
                 if(transform_with_origin) {
