@@ -519,6 +519,11 @@ namespace strandsim
         {
             return m_vertexMasses[i];
         }
+
+        Scalar getEdgeMass(IndexType i) const
+        {
+            return m_edgeMasses[i];
+        }
         
         Scalar getDt() const;
 		
@@ -848,6 +853,7 @@ namespace strandsim
         std::vector<Scalar> m_VoronoiLengths; // rest length around each vertex
         std::vector<Scalar> m_invVoronoiLengths; // their inverses
         std::vector<Scalar> m_vertexMasses;
+        std::vector<Scalar> m_edgeMasses;
         Vec4xArray m_restKappas;
         std::vector<Scalar> m_restTwists;
         

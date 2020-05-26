@@ -20,6 +20,8 @@ namespace strandsim
 		void insertParticle(const Vec3x& pos, const Vec3x& vel);
 		void finalize();
 		Vec3x getValue(const Vec3x& pos);
+		Scalar getWeight(const Vec3x& p1, const Vec3x& p2) const;
+		Scalar getWeight(Scalar distance) const;
 		void clear() { m_grids.clear(); }
 
 	private:
@@ -54,7 +56,7 @@ namespace strandsim
 		};
 
 		Scalar getWeight(int i, int j, int k, const Vec3x& pos);
-		Scalar quadraticKernel(Scalar x);
+		Scalar quadraticKernel(Scalar x) const;
 
 		typedef std::unordered_map<Grid, std::pair<Vec3x, Scalar>, typename Grid::Hasher, typename Grid::Comparer> GridMap;
 		GridMap m_grids;

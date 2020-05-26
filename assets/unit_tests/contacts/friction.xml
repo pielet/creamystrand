@@ -47,7 +47,7 @@
   <SimulationParameters>
     <maxNewtonIterations value="100"/>
 
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>

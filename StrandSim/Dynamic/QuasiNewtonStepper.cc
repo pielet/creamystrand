@@ -109,6 +109,7 @@ namespace strandsim
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
+		resetCollisionVelocities();
 
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 

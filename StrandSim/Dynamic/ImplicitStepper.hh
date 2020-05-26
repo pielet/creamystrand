@@ -28,7 +28,10 @@ namespace strandsim
 
 		virtual void accumulateCollisionImpulse(int vid, const Vec3x& r) = 0;
 
+		void commitVelocity();
+
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
+		void resetCollisionVelocities() { m_collisionVelocities = m_velocities; }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
 
 		void finalize() {}
@@ -44,6 +47,9 @@ namespace strandsim
 
 		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
 
+		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
+		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
+
 	protected:
 		omp_lock_t m_lock;
 
@@ -54,6 +60,7 @@ namespace strandsim
 
 		VecXx m_velocities;
 		VecXx m_collisionImpulse;
+		VecXx m_collisionVelocities;
 
 		bool m_notSPD;
 	};

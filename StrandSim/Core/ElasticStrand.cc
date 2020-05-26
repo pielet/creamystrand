@@ -152,6 +152,7 @@ namespace strandsim
 		m_restLengths.resize( m_numEdges );
 		m_restKappas.resize( m_numEdges );
 		m_restTwists.resize( m_numEdges );
+		m_edgeMasses.resize( m_numEdges );
 		m_vertexMasses.resize( m_numVertices );
 		m_VoronoiLengths.resize( m_numVertices );
 		m_invVoronoiLengths.resize( m_numVertices );
@@ -328,6 +329,12 @@ namespace strandsim
 			
 			m_invVoronoiLengths[vtx] = 1.0 / m_VoronoiLengths[vtx];
 		}
+
+		for (IndexType vtx = 0; vtx < m_numEdges; ++vtx)
+		{
+			m_edgeMasses[vtx] = m_parameters.getDensity() * m_restLengths[vtx] * M_PI *
+				m_parameters.getRadiusA(vtx, m_numVertices) * m_parameters.getRadiusB(vtx, m_numVertices);
+		}
 		
 		invalidatePhysics();
 	}
@@ -455,6 +462,12 @@ namespace strandsim
 		{
 			m_vertexMasses[vtx] = m_parameters.getDensity() * m_VoronoiLengths[vtx] * M_PI
 			* m_parameters.getRadiusA( vtx, m_numVertices ) * m_parameters.getRadiusB( vtx, m_numVertices );
+		}
+
+		for (IndexType vtx = 0; vtx < m_numVertices; ++vtx)
+		{
+			m_edgeMasses[vtx] = m_parameters.getDensity() * m_restLengths[vtx] * M_PI
+				* m_parameters.getRadiusA(vtx, m_numVertices) * m_parameters.getRadiusB(vtx, m_numVertices);
 		}
 		
 		invalidatePhysics();

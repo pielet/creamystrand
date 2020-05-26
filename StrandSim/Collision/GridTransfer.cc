@@ -96,6 +96,20 @@ namespace strandsim
 		return vel;
 	}
 
+	Scalar GridTransfer::getWeight(const Vec3x& p1, const Vec3x& p2) const
+	{
+		Scalar weight = 1.;
+		for (int i = 0; i < 3; ++i) {
+			weight *= quadraticKernel((p1(i) - p2(i)) * m_invGridSize);
+		}
+		return weight;
+	}
+
+	Scalar GridTransfer::getWeight(Scalar dis) const
+	{
+		return quadraticKernel(dis * m_invGridSize);
+	}
+
 	Scalar GridTransfer::getWeight(int i, int j, int k, const Vec3x& pos)
 	{
 		Vec3x grid_pos = Vec3x(i, j, k);
@@ -109,7 +123,7 @@ namespace strandsim
 		return weight;
 	}
 
-	Scalar GridTransfer::quadraticKernel(Scalar x_in)
+	Scalar GridTransfer::quadraticKernel(Scalar x_in) const
 	{
 		Scalar x = fabs(x_in);
 

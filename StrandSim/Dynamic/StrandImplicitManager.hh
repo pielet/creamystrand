@@ -292,7 +292,9 @@ private:
 
     //! solve individual collision in local coordinate
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
-    
+    //! Accumulates impulse
+    void accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel);
+
     void exportStrandRestShapes( const std::string& fileName ) const;
 
     Scalar m_time; //!< Current time

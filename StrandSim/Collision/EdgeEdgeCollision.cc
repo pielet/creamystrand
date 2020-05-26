@@ -68,7 +68,7 @@ namespace strandsim
                                 + m_secondStrand->collisionParameters().selfCollisionsRadius(m_secondVertex);
             
             if (sqrt_dist < colRadius * colRadius) {    // collision happens
-                m_normal = (pq1 - pq0).cross(pp1 - pp0);
+                m_normal = ((pp1 - dp1) - (pp0 - dp0)).cross((pq1 - dq1) - (pq0 - -dq0));
                 double nnorm = m_normal.norm();
 
                 if (nnorm * nnorm <= PARALLEL_TOL) {    // parallel -> pass
@@ -84,8 +84,7 @@ namespace strandsim
                 const Vec3x relativeDisplacement = m_time * 
                     (((1.0 - m_firstAbscissa) * dp0 + m_firstAbscissa * dp1)    // edge1 displacement
                     - ((1.0 - m_secondAbscissa) * dq0 + m_secondAbscissa * dq1));   // edge2 displacement
-                postAnalyse(relativeDisplacement);  // adjust normel direction
-
+                postAnalyse(relativeDisplacement);  // adjust normal direction
                 return true;
             }
         }
