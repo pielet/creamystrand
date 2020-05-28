@@ -50,7 +50,7 @@
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -72,7 +72,7 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
@@ -182,7 +182,9 @@
     <fixed start="39" end="39" value="1"/>
     <fixed start="40" end="40" value="3"/>
   </hairobj>
--->
+
+<checkpoint path="simulation_capture_\assets\unit_tests\contacts\friction_2020_05_28_16_38_45\checkpoint_00000000000000000248.bin">
+</checkpoint>-->
 
   <hairobj filename="assets/strands.obj" params="0" group="1" x="0.0" y="0.3" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
     <fixed start="0" end="0" value="3"/>

@@ -155,6 +155,10 @@
     </distancefield> 
     <distancefield usage="terminator" type="box" cx="0.0" cy="0.0" cz="0.0" ex="128.0" ey="128.0" ez="256.0" group="2" radius="0.001" inverted="1"/>
 
+    <checkpoint>
+    	<path></path>
+    </checkpoint>
+
     <!-- motion script -->
 	    <!-- [type] rotate / translate / swirl / scale / switch (unfreeze fixed point in group) -->
 	    <!-- [func] ease function: cubic / cosine / weno -->

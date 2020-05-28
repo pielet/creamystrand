@@ -22,35 +22,9 @@ struct DumpDataBinary
 	
 	std::string data_fn;
 	
-	// fluid variables
-	VecXx m_x;
-	VecXx m_v;
-	VecXx m_m;
-	VecXx m_radius;
-	VecXx m_J;
-	VecXx m_vol;
-	VecXx m_rest_vol;
-	std::vector< int > m_particle_group;
-	std::vector< ParticleClassifier > m_classifier;
-	VecXuc m_weakened;
-	VecXx m_components;
-	VecXx m_proj_func;
-	
-	MatXx m_Fe;
-	MatXx m_b;
-	MatXx m_B;
-	MatXx m_b_trial;
-	//	MatXx m_Fe_plus;
-	//	MatXx m_b_plus;
-	
 	// hair variables
 	std::vector< VecXx > m_currentDOFs;
-	std::vector< VecXx > m_currentAreaDOFs;
 	std::vector< VecXx > m_velocities;
-	std::vector< VecXx > m_flow_velocities;
-	std::vector< VecXx > m_flow_strain;
-	std::vector< VecXx > m_flow_components;
-	std::vector< Vec2x > m_flow_reservoirs;
 	
 	// hair goals
 	std::vector< std::pair<Vec2i, Vec4x> > m_strand_goals;

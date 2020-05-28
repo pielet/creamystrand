@@ -10,17 +10,28 @@ namespace strandsim
 		m_notSPD(false),
 		m_strand(strand),
 		m_params(params),
-		m_velocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_collisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_collisionVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows()))
+		m_timer(Timer("stepper", false))
 	{
+		int ndof = strand.getCurrentDegreesOfFreedom().rows();
+
+		m_velocities = VecXx::Zero(ndof);
+		m_collisionImpulse = VecXx::Zero(ndof);
+		m_collisionVelocities = VecXx::Zero(ndof);
+
+#if defined(_OPENMP)
 		omp_init_lock(&m_lock);
+#endif
 	}
 
 
 	ImplicitStepper::~ImplicitStepper()
 	{
 
+	}
+
+	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
+	{
+		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 
 	
@@ -42,6 +53,17 @@ namespace strandsim
 			}
 		}
 		return maxlen;
+	}
+
+	void ImplicitStepper::outputTiming() const
+	{
+		InfoStream(g_log, "Stepper breakdown timing")
+			<< "hessian: " << m_timing.hessian
+			<< "  fac: " << m_timing.factorize
+			<< "  graident: " << m_timing.gradient
+			<< "  solve: " << m_timing.solveLinear
+			<< "  ls: " << m_timing.lineSearch
+			<< "  total: " << m_timing.sum();
 	}
 
 }

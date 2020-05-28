@@ -34,24 +34,31 @@ namespace strandsim
 		// compute initial hessian
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, dt);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getCurrentDegreesOfFreedom() + m_velocities * m_dt);
+		m_timer.restart();
 		m_dynamics.computeFutureJacobian();
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 		m_dynamics.getScriptingController()->fixLHS(hessian);
+		m_timing.hessian += m_timer.elapsed();
 
+		m_timer.restart();
 		m_directSolver.store(hessian);	// pre-fab
+		m_timing.factorize += m_timer.elapsed();
 	}
 
 	bool QuasiNewtonStepper::performOneIteration()
 	{
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
+		// gradiant
+		m_timer.restart();
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces();
 		gradient -= m_dt * m_strand.getFutureTotalForces() + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);
+		m_timing.gradient += m_timer.elapsed();
 
 		// check convergence
 		Scalar err = gradient.squaredNorm() / gradient.size();
@@ -92,7 +99,9 @@ namespace strandsim
 		}
 		// solve linear equation
 		VecXx descent_dir = VecXx::Zero(m_velocities.size());
+		m_timer.restart();
 		m_directSolver.solve(descent_dir, gradient);
+		m_timing.solveLinear += m_timer.elapsed();
 		// loop 2
 		for (int i = w - 1; i >= 0; --i)
 		{
@@ -106,7 +115,9 @@ namespace strandsim
 		descent_dir = -descent_dir;
 
 		// line search
+		m_timer.restart();
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
+		m_timing.lineSearch += m_timer.elapsed();
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 		resetCollisionVelocities();

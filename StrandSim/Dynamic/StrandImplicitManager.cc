@@ -216,12 +216,12 @@ namespace strandsim
 		InfoStream(g_log, "Timing") << "Average after " << m_timings.size() << " frames (ms):";
 		print(m_timings);
 
-		if (m_params.m_statGathering)
-		{
-			//printNewtonSolverBreakdownTiming<InfoStream>();
-			print<InfoStream>(m_cdTimings);
-			print<InfoStream>(m_solverStat);
-		}
+		//if (m_params.m_statGathering)
+		//{
+		//	//printNewtonSolverBreakdownTiming<InfoStream>();
+		//	print<InfoStream>(m_cdTimings);
+		//	print<InfoStream>(m_solverStat);
+		//}
 
 		m_cdTimings.reset();
 		m_solverStat.reset();
@@ -1132,7 +1132,7 @@ namespace strandsim
 		}
 	}
 	*/
-	static const unsigned maxObjForOuterParallelism = 8 * omp_get_max_threads();
+	//static const unsigned maxObjForOuterParallelism = 8 * omp_get_max_threads();
 	/*
 	void StrandImplicitManager::step_processCollisions(Scalar dt)
 	{
@@ -2620,7 +2620,7 @@ namespace strandsim
 		std::cout << "[Prepare Simulation Step]" << std::endl;
 		Timer timer("step", false);
 		step_prepare(m_dt);
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (int i = 0; i < m_steppers.size();++i) {
 			m_steppers[i]->prepareStep(m_dt);
 		}
@@ -2648,7 +2648,7 @@ namespace strandsim
 		int k = 0;
 		for (k; k < m_params.m_maxNewtonIterations; ++k) {
 			timer.restart();
-#pragma omp parallel for
+//#pragma omp parallel for
 			for (int i = 0; i < m_steppers.size(); ++i) {
 				pass[i] = m_steppers[i]->performOneIteration();
 			}
@@ -2670,7 +2670,7 @@ namespace strandsim
 			}
 
 			if (m_params.m_solveCollision) {
-				if (m_params.m_useCTRodRodCollisions && m_statTotalContacts == 0) {
+				if (m_params.m_useCTRodRodCollisions && k == 0) {
 					timer.restart();
 #pragma omp parallel for 
 					for (int i = 0; i < m_steppers.size(); ++i)
@@ -2700,9 +2700,20 @@ namespace strandsim
 		std::cout << "Total iteration number: " << k + 1 << std::endl;
 
 		std::cout << "[Step Post Dynamics]" << std::endl;
+		ImplicitStepper::StepperTiming stepper_timing;
 #pragma omp parallel for
 		for (int i = 0; i < m_steppers.size(); ++i) {
 			m_steppers[i]->postStep();
+			stepper_timing += m_steppers[i]->getTiming();
+		}
+		if (m_params.m_statGathering) {
+			InfoStream(g_log, "Stepper breakdown timing")
+				<< "hessian: " << stepper_timing.hessian
+				<< "  fac: " << stepper_timing.factorize
+				<< "  graident: " << stepper_timing.gradient
+				<< "  solve: " << stepper_timing.solveLinear
+				<< "  ls: " << stepper_timing.lineSearch
+				<< "  total: " << stepper_timing.sum();
 		}
 
 		m_timings.back().push_back(timings);
@@ -2898,6 +2909,16 @@ namespace strandsim
 		return E * r;
 	}
 
+	Vec3x StrandImplicitManager::solveOneCollision(const Vec3x& relative_vel, const Vec3x& normal, Scalar m1, Scalar m2, Scalar a1, Scalar a2)
+	{
+		Vec3x r = normal.normalized();
+		Scalar r_n = relative_vel.dot(r);
+		if (r_n < 0) return Vec3x::Zero();
+		r_n /= (1 + 12 * square(a1 - 0.5)) / m1 + (1 + 12 * square(a2 - 0.5)) / m2;
+
+		return r_n * r;
+	}
+
 	void StrandImplicitManager::accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel)
 	{
 		const Vec3x edge = m_strands[sid]->getEdgeVector(vid).normalized();
@@ -2907,11 +2928,17 @@ namespace strandsim
 		Scalar m1 = m_strands[sid]->getVertexMass(vid);
 		Scalar m2 = m_strands[sid]->getVertexMass(vid + 1);
 
-		const Vec3x delta_v1 = (r + 6 * (alpha - 0.5) * r_t) / m;
-		const Vec3x delta_v2 = (r - 6 * (alpha - 0.5) * r_t) / m;
+		const Vec3x delta_v1 = (r - 6 * (alpha - 0.5) * r_t) / m;
+		const Vec3x delta_v2 = (r + 6 * (alpha - 0.5) * r_t) / m;
 
-		m_steppers[sid]->accumulateCollisionImpulse(vid, delta_v1 * m1);
-		m_steppers[sid]->accumulateCollisionImpulse(vid + 1, delta_v2 * m2);
+		m_steppers[sid]->accumulateCollisionImpulse(vid, delta_v1 * m1 );
+		m_steppers[sid]->accumulateCollisionImpulse(vid + 1, delta_v2 * m2 );
+
+		//const Vec3x delta_j1 = (r - 6 * (alpha - 0.5) * r_t);
+		//const Vec3x delta_j2 = (r + 6 * (alpha - 0.5) * r_t);
+
+		//m_steppers[sid]->accumulateCollisionImpulse(vid, delta_j1 );
+		//m_steppers[sid]->accumulateCollisionImpulse(vid + 1, delta_j2 );
 
 		if (modifyFinalVel)
 		{
@@ -2960,34 +2987,36 @@ namespace strandsim
 			Scalar alpha_1 = collision.objects.first.abscissa;
 			Scalar alpha_2 = collision.objects.second.abscissa;
 
-			//Scalar m1 = m_strands[s1]->getVertexMass(v1) / m_collisionTimes[s1][v1];
-			//Scalar m2 = m_strands[s2]->getVertexMass(v2) / m_collisionTimes[s2][v2];
-			//
-			//const Vec3x cv1 = (1 - alpha_1) * m_steppers[s1]->getVelocity(v1) + alpha_1 * m_steppers[s1]->getVelocity(v1 + 1);
-			//const Vec3x cv2 = (1 - alpha_2) * m_steppers[s2]->getVelocity(v2) + alpha_2 * m_steppers[s2]->getVelocity(v2 + 1);
+			Scalar m1 = m_strands[s1]->getEdgeMass(v1) / m_collisionTimes[s1][v1];
+			Scalar m2 = m_strands[s2]->getEdgeMass(v2) / m_collisionTimes[s2][v2];
 
-			Scalar m1 = m_strands[s1]->getEdgeMass(v1);
-			Scalar m2 = m_strands[s2]->getEdgeMass(v2);
+			//std::cout << "m1: " << m1 << "\nm2: " << m2 << std::endl;
+			
+			const Vec3x cv1 = (1 - alpha_1) * m_steppers[s1]->getVelocity(v1) + alpha_1 * m_steppers[s1]->getVelocity(v1 + 1);
+			const Vec3x cv2 = (1 - alpha_2) * m_steppers[s2]->getVelocity(v2) + alpha_2 * m_steppers[s2]->getVelocity(v2 + 1);
 
-			const Vec3x cv1 = (1 - alpha_1) * m_steppers[s1]->getCollisionVelocity(v1) + alpha_1 * m_steppers[s1]->getCollisionVelocity(v1 + 1);
-			const Vec3x cv2 = (1 - alpha_2) * m_steppers[s2]->getCollisionVelocity(v2) + alpha_2 * m_steppers[s2]->getCollisionVelocity(v2 + 1);
+			//Scalar m1 = m_strands[s1]->getEdgeMass(v1);
+			//Scalar m2 = m_strands[s2]->getEdgeMass(v2);
 
-			Vec3x v_star = (m1 * cv1 + m2 * cv2) / (m1 + m2);
-			std::cout << "v*: " << v_star.dot(collision.normal) << std::endl;
+			//const Vec3x cv1 = (1 - alpha_1) * m_steppers[s1]->getCollisionVelocity(v1) + alpha_1 * m_steppers[s1]->getCollisionVelocity(v1 + 1);
+			//const Vec3x cv2 = (1 - alpha_2) * m_steppers[s2]->getCollisionVelocity(v2) + alpha_2 * m_steppers[s2]->getCollisionVelocity(v2 + 1);
 
-			Vec3x r_world = solveOneCollision(cv1 - v_star, m1, collision.transformationMatrix, collision.mu);
-			//Vec3x r_world = solveOneCollision(vel1 - vel2, m_strands[s1]->getVertexMass(v1), collision.transformationMatrix, collision.mu);
-			//r_world /= 2 * std::max(m_collisionTimes[s1][v1], m_collisionTimes[s2][v2]);
+			//Vec3x v_star = (m1 * cv1 + m2 * cv2) / (m1 + m2);
+			//std::cout << "v*: " << v_star.dot(collision.normal) << std::endl;
+
+			//const Vec3x r_world = solveOneCollision(cv1 - v_star, m1, collision.transformationMatrix, collision.mu);
+			const Vec3x r_world = solveOneCollision(cv2 - cv1, collision.normal, m1, m2, alpha_1, alpha_2);
 
 			ContactStream(g_log, "") << "delta r: " << r_world;
 
 			collision.force += r_world;
 
-			accumulateImpulse(s1, v1, alpha_1, r_world, commitVelocities);
-			accumulateImpulse(s2, v2, alpha_2, -r_world, commitVelocities);
+			accumulateImpulse(s1, v1, alpha_1, r_world, false);
+			accumulateImpulse(s2, v2, alpha_2, -r_world, false);
 
-			std::cout << "col point v: " << ((1 - alpha_1) * m_steppers[s1]->getVelocity(v1) + alpha_1 * m_steppers[s1]->getVelocity(v1 + 1)).dot(collision.normal) << std::endl;
-			std::cout << "col point v: " << ((1 - alpha_2) * m_steppers[s2]->getVelocity(v2) + alpha_2 * m_steppers[s2]->getVelocity(v2 + 1)).dot(collision.normal) << std::endl;
+			//std::cout << "v1:" << ((1 - alpha_1) * m_steppers[s1]->getVelocity(v1) + alpha_1 * m_steppers[s1]->getVelocity(v1 + 1)).dot(collision.normal) << std::endl;
+			//std::cout << "v2:" << ((1 - alpha_2) * m_steppers[s2]->getVelocity(v2) + alpha_2 * m_steppers[s2]->getVelocity(v2 + 1)).dot(collision.normal) << std::endl;
+
 			//m_steppers[s1]->accumulateCollisionImpulse(v1, r_world);
 			//m_steppers[s1]->accumulateCollisionImpulse(v1 + 1, r_world);
 			//m_steppers[s2]->accumulateCollisionImpulse(v2, -r_world);

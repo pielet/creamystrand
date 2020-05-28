@@ -45,9 +45,9 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="1"/>
+    <maxNewtonIterations value="50"/>
 
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>
@@ -72,7 +72,7 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
@@ -212,7 +212,7 @@
   <particle x="0.0 0.1 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.1 9.5" v="0.0 0.0 0.0" fixed="0"/>
-
+-->
   <particle x="-9.75 -0.01 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
   <particle x="-9.25 -0.01 0.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="-8.75 -0.01 0.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -298,7 +298,7 @@
   <hair params="0" start="0" count="40"/>
   <hair params="0" start="40" count="40"/>
 
--->
+<!--
   <particle x="-9.75 -0.01 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
   <particle x="-3.75 -0.01 0.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="2.75 -0.01 0.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -311,7 +311,7 @@
 
   <hair params="0" start="0" count="4"/>
   <hair params="0" start="4" count="4"/>
-<!--
+
   <hair params="0" start="40" count="40"/>
 
   <hair params="0" start="80" count="40"/>-->

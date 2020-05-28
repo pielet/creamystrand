@@ -12,7 +12,6 @@ namespace strandsim
 		ImplicitStepper(strand, params), m_dynamics(strand.dynamics())
 	{
 		int ndof = strand.getCurrentDegreesOfFreedom().rows();
-		m_velocities = VecXx::Zero(ndof);
 		m_savedVelocities = VecXx::Zero(ndof);
 		m_prevVelocities = VecXx::Zero(ndof);
 
@@ -29,6 +28,8 @@ namespace strandsim
 		m_dt = dt;
 
 		m_iteration = 0;
+
+		m_timing.reset();
 
 		clearCollisionImpulse();
 		resetCollisionVelocities();
@@ -47,28 +48,38 @@ namespace strandsim
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 
 		// gradient
+		m_timer.restart();
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
+		m_timing.gradient += m_timer.elapsed();
 
 		// hessian
+		m_timer.restart();
 		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);
 		m_dynamics.getScriptingController()->fixLHS(hessian);  // fix points
+		m_timing.hessian += m_timer.elapsed();
 
 		// solve linear equation
 		VecXx descent_dir = VecXx::Zero(m_velocities.size());
+		m_timer.restart();
 		JacobianSolver directSolver;
 		directSolver.store(hessian);
+		m_timing.factorize += m_timer.elapsed();
+		m_timer.restart();
 		directSolver.solve(descent_dir, gradient);
+		m_timing.solveLinear += m_timer.elapsed();
 		descent_dir = -descent_dir;
 
 		// line search
+		m_timer.restart();
 		Scalar step_size = lineSearch(m_velocities, gradient, descent_dir);
+		m_timing.lineSearch += m_timer.elapsed();
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 		resetCollisionVelocities();
@@ -76,6 +87,8 @@ namespace strandsim
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 		
 		m_strand.getFutureState().freeCachedQuantities();
+
+		++m_iteration;
 
 		VecXx velDiff = m_velocities - m_prevVelocities;
 		m_prevVelocities = m_velocities;
@@ -102,11 +115,6 @@ namespace strandsim
 		m_dynamics.getDisplacements() = displacements;
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
-	}
-
-	void NewtonStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
-	{
-		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 	
 	Scalar NewtonStepper::lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir)

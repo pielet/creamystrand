@@ -292,6 +292,8 @@ private:
 
     //! solve individual collision in local coordinate
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
+    //! Rigid body impulse solver
+    Vec3x solveOneCollision(const Vec3x& relative_vel, const Vec3x& normal, Scalar m1, Scalar m2, Scalar a1, Scalar a2);
     //! Accumulates impulse
     void accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel);
 

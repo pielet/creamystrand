@@ -5,6 +5,7 @@
 #include <omp.h>
 #endif
 #include "../Core/Definitions.hh"
+#include "../Utils/LoggingTimer.hh"
 
 namespace strandsim
 {
@@ -15,7 +16,42 @@ namespace strandsim
 	class ImplicitStepper
 	{
 	public:
-		enum LinearSolverType { DIRECT, JACOBI, GAUSS_SEIDEL, CONJ_GRAD };
+		enum LinearSolverType {DIRECT, JACOBI, GAUSS_SEIDEL};
+
+		struct StepperTiming
+		{
+			double hessian;
+			double gradient;
+			double factorize;
+			double solveLinear;
+			double lineSearch;
+
+			StepperTiming() : hessian(0), gradient(0), factorize(0), solveLinear(0), lineSearch(0) {}
+			StepperTiming(double h, double g, double f, double s, double l) :
+				hessian(h), gradient(g), factorize(f), solveLinear(s), lineSearch(l) {}
+
+			void reset()
+			{
+				hessian = 0;
+				gradient = 0;
+				factorize = 0;
+				solveLinear = 0;
+				lineSearch = 0;
+			}
+			double sum() const
+			{
+				return hessian + gradient + factorize + solveLinear + lineSearch;
+			}
+			const StepperTiming& operator+=(const StepperTiming& other)
+			{
+				hessian += other.hessian;
+				gradient += other.gradient;
+				factorize += other.factorize;
+				solveLinear += other.factorize;
+				lineSearch += other.lineSearch;
+				return *this;
+			}
+		};
 
 		ImplicitStepper(ElasticStrand& strand, const SimulationParameters& params);
 		virtual ~ImplicitStepper();
@@ -26,13 +62,25 @@ namespace strandsim
 
 		virtual void rewind() = 0;
 
-		virtual void accumulateCollisionImpulse(int vid, const Vec3x& r) = 0;
+		const StepperTiming& getTiming() { return m_timing; }
+
+		void outputTiming() const;
+
+		void accumulateCollisionImpulse(int vid, const Vec3x& r);
+		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
+		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
+		Scalar maxCollisionImpulseNorm(int& idx) const;
 
 		void commitVelocity();
 
-		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
 		void resetCollisionVelocities() { m_collisionVelocities = m_velocities; }
-		Scalar maxCollisionImpulseNorm(int& idx) const;
+		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
+		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
+
+		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
+		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }
+		VecXx& velocities() { return m_velocities; }
+		const VecXx& velocities() const { return m_velocities; }
 
 		void finalize() {}
 
@@ -40,18 +88,10 @@ namespace strandsim
 		Scalar getStretchMultiplier() const { return 1.0; }
 		VecXx flowComponents() const { return VecXx::Ones(m_velocities.size()); }	// for StrandRender::computeFlowQuads and ProblemStepper::dumpRods
 
-		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
-		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }
-		VecXx& velocities() { return m_velocities; }
-		const VecXx& velocities() const { return m_velocities; }
-
-		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
-
-		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
-		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
-
 	protected:
+#if defined(_OPENMP)
 		omp_lock_t m_lock;
+#endif
 
 		ElasticStrand& m_strand;
 		const SimulationParameters& m_params;
@@ -61,6 +101,9 @@ namespace strandsim
 		VecXx m_velocities;
 		VecXx m_collisionImpulse;
 		VecXx m_collisionVelocities;
+
+		StepperTiming m_timing;
+		Timer m_timer;
 
 		bool m_notSPD;
 	};

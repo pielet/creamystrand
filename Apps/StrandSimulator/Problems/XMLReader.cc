@@ -1770,79 +1770,23 @@ void XMLReader::loadCheckpoint( rapidxml::xml_node<>* node, int& current_frame, 
 			ifs.read((char*) &(data.current_checkpoint), sizeof(int));
 			ifs.read((char*) &(data.num_components), sizeof(int));
 			
-			// read fluid
-			int num_particles;
-			ifs.read((char*) &(num_particles), sizeof(int));
-			
-			if(num_particles) {
-				data.m_x.resize( num_particles * 3 );
-				data.m_v.resize( num_particles * 3 );
-				data.m_m.resize( num_particles * 3 );
-				data.m_radius.resize( num_particles );
-				data.m_J.resize( num_particles );
-				data.m_vol.resize( num_particles );
-				data.m_rest_vol.resize( num_particles );
-				data.m_particle_group.resize( num_particles );
-				data.m_classifier.resize( num_particles );
-				data.m_weakened.resize( num_particles );
-				data.m_components.resize( num_particles * data.num_components );
-				data.m_proj_func.resize( num_particles * 3 );
-				
-				data.m_Fe.resize( num_particles * 3, 3 );
-				data.m_b.resize( num_particles * 3, 3 );
-				data.m_B.resize( num_particles * 3, 3 );
-				data.m_b_trial.resize( num_particles * 3, 3 );
-				
-				ifs.read((char*) data.m_x.data(), num_particles * 3 * sizeof(Scalar));
-				ifs.read((char*) data.m_v.data(), num_particles * 3 * sizeof(Scalar));
-				ifs.read((char*) data.m_m.data(), num_particles * 3 * sizeof(Scalar));
-				ifs.read((char*) data.m_radius.data(), num_particles * sizeof(Scalar));
-				ifs.read((char*) data.m_J.data(), num_particles * sizeof(Scalar));
-				ifs.read((char*) data.m_vol.data(), num_particles * sizeof(Scalar));
-				ifs.read((char*) data.m_rest_vol.data(), num_particles * sizeof(Scalar));
-				ifs.read((char*) &(data.m_particle_group[0]), num_particles * sizeof(int));
-				ifs.read((char*) &(data.m_classifier[0]), num_particles * sizeof(ParticleClassifier));
-				ifs.read((char*) data.m_weakened.data(), num_particles * sizeof(unsigned char));
-				ifs.read((char*) data.m_components.data(), num_particles * data.num_components * sizeof(Scalar));
-				ifs.read((char*) data.m_proj_func.data(), num_particles * 3 * sizeof(Scalar));
-				
-				ifs.read((char*) data.m_Fe.data(), num_particles * 9 * sizeof(Scalar));
-				ifs.read((char*) data.m_b.data(), num_particles * 9 * sizeof(Scalar));
-				ifs.read((char*) data.m_B.data(), num_particles * 9 * sizeof(Scalar));
-				ifs.read((char*) data.m_b_trial.data(), num_particles * 9 * sizeof(Scalar));
-			}
-			
 			// read hairs
 			int num_strands;
 			ifs.read((char*) &(num_strands), sizeof(int));
-			
+
 			data.m_currentDOFs.resize(num_strands);
-			data.m_currentAreaDOFs.resize(num_strands);
 			data.m_velocities.resize(num_strands);
-			data.m_flow_velocities.resize(num_strands);
-			data.m_flow_strain.resize(num_strands);
-			data.m_flow_components.resize(num_strands);
-			data.m_flow_reservoirs.resize(num_strands);
-			
+
 			for(int i = 0; i < num_strands; ++i)
 			{
 				int num_verts;
 				ifs.read((char*) &(num_verts), sizeof(int));
 				
 				data.m_currentDOFs[i].resize(num_verts * 4 - 1);
-				data.m_currentAreaDOFs[i].resize(num_verts);
 				data.m_velocities[i].resize(num_verts * 4 - 1);
-				data.m_flow_velocities[i].resize(num_verts - 1);
-				data.m_flow_strain[i].resize(num_verts);
-				data.m_flow_components[i].resize(num_verts * data.num_components);
 				
 				ifs.read((char*) (data.m_currentDOFs[i].data()), data.m_currentDOFs[i].size() * sizeof(Scalar));
-				ifs.read((char*) (data.m_currentAreaDOFs[i].data()), data.m_currentAreaDOFs[i].size() * sizeof(Scalar));
 				ifs.read((char*) (data.m_velocities[i].data()), data.m_velocities[i].size() * sizeof(Scalar));
-				ifs.read((char*) (data.m_flow_velocities[i].data()), data.m_flow_velocities[i].size() * sizeof(Scalar));
-				ifs.read((char*) (data.m_flow_strain[i].data()), data.m_flow_strain[i].size() * sizeof(Scalar));
-				ifs.read((char*) (data.m_flow_components[i].data()), data.m_flow_components[i].size() * sizeof(Scalar));
-				ifs.read((char*) (data.m_flow_reservoirs[i].data()), 2 * sizeof(Scalar));
 			}
 			
 			// read goals
@@ -1927,44 +1871,14 @@ void XMLReader::loadCheckpoint( rapidxml::xml_node<>* node, int& current_frame, 
 			current_frame = data.current_frame;
 			current_checkpoint = data.current_checkpoint;
 			
-			// set fluid
-			if(m_fluidScripting_controllers.size() && m_fluidScripting_controllers[0]) {
-				std::shared_ptr<FluidScriptingController> controller = m_fluidScripting_controllers[0];
-				
-				controller->conservativeResizeParticles( num_particles );
-				controller->getX() = data.m_x;
-				controller->getV() = data.m_v;
-				controller->getM() = data.m_m;
-				controller->getRadius() = data.m_radius;
-				controller->getJ() = data.m_J;
-				controller->getVol() = data.m_vol;
-				controller->getRestVol() = data.m_rest_vol;
-				controller->getParticleGroup() = data.m_particle_group;
-				controller->getClassifier() = data.m_classifier;
-				controller->getWeakened() = data.m_weakened;
-				controller->getComponents() = data.m_components;
-				controller->getProjFunc() = data.m_proj_func;
-				
-				controller->getFe() = data.m_Fe;
-				controller->getFePlus() = data.m_Fe;
-				controller->getb() = data.m_b;
-				controller->getB() = data.m_B;
-				controller->getbtrial() = data.m_b_trial;
-				controller->getbPlus() = data.m_b;
-			}
-			
 			// set hairs
 			assert( (int) m_strands.size() == num_strands );
 			for(int i = 0; i < num_strands; ++i)
 			{
 				m_strands[i]->setCurrentDegreesOfFreedom(data.m_currentDOFs[i]);
 				m_strands[i]->setFutureDegreesOfFreedom(data.m_currentDOFs[i] - data.m_velocities[i] * m_dt);
-				m_strands[i]->setCurrentAreaDegreesOfFreedom(data.m_currentAreaDOFs[i]);
-				m_strands[i]->setFutureAreaDegreesOfFreedom(data.m_currentAreaDOFs[i]);
 				m_strands[i]->getStepper()->velocities() = data.m_velocities[i];
 				m_strands[i]->dynamics().getDisplacements() = data.m_velocities[i] * m_dt;
-				m_strands[i]->getStepper()->flowComponents() = data.m_flow_components[i];
-				m_strands[i]->getReservoir() = data.m_flow_reservoirs[i];
 				
 				const int num_verts = m_strands[i]->getNumVertices();
 				for(int k = 0; k < num_verts; ++k)
@@ -3007,46 +2921,17 @@ void dump_binary_checkpoint_subprog( DumpDataBinary* data )
 	os_data.write((char*) &(data->current_checkpoint), sizeof(int));
 	os_data.write((char*) &(data->num_components), sizeof(int));
 	
-	// write fluid
-	const int num_particles = data->m_x.size() / 3;
-	os_data.write((const char*) &num_particles, sizeof(int));
-	
-	if(num_particles) {
-		os_data.write((char*) data->m_x.data(), num_particles * 3 * sizeof(Scalar));
-		os_data.write((char*) data->m_v.data(), num_particles * 3 * sizeof(Scalar));
-		os_data.write((char*) data->m_m.data(), num_particles * 3 * sizeof(Scalar));
-		os_data.write((char*) data->m_radius.data(), num_particles * sizeof(Scalar));
-		os_data.write((char*) data->m_J.data(), num_particles * sizeof(Scalar));
-		os_data.write((char*) data->m_vol.data(), num_particles * sizeof(Scalar));
-		os_data.write((char*) data->m_rest_vol.data(), num_particles * sizeof(Scalar));
-		os_data.write((char*) &(data->m_particle_group[0]), num_particles * sizeof(int));
-		os_data.write((char*) &(data->m_classifier[0]), num_particles * sizeof(ParticleClassifier));
-		os_data.write((char*) data->m_weakened.data(), num_particles * sizeof(unsigned char));
-		os_data.write((char*) data->m_components.data(), num_particles * data->num_components * sizeof(Scalar));
-		os_data.write((char*) data->m_proj_func.data(), num_particles * 3 * sizeof(Scalar));
-		
-		os_data.write((char*) data->m_Fe.data(), num_particles * 9 * sizeof(Scalar));
-		os_data.write((char*) data->m_b.data(), num_particles * 9 * sizeof(Scalar));
-		os_data.write((char*) data->m_B.data(), num_particles * 9 * sizeof(Scalar));
-		os_data.write((char*) data->m_b_trial.data(), num_particles * 9 * sizeof(Scalar));
-	}
-	
 	// write hairs
 	const int num_strands = data->m_currentDOFs.size();
 	os_data.write((char*) &num_strands, sizeof(int));
 	
 	for(int i = 0; i < num_strands; ++i)
 	{
-		const int num_verts = data->m_currentAreaDOFs[i].size();
+		const int num_verts = (data->m_currentDOFs[i].size() + 1) / 4;
 		os_data.write((char*) &num_verts, sizeof(int));
 		
 		os_data.write((char*) (data->m_currentDOFs[i].data()), data->m_currentDOFs[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_currentAreaDOFs[i].data()), data->m_currentAreaDOFs[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_velocities[i].data()), data->m_velocities[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_flow_velocities[i].data()), data->m_flow_velocities[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_flow_strain[i].data()), data->m_flow_strain[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_flow_components[i].data()), data->m_flow_components[i].size() * sizeof(Scalar));
-		os_data.write((char*) (data->m_flow_reservoirs[i].data()), data->m_flow_reservoirs[i].size() * sizeof(Scalar));
+		os_data.write((char*) (data->m_velocities[i].data()), data->m_velocities[i].size() * sizeof(Scalar));;
 	}
 	
 	const int num_goals = data->m_strand_goals.size();
@@ -3118,47 +3003,16 @@ void XMLReader::dumpBinaryCheckpoint(std::string outputdirectory, int current_fr
 	data->current_checkpoint = current_checkpoint;
 	data->num_components = m_num_components;
 	
-	// fill fluid variables
-	if(m_fluidScripting_controllers.size() && m_fluidScripting_controllers[0]) {
-		std::shared_ptr<FluidScriptingController> controller = m_fluidScripting_controllers[0];
-		
-		data->m_x = controller->getX();
-		data->m_v = controller->getV();
-		data->m_m = controller->getM();
-		data->m_radius = controller->getRadius();
-		data->m_J = controller->getJ();
-		data->m_vol = controller->getVol();
-		data->m_rest_vol = controller->getRestVol();
-		data->m_particle_group = controller->getParticleGroup();
-		data->m_classifier = controller->getClassifier();
-		data->m_weakened = controller->getWeakened();
-		data->m_components = controller->getComponents();
-		data->m_proj_func = controller->getProjFunc();
-		
-		data->m_Fe = controller->getFe();
-		data->m_b = controller->getb();
-		data->m_B = controller->getB();
-		data->m_b_trial = controller->getbtrial();
-	}
-	
 	// fill rod variables
 	const int num_rods = m_rodDatum.size();
 	data->m_currentDOFs.resize(num_rods);
-	data->m_currentAreaDOFs.resize(num_rods);
 	data->m_velocities.resize(num_rods);
-	data->m_flow_velocities.resize(num_rods);
-	data->m_flow_strain.resize(num_rods);
-	data->m_flow_components.resize(num_rods);
-	data->m_flow_reservoirs.resize(num_rods);
 	
 	for(int i = 0; i < num_rods; ++i)
 	{
 		ElasticStrand& strand = m_rodDatum[i]->getStrand();
 		data->m_currentDOFs[i] = strand.getCurrentDegreesOfFreedom();
-		data->m_currentAreaDOFs[i] = strand.getCurrentAreaDegreesOfFreedom();
 		data->m_velocities[i] = strand.getStepper()->velocities();
-		data->m_flow_components[i] = strand.getStepper()->flowComponents();
-		data->m_flow_reservoirs[i] = strand.getReservoir();
 		
 		DOFScriptingController* controller = strand.dynamics().getScriptingController();
 		
