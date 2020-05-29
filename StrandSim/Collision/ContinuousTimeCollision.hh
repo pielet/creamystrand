@@ -40,6 +40,10 @@ public:
     {
         return m_firstVertex;
     }
+    const Vec3x& getFirstDirection() const
+    {
+        return m_firstDirection;
+    }
 
     virtual bool notIn( const std::set<const ElasticStrand*>& alreadySeenStrands )
     {
@@ -65,10 +69,11 @@ public:
 
     ElasticStrand* m_firstStrand;
     int m_firstVertex;
+    Vec3x m_firstDirection;
 
     Scalar m_time;
     Vec3x m_normal;
-    Vec3x m_offset ;
+    Vec3x m_offset;
     Scalar m_normalRelativeDisplacement;
     Vec3x m_tangentialRelativeDisplacement;
 };

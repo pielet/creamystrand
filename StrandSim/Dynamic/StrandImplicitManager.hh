@@ -39,6 +39,7 @@ class FluidScriptingController;
 class ConstraintScriptingController;
 class CollisionBase;
 class LevelSetForce;
+struct StepperTiming;
 
 extern bool g_one_iter;
 extern std::mutex g_iter_mutex;
@@ -160,6 +161,7 @@ public:
 
     typedef std::vector<SubStepTimings> StepTimings;
     typedef std::list<StepTimings> Timings;
+    typedef std::vector<StepperTiming> StepperTimings;
 
     StrandImplicitManager( const std::vector<ElasticStrand*>& strands,
             const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& collision_free,
@@ -235,6 +237,8 @@ public:
 private:
     void printMemStats();
     template<typename StreamT>
+    void printStepperTiming();
+    template<typename StreamT>
     void print( const SubStepTimings& timings ) const;
     template<typename StreamT>
     void print(const CDTimings& timings) const;
@@ -270,7 +274,7 @@ private:
 
     //! Adds an external contact on strand \p strIdx, edge \p edgeIdx, abscissa \p abscissa
     /*! \return whether this collision has been accepted */
-    bool addExternalContact( const unsigned strIdx, const unsigned edgeIdx, const Scalar abscissa,
+    bool addExternalContact( const unsigned strIdx, const unsigned edgeIdx, const Scalar abscissa, const Vec3x& direction,
             const ProximityCollision& collision );
     //! Transform a mutual collision into an external contact on the (onFirstObject ? first : second) object
     void makeExternalContact(ProximityCollision& c, bool onFirstObject);
@@ -293,7 +297,7 @@ private:
     //! solve individual collision in local coordinate
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
     //! Rigid body impulse solver
-    Vec3x solveOneCollision(const Vec3x& relative_vel, const Vec3x& normal, Scalar m1, Scalar m2, Scalar a1, Scalar a2);
+    Vec3x solveOneCollision(const Mat3x& K, const Vec3x& relative_vel, const Vec3x& normal, Scalar mu);
     //! Accumulates impulse
     void accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel);
 
@@ -329,6 +333,7 @@ private:
     // Stat gathering 
     SolverStat m_solverStat;
     Timings m_timings;
+    StepperTimings m_stepperTimings;
     unsigned m_statTotalContacts;
     Scalar m_mem_usage_accu;
     Scalar m_mem_usage_divisor;

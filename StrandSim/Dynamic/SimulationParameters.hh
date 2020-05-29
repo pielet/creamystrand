@@ -57,6 +57,7 @@ struct SimulationParameters
 
     double m_airDrag ;
 
+    bool m_energyWithStretch;
     bool m_energyWithBend;
     bool m_energyWithTwist;
 

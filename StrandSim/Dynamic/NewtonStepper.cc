@@ -9,12 +9,10 @@ namespace strandsim
 {
 
 	NewtonStepper::NewtonStepper(ElasticStrand& strand, const SimulationParameters& params) :
-		ImplicitStepper(strand, params), m_dynamics(strand.dynamics())
+		ImplicitStepper(strand, params), m_dynamics(strand.dynamics()),
+		m_savedVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_prevVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows()))
 	{
-		int ndof = strand.getCurrentDegreesOfFreedom().rows();
-		m_savedVelocities = VecXx::Zero(ndof);
-		m_prevVelocities = VecXx::Zero(ndof);
-
 		m_dynamics.computeDOFMasses();
 	}
 
@@ -51,14 +49,14 @@ namespace strandsim
 		m_timer.restart();
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
-		m_dynamics.computeFutureForces(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
+		m_dynamics.computeFutureForces(m_params.m_energyWithStretch, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		gradient -= m_strand.getFutureTotalForces() * m_dt + m_collisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
 		m_timing.gradient += m_timer.elapsed();
 
 		// hessian
 		m_timer.restart();
-		m_dynamics.computeFutureJacobian(true, m_params.m_energyWithTwist, m_params.m_energyWithBend);
+		m_dynamics.computeFutureJacobian(m_params.m_energyWithStretch, m_params.m_energyWithTwist, m_params.m_energyWithBend);
 		JacobianMatrixType hessian = m_strand.getFutureTotalJacobian();
 		hessian *= m_dt * m_dt;
 		m_dynamics.addMassMatrixTo(hessian);

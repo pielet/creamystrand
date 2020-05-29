@@ -140,7 +140,7 @@ void output()
             const int file_width = 20;
 
             ++g_current_checkpoint;
-            
+
             g_ps->dumpBinaryCheckpoint( g_outputdirectory, g_current_frame, g_current_checkpoint, file_width );
         }
     }

@@ -78,6 +78,9 @@ namespace strandsim
                 m_normal /= nnorm;
                 m_time = times[i];
 
+                m_firstDirection = (p1col - p0col).normalized();
+                m_secondDirection = (q1col - q0col).normalized();
+
                 m_offset = (1. - m_firstAbscissa) * (pp0 - dp0) + m_firstAbscissa * (pp1 - dp1)   // p orig
                     - ((1. - m_secondAbscissa) * (pq0 - dq0) + m_secondAbscissa * (pq1 - dq1));   // q orig
 

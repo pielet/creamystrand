@@ -1638,6 +1638,7 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_solveCollision = true;
     m_simulation_params.m_energyWithBend = true;
     m_simulation_params.m_energyWithTwist = true;
+    m_simulation_params.m_energyWithStretch = true;
 
     m_simulation_params.m_velocityDiffTolerance = 1e-6;
     m_simulation_params.m_nonlinearIterations = 10;
@@ -1686,9 +1687,12 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "hairMeshFrictionCoefficient", m_simulation_params.m_hairMeshFrictionCoefficient);
     loadParam(nd, "airDrag", m_simulation_params.m_airDrag);
     loadParam(nd, "subSteps", m_simulation_params.m_subSteps);
-    loadParam(nd, "m_useCTRodRodCollisions", m_simulation_params.m_solveCollision);
+
+    loadParam(nd, "solveCollision", m_simulation_params.m_solveCollision);
+
     loadParam(nd, "energyWithBend", m_simulation_params.m_energyWithBend);
     loadParam(nd, "energyWithTwist", m_simulation_params.m_energyWithTwist);
+    loadParam(nd, "energyWithStretch", m_simulation_params.m_energyWithStretch);
 
     loadParam(nd, "velocityDiffTolerance", m_simulation_params.m_velocityDiffTolerance);
     loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
@@ -3007,12 +3011,12 @@ void XMLReader::dumpBinaryCheckpoint(std::string outputdirectory, int current_fr
 	const int num_rods = m_rodDatum.size();
 	data->m_currentDOFs.resize(num_rods);
 	data->m_velocities.resize(num_rods);
-	
+
 	for(int i = 0; i < num_rods; ++i)
 	{
 		ElasticStrand& strand = m_rodDatum[i]->getStrand();
 		data->m_currentDOFs[i] = strand.getCurrentDegreesOfFreedom();
-		data->m_velocities[i] = strand.getStepper()->velocities();
+        data->m_velocities[i] = strand.getStepper()->velocities();
 		
 		DOFScriptingController* controller = strand.dynamics().getScriptingController();
 		
@@ -3024,7 +3028,6 @@ void XMLReader::dumpBinaryCheckpoint(std::string outputdirectory, int current_fr
 				data->m_strand_goals.push_back(std::pair<Vec2i, Vec4x>(Vec2i(i, j), Vec4x(v(0), v(1), v(2), t)));
 			}
 		}
-		
 	}
 	
 	// fill group variables;

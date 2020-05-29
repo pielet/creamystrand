@@ -23,23 +23,26 @@ namespace strandsim
     struct ProximityCollision
     {
     public:
-        
         struct Object
         {
             int globalIndex;
             int vertex;
-            Vec3x force;
             Scalar abscissa;
 
             Vec3x freeVel;
+            Vec3x direction;
+            Mat3x invInertia;
 
-            Object() : globalIndex(0), vertex(0), abscissa(0), force(Vec3x::Zero()) {}
+            Object() : globalIndex(0), vertex(0), abscissa(0) {}
+
+            void generateInverseInertia(const Vec3x& normal);
 
             unsigned long computeSizeInBytes() const
             {
                 unsigned long total = 0;
                 total += sizeof(int) + sizeof(int) + sizeof(Scalar);
-                total += freeVel.size() * sizeof(Vec3x::Scalar) + force.size() * sizeof(Vec3x::Scalar);
+                total += freeVel.size() * sizeof(Vec3x::Scalar) * 2;
+                total += invInertia.size() * sizeof(Mat3x::Scalar);
                 return total;
             }
         };
@@ -60,6 +63,7 @@ namespace strandsim
         
         std::pair<Object, Object> objects;
         
+        void generateInverseInertia();
         void generateTransformationMatrix() ;
         void updateTransformationMatrix( const Mat3x& previous ) ;
         

@@ -8,12 +8,11 @@
 namespace strandsim
 {
 	QuasiNewtonStepper::QuasiNewtonStepper(ElasticStrand& strand, const SimulationParameters& params):
-		NewtonStepper(strand, params), m_windowSize(params.m_windowSize)
+		NewtonStepper(strand, params), m_windowSize(params.m_windowSize),
+		m_last_v(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_last_gradient(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows()))
 	{
-		int ndof = strand.getCurrentDegreesOfFreedom().rows();
 
-		m_last_v = VecXx::Zero(ndof);
-		m_last_gradient = VecXx::Zero(ndof);
 	}
 
 	QuasiNewtonStepper::~QuasiNewtonStepper()

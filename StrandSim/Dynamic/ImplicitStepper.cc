@@ -10,14 +10,11 @@ namespace strandsim
 		m_notSPD(false),
 		m_strand(strand),
 		m_params(params),
+		m_velocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_collisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_collisionVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
 		m_timer(Timer("stepper", false))
 	{
-		int ndof = strand.getCurrentDegreesOfFreedom().rows();
-
-		m_velocities = VecXx::Zero(ndof);
-		m_collisionImpulse = VecXx::Zero(ndof);
-		m_collisionVelocities = VecXx::Zero(ndof);
-
 #if defined(_OPENMP)
 		omp_init_lock(&m_lock);
 #endif

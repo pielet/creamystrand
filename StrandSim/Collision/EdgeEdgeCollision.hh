@@ -27,6 +27,8 @@ namespace strandsim
 
         int getSecondVertex() const { return m_secondVertex; }
 
+        const Vec3x& getSecondDirection() const { return m_secondDirection; }
+
         Scalar getFirstAbscissa() const {  return m_firstAbscissa; }
 
         Scalar getSecondAbscissa() const { return m_secondAbscissa; }
@@ -40,6 +42,7 @@ namespace strandsim
 
         ElasticStrand* m_secondStrand;
         int m_secondVertex;
+        Vec3x m_secondDirection;
 
         Scalar m_firstAbscissa;
         Scalar m_secondAbscissa;

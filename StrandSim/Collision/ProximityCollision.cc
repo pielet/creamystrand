@@ -19,6 +19,30 @@ namespace strandsim
 {
     
     const unsigned ProximityCollisionDatabase::s_maxAge = 3 ;
+
+    void ProximityCollision::Object::generateInverseInertia(const Vec3x& normal)
+    {
+        if (globalIndex >= 0 && !isSmall(direction.norm()))
+        {
+            Mat3x local_basis;
+            local_basis.col(0) = normal;
+            local_basis.col(1) = direction;
+            local_basis.col(2) = normal.cross(direction);
+
+            Scalar num = 12 * square(abscissa - 0.5);
+            Mat3x I = Mat3x::Identity();
+            I(0, 0) += num;
+            I(2, 2) += num;
+
+            invInertia = local_basis * I * local_basis.transpose();
+        }
+    }
+
+    void ProximityCollision::generateInverseInertia()
+    {
+        objects.first.generateInverseInertia(normal);
+        objects.second.generateInverseInertia(normal);
+    }
     
     void ProximityCollision::generateTransformationMatrix()
     {
@@ -88,6 +112,8 @@ namespace strandsim
         //Vec3x force;
         total += force.size() * sizeof( Vec3x::Scalar );
         //Scalar mu;
+        total += sizeof( Scalar );
+        //Scalar adhesion;
         total += sizeof( Scalar );
         //Scalar distance ;
         total += sizeof( Scalar );

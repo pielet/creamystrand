@@ -13,45 +13,54 @@ namespace strandsim
 	class StrandDynamicTraits;
 	struct SimulationParameters;
 
+	struct StepperTiming
+	{
+		double hessian;
+		double gradient;
+		double factorize;
+		double solveLinear;
+		double lineSearch;
+
+		StepperTiming() : hessian(0), gradient(0), factorize(0), solveLinear(0), lineSearch(0) {}
+		StepperTiming(double h, double g, double f, double s, double l) :
+			hessian(h), gradient(g), factorize(f), solveLinear(s), lineSearch(l) {}
+
+		void reset()
+		{
+			hessian = 0;
+			gradient = 0;
+			factorize = 0;
+			solveLinear = 0;
+			lineSearch = 0;
+		}
+		double sum() const
+		{
+			return hessian + gradient + factorize + solveLinear + lineSearch;
+		}
+		const StepperTiming& operator+=(const StepperTiming& other)
+		{
+			hessian += other.hessian;
+			gradient += other.gradient;
+			factorize += other.factorize;
+			solveLinear += other.factorize;
+			lineSearch += other.lineSearch;
+			return *this;
+		}
+		const StepperTiming& operator/=(int time)
+		{
+			hessian /= time;
+			gradient /= time;
+			factorize /= time;
+			solveLinear /= time;
+			lineSearch /= time;
+			return *this;
+		}
+	};
+
 	class ImplicitStepper
 	{
 	public:
 		enum LinearSolverType {DIRECT, JACOBI, GAUSS_SEIDEL};
-
-		struct StepperTiming
-		{
-			double hessian;
-			double gradient;
-			double factorize;
-			double solveLinear;
-			double lineSearch;
-
-			StepperTiming() : hessian(0), gradient(0), factorize(0), solveLinear(0), lineSearch(0) {}
-			StepperTiming(double h, double g, double f, double s, double l) :
-				hessian(h), gradient(g), factorize(f), solveLinear(s), lineSearch(l) {}
-
-			void reset()
-			{
-				hessian = 0;
-				gradient = 0;
-				factorize = 0;
-				solveLinear = 0;
-				lineSearch = 0;
-			}
-			double sum() const
-			{
-				return hessian + gradient + factorize + solveLinear + lineSearch;
-			}
-			const StepperTiming& operator+=(const StepperTiming& other)
-			{
-				hessian += other.hessian;
-				gradient += other.gradient;
-				factorize += other.factorize;
-				solveLinear += other.factorize;
-				lineSearch += other.lineSearch;
-				return *this;
-			}
-		};
 
 		ImplicitStepper(ElasticStrand& strand, const SimulationParameters& params);
 		virtual ~ImplicitStepper();
@@ -83,6 +92,8 @@ namespace strandsim
 		const VecXx& velocities() const { return m_velocities; }
 
 		void finalize() {}
+
+		ElasticStrand& getStrand() { return m_strand; }
 
 		bool refusesMutualContacts() const { return m_notSPD; }
 		Scalar getStretchMultiplier() const { return 1.0; }

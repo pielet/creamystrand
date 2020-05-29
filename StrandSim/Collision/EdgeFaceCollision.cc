@@ -240,6 +240,7 @@ bool EdgeFaceCollision::analyse()
             m_offset = ( ( 1.0 - t ) * pq0 + t * pq1 ) - m_meshDisplacement //p mesh orig
                     -  ( ( 1.0 - m_s ) * ( pp0 - dp0 ) + m_s * ( pp1 -dp1 ) ) ; //p rod orig
 
+            m_firstDirection = (p1col - p0col).normalized();
 
             Scalar perp = m_normal.dot( faceNormal ) ;
 
