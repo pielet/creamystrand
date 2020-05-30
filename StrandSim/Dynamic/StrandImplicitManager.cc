@@ -2917,7 +2917,7 @@ namespace strandsim
 			const Mat3x K = collision.objects.first.invInertia / m1 + collision.objects.second.invInertia / m2;
 			const Vec3x r = solveOneCollision(K, cv2 - cv1, collision.normal, collision.mu);
 
-			//ContactStream(g_log, "") << "delta r: " << r;
+			ContactStream(g_log, "") << "delta r: " << r;
 			if (isnan(r.norm())) {
 				std::cout << "K: " << K.determinant() << std::endl;
 				break;
@@ -3094,7 +3094,7 @@ namespace strandsim
 		}
 		timing /= m_stepperTimings.size();
 		StreamT(g_log, "StepperTiming") << "Average:";
-		StreamT(g_log, "Stepper breakdown timing")
+		StreamT(g_log, "StepperTiming")
 			<< "hessian: " << timing.hessian
 			<< "  gradient: " << timing.gradient
 			<< "  fac: " << timing.factorize

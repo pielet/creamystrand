@@ -25,14 +25,14 @@ namespace strandsim
 		Scalar evaluateObjectValue(const VecXx& v);
 		Scalar lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir);
 		
-		//ElasticStrand& m_strand;
 		StrandDynamicTraits& m_dynamics;
-		//const SimulationParameters& m_params;
 
 		VecXx m_savedVelocities;
 		VecXx m_prevVelocities;
 
 		int m_iteration;
+		Scalar m_last_E;
+		Scalar m_alpha;
 	};
 }
 

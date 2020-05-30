@@ -59,11 +59,6 @@ namespace strandsim
 		m_dynamics.getScriptingController()->fixRHS(gradient);
 		m_timing.gradient += m_timer.elapsed();
 
-		// check convergence
-		Scalar err = gradient.squaredNorm() / gradient.size();
-		//if (isSmall(err) || (m_iteration > 3 && err < 1e-6))
-		//	return true;
-
 		// update saved info
 		if (m_iteration)
 		{

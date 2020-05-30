@@ -9,10 +9,13 @@ namespace strandsim
 {
 
 	NewtonStepper::NewtonStepper(ElasticStrand& strand, const SimulationParameters& params) :
-		ImplicitStepper(strand, params), m_dynamics(strand.dynamics()),
-		m_savedVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_prevVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows()))
+		ImplicitStepper(strand, params), m_dynamics(strand.dynamics())
 	{
+		int ndof = strand.getCurrentDegreesOfFreedom().rows();
+		m_velocities = VecXx::Zero(ndof);
+		m_savedVelocities = VecXx::Zero(ndof);
+		m_prevVelocities = VecXx::Zero(ndof);
+
 		m_dynamics.computeDOFMasses();
 	}
 
@@ -26,6 +29,7 @@ namespace strandsim
 		m_dt = dt;
 
 		m_iteration = 0;
+		m_alpha = 1.0;
 
 		m_timing.reset();
 
@@ -39,6 +43,8 @@ namespace strandsim
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_dynamics.computeViscousForceCoefficients(dt);  // used for updating dt (air draging force);
+
+		//m_last_E = evaluateObjectValue(m_velocities);
 	}
 
 	bool NewtonStepper::performOneIteration()
@@ -119,23 +125,22 @@ namespace strandsim
 	{
 		if (m_params.m_useLineSearch) {
 			Scalar current_obj_value = evaluateObjectValue(current_v), next_obj_value;
-			Scalar alpha = 1. / m_params.m_ls_beta;
+			m_alpha = std::min(1., m_alpha) / m_params.m_ls_beta;
 			Scalar rhs;
 
 			do {
-				alpha *= m_params.m_ls_beta;
-				if (alpha < 1e-5) break; 
+				m_alpha *= m_params.m_ls_beta;
+				if (m_alpha < 1e-5) break;
 
-				next_obj_value = evaluateObjectValue(current_v + alpha * descent_dir);
-				rhs = current_obj_value + m_params.m_ls_alpha * alpha * gradient_dir.dot(descent_dir);
-				
-				//std::cout << "next: " << next_obj_value << "  current: " << current_obj_value << "  rhs: " << rhs << std::endl;
+				next_obj_value = evaluateObjectValue(current_v + m_alpha * descent_dir);
+				rhs = current_obj_value + m_params.m_ls_alpha * m_alpha * gradient_dir.dot(descent_dir);
 			} while (next_obj_value > rhs);
 
-			if (alpha < 1e-5)
-				alpha = 0;
+			if (m_alpha < 1e-5)
+				m_alpha = 0;
+			m_last_E = next_obj_value;
 
-			return alpha;
+			return m_alpha;
 		}
 		else {
 			return 1.0;

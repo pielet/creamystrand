@@ -42,8 +42,9 @@ Scalar BendingForce<ViscousT>::localEnergy( const ElasticStrand& strand, StrandS
     const Scalar ilen = strand.m_invVoronoiLengths[vtx];
     const Vec4x& kappa = geometry.m_kappas[vtx];
 
-    Scalar E = 0.25 * ilen * (( kappa.segment<2>(0) - kappaBar.segment<2>(0) ).dot( Vec2x( B * ( kappa.segment<2>(0) - kappaBar.segment<2>(0) ) ) ) + ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ).dot( Vec2x( B * ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ) ) ));
-    
+    //Scalar E = 0.25 * ilen * (( kappa.segment<2>(0) - kappaBar.segment<2>(0) ).dot( Vec2x( B * ( kappa.segment<2>(0) - kappaBar.segment<2>(0) ) ) ) + ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ).dot( Vec2x( B * ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ) ) ));
+    Scalar E = 0.25 * ilen * B(0, 0) * (kappa - kappaBar).squaredNorm();
+
     // failsafes
     if(vtx > 0 && vtx < strand.getNumVertices() - 1) {
         const Scalar ks = ViscousT::kmb( strand, vtx ) * strand.getStepper()->getStretchMultiplier();
@@ -70,8 +71,9 @@ void BendingForce<ViscousT>::computeLocal( typename BendingForce::LocalForceType
     const Vec4x& kappa = geometry.m_kappas[vtx];
     const GradKType& gradKappa = geometry.m_gradKappas[vtx];
 
-    localF = -ilen * 0.5 * (gradKappa.block<11, 2>(0, 0) * B * ( kappa.segment<2>(0) - kappaBar.segment<2>(0) ) + gradKappa.block<11, 2>(0, 2) * B * ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ));
-    
+    //localF = -ilen * 0.5 * (gradKappa.block<11, 2>(0, 0) * B * ( kappa.segment<2>(0) - kappaBar.segment<2>(0) ) + gradKappa.block<11, 2>(0, 2) * B * ( kappa.segment<2>(2) - kappaBar.segment<2>(2) ));
+    localF = -ilen * 0.5 * B(0, 0) * gradKappa * (kappa - kappaBar);
+
     if(vtx > 0 && vtx < strand.getNumVertices() - 1) {
         const Scalar l0 = (strand.getVertex(vtx + 1) - strand.getVertex(vtx - 1)).norm();
         const Scalar restLength = strand.m_restNeighborDistances[vtx];

@@ -45,12 +45,12 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="100"/>
+    <maxNewtonIterations value="10"/>
 
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="0"/>
+    <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -60,9 +60,11 @@
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
 
+    <statGathering value="1"/>
+
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="4"/>
+    <logLevel value="5"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <linearSolverType value="direct"/>
@@ -72,7 +74,6 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
@@ -80,6 +81,7 @@
 
     <simulationManagerLimitedMemory value="1"/>
 
+    <energyWithStretch value="1"/>
     <energyWithBend value="1"/>
     <energyWithTwist value="1"/>
 
@@ -183,7 +185,7 @@
     <fixed start="40" end="40" value="3"/>
   </hairobj>
 
-<checkpoint path="simulation_capture_\assets\unit_tests\contacts\friction_2020_05_28_16_38_45\checkpoint_00000000000000000248.bin">
+<checkpoint path="simulation_capture_\assets\unit_tests\contacts\friction_2020_05_29_21_27_19\checkpoint_00000000000000000147.bin">
 </checkpoint>-->
 
   <hairobj filename="assets/strands.obj" params="0" group="1" x="0.0" y="0.3" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
