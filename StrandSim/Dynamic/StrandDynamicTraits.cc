@@ -391,16 +391,15 @@ namespace strandsim {
 		m_futureForcesUpToDate = true;
 	}
 	
-	void StrandDynamicTraits::computeFutureStrandEnergy( bool withStretch )
+	void StrandDynamicTraits::computeFutureStrandEnergy( bool withStretch, bool withTwist, bool withBend )
 	{
 		StrandState& futureState = *m_strand.m_futureState;
         futureState.m_totalEnergy = 0;
 		
-        if (withStretch)
-            m_strand.accumulateE< StretchingForce<NonViscous> >(futureState);
-        
-        m_strand.accumulateE< TwistingForce<NonViscous> >(futureState);
-        m_strand.accumulateE< BendingForce<NonViscous> >(futureState);
+        if (withStretch) m_strand.accumulateE< StretchingForce<NonViscous> >(futureState);
+        if (withTwist) m_strand.accumulateE< TwistingForce<NonViscous> >(futureState);
+        if (withBend) m_strand.accumulateE< BendingForce<NonViscous> >(futureState);
+
         m_strand.accumulateE< FixingForce<NonViscous> >(futureState);
 		//m_strand.accumulateE< GravitationForce > ( futureState ) ;
 		

@@ -49,7 +49,7 @@ void TwistingForce<ViscousT>::computeLocal( typename TwistingForce::LocalForceTy
     const Scalar ilen = strand.m_invVoronoiLengths[vtx];
     const Scalar twist = geometry.m_twists[vtx];
 
-    localF = -kt * ilen * ( twist - undefTwist ) * geometry.m_gradTwists[vtx];
+    localF = -kt * ilen * (twist - undefTwist) * geometry.m_gradTwists[vtx];
     
 //    localF.segment<3>(0).setZero();
 //    localF.segment<3>(4).setZero();

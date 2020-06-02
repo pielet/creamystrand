@@ -21,18 +21,17 @@
 
   <StrandParameters>
     <radius value="0.005"/>
-    <youngsModulus value="1e10"/>
-    <poissonRatio value="0.36" />
+    <youngsModulus value="8e9"/>
+    <poissonRatio value="0.37" />
     <collisionMultiplier value="1.0"/>
     <attachMultiplier value="1.0" />
-    <density value="1.32"/>
-    <viscosity value="1e8" />
+    <density value="1.32" /> 
+    <viscosity value="3.727e8" />
     <baseRotation value="0.0"/>
     <accumulateWithViscous value="1"/>
     <accumulateViscousOnlyForBendingModes value="0"/>
     <frictionAngle value="40.0"/>
-    <stretchMultiplier value="1e-2"/>
-    <minBendingAngle value="45.0"/>
+    <stretchMultiplier value="1e-4"/>
   </StrandParameters>
 
   <CollisionParameters>
@@ -45,10 +44,10 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="100"/>
+    <maxNewtonIterations value="50"/>
 
-    <useQuasiNewton value="1"/>
-    <windowSize value="5"/>
+    <useQuasiNewton value="0"/>
+    <windowSize value="0"/>
 
     <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
@@ -72,7 +71,7 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>

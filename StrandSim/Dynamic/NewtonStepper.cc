@@ -125,7 +125,7 @@ namespace strandsim
 	{
 		if (m_params.m_useLineSearch) {
 			Scalar current_obj_value = evaluateObjectValue(current_v), next_obj_value;
-			m_alpha = std::min(1., m_alpha) / m_params.m_ls_beta;
+			m_alpha = std::min(1., 2 * m_alpha) / m_params.m_ls_beta;
 			Scalar rhs;
 
 			do {
@@ -154,7 +154,7 @@ namespace strandsim
 
 		// internal energy
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + v * m_dt);
-		m_dynamics.computeFutureStrandEnergy();
+		m_dynamics.computeFutureStrandEnergy(m_params.m_energyWithStretch, m_params.m_energyWithTwist, m_params.m_energyWithBend);;
 		Scalar g = m_strand.getFutureTotalEnergy();
 
 		// inertia term

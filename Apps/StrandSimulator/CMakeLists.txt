@@ -61,7 +61,7 @@ endif()
 AUX_SOURCE_DIRECTORY( Render RENDERDIR )
 AUX_SOURCE_DIRECTORY( Problems PROBLEMDIR )
 
-add_executable( StrandSimulatorApp StrandSimulatorApp.hh StrandSimulatorApp.cc  ProblemStepper.hh ProblemStepper.cc ${RENDERDIR} ${PROBLEMDIR} )
+add_executable( StrandSimulatorApp StrandSimulatorApp.hh StrandSimulatorApp.cc  ProblemStepper.hh ProblemStepper.cc stb_image_write.h stb_image_write.c ${RENDERDIR} ${PROBLEMDIR} )
 target_link_libraries( StrandSimulatorApp StrandSim bogus ${MKL_LIBRARY} ${LAPACK_LIBRARIES} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_SERIALIZATION_LIBRARY} ${OPENGL_LIBRARIES} ${GLUT_glut_LIBRARY})
 
 if (USE_XCODE_PATCH AND CMAKE_GENERATOR STREQUAL Xcode)

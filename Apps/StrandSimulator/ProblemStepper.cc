@@ -451,7 +451,7 @@ void ProblemStepper::dumpRods(DumpData* data, std::string outputdirectory, int c
 void ProblemStepper::dumpData(std::string outputdirectory, int current_frame, int file_width) const
 {
     DumpData* data = new DumpData;
-    dumpFluid(data, outputdirectory, current_frame, file_width);
+    //dumpFluid(data, outputdirectory, current_frame, file_width);
     dumpMesh(data, outputdirectory, current_frame, file_width);
     dumpRods(data, outputdirectory, current_frame, file_width);
     

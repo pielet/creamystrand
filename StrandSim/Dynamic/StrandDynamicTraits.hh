@@ -144,7 +144,7 @@ public:
     void computeFutureJacobian( bool withStretch = true, bool withTwist = true, bool withBend = true, bool withViscous = false, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
     void computeLHS( Scalar dt, bool withStretch, bool withTwist = true, bool withBend = true, bool withViscous = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
     void computeFutureForces( bool withStretch = true, bool withTwist = true, bool withBend = true, bool withViscous = false, bool butOnlyForBendingModes = false, bool dump_data = false, std::ostream& dump_stream = std::cout );
-    void computeFutureStrandEnergy( bool withStretch = true );
+    void computeFutureStrandEnergy( bool withStretch = true, bool withTwist = true, bool withBend = true );
     const VecXx& getExternalForce();
     const VecXx& getDOFMasses() const;
 	const VecXx& getFlowMasses() const;

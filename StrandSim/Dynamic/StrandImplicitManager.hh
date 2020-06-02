@@ -16,7 +16,7 @@
 #include "../Utils/SpatialHashMapFwd.hh"
 #include "../Collision/ProximityCollision.hh"
 
-#include "../../bogus/Interfaces/MecheEigenInterface.hpp"
+#include "../../bogus/Extra/SecondOrder.fwd.hpp"
 
 #include <vector>
 #include <list>
@@ -52,6 +52,8 @@ public:
     typedef std::map<unsigned, unsigned> IndicesMap;
     //! Colliding group: set of strands and contacts that should be solved together
     typedef std::pair<IndicesMap, ProximityCollisions> CollidingGroup;
+
+    typedef bogus::SOCLaw<3, Scalar, true> CoulombLaw;
 
     //! Simulation step timings -- in milliseconds
 	struct SubStepCallback
@@ -238,6 +240,8 @@ private:
     void printMemStats();
     template<typename StreamT>
     void printStepperTiming();
+    template<typename StreamT>
+    void printCollisionError() const;
     template<typename StreamT>
     void print( const SubStepTimings& timings ) const;
     template<typename StreamT>

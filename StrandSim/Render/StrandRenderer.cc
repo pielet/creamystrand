@@ -38,7 +38,7 @@ namespace strandsim
 	m_drawRootMaterial( false ), //
 	m_drawAnchors( false ), //
 	m_drawMode( LINES ), // QUADS_SHADED ), //QUADS_SHADED), //LINES ), //
-	m_drawForce( NONE ), //
+	m_drawForce(NONE), //
 	m_drawnVolume( NO_VOLUME ), //
 	m_geometryChanged( true ), //
 	m_flowChanged( true ),
