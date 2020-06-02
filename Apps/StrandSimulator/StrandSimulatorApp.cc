@@ -4,25 +4,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <boost/filesystem.hpp>
+#include "stb_image_write.h"
 
 #include "StrandSimulatorApp.hh"
 #include "ProblemStepper.hh"
 #include "Render/ViewController.hh"
 #include "Render/Camera.hh"
-#include <boost/filesystem.hpp>
-#include <thread>
-#include <chrono>
 
 // problems :
 #include "Problems/XMLReader.hh"
 
 #include "StrandSim/Utils/TextLog.hh"
 
+#include "StrandSim/Dynamic/StrandImplicitManager.hh"
+
+
+
 std::vector<ProblemStepper*> problems;
 int g_problem_idx = -1;
 
 int g_window_width = 960;
 int g_window_height = 540;
+int g_nchannel = 3;
+GLubyte* g_pixel_buffer;
+std::mutex g_buffer_mutex;
 
 bool g_single_step = false;
 bool g_paused = true;
@@ -69,6 +79,11 @@ void display()
     
     g_ps->render();
 
+    {
+        std::lock_guard<std::mutex> gaurd(g_buffer_mutex);
+        glReadPixels(0, 0, g_window_width, g_window_height, GL_RGB, GL_BYTE, g_pixel_buffer);
+    }
+
     glutSwapBuffers();
     glPopMatrix();
 }
@@ -78,6 +93,12 @@ void reshape( int w, int h )
 {
     g_window_width = w;
     g_window_height = h;
+
+    {
+        std::lock_guard<std::mutex> guard(g_buffer_mutex);
+        if (g_pixel_buffer) delete[] g_pixel_buffer;
+        g_pixel_buffer = new GLubyte[g_window_height * g_window_width * g_nchannel];
+    }
     
     Camera& c = controller.getCamera();
     c.setPerspective(60, 1.0);
@@ -86,6 +107,28 @@ void reshape( int w, int h )
     c.setViewport( w, h );
     
     glutPostRedisplay();
+}
+
+void screenshot_png_subprog(const char* filename)
+{
+    GLubyte* tmp_pixels = new GLubyte[g_window_height * g_window_width * g_nchannel];
+    const int strip = g_window_width * g_nchannel;
+    for (int h = 0; h < g_window_height; ++h) {
+        for (int w = 0; w < strip; ++w)
+            tmp_pixels[h * strip + w] = g_pixel_buffer[(g_window_height - 1 - h) * strip + w];
+    }
+    stbi_write_png(filename, g_window_width, g_window_height, g_nchannel, tmp_pixels, g_nchannel * g_window_width);
+    delete[] tmp_pixels;
+}
+
+void screenshot_png(std::string outputdirectory, int current_frame, int file_width)
+{
+    std::stringstream name;
+    name << std::setfill('0');
+    name << outputdirectory << "/screenshot_" << std::setw(file_width) << current_frame << ".png";
+
+    std::thread t(std::bind(screenshot_png_subprog, name.str().c_str()));
+    t.detach();
 }
 
 void output()
@@ -109,7 +152,8 @@ void output()
             
             const int file_width = 20;
             
-            g_ps->dumpData( g_outputdirectory, g_current_frame, file_width );
+            g_ps->dumpData( g_outputdirectory, g_current_frame, file_width ); 
+            screenshot_png(g_outputdirectory, g_current_frame, file_width);
             ++g_current_frame;
         }
         
@@ -134,7 +178,7 @@ void output()
             const int file_width = 20;
 
             ++g_current_checkpoint;
-            
+
             g_ps->dumpBinaryCheckpoint( g_outputdirectory, g_current_frame, g_current_checkpoint, file_width );
         }
     }
@@ -288,7 +332,6 @@ void menu( int id )
             g_exit = true;
             std:exit(EXIT_SUCCESS);
             break;
-            
         case ' ':
             g_paused = !g_paused;
             break;
@@ -299,7 +342,8 @@ void menu( int id )
             g_paused = !g_paused;
             break;
         case 'a':
-            break;
+            g_single_step = true;
+            g_paused = !g_paused;
         case 'd':
             break;
         case 'f':
@@ -348,6 +392,11 @@ void initializeOpenGL( int argc, char** argv )
     
     setLighting();
     //SetMaterial();
+
+    {
+        std::lock_guard<std::mutex> guard(g_buffer_mutex);
+        g_pixel_buffer = new GLubyte[g_window_height * g_window_width * g_nchannel];
+    }
 }
 
 void cleanup()
@@ -540,6 +589,7 @@ int main( int argc, char** argv )
         initializeOpenGL( argc, argv );
         std::thread(doSimulation).detach();
         glutMainLoop();
+        delete[] g_pixel_buffer;
     }
     else{
         g_paused = false;
