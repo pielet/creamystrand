@@ -109,26 +109,21 @@ void reshape( int w, int h )
     glutPostRedisplay();
 }
 
-void screenshot_png_subprog(const char* filename)
-{
-    GLubyte* tmp_pixels = new GLubyte[g_window_height * g_window_width * g_nchannel];
-    const int strip = g_window_width * g_nchannel;
-    for (int h = 0; h < g_window_height; ++h) {
-        for (int w = 0; w < strip; ++w)
-            tmp_pixels[h * strip + w] = g_pixel_buffer[(g_window_height - 1 - h) * strip + w];
-    }
-    stbi_write_png(filename, g_window_width, g_window_height, g_nchannel, tmp_pixels, g_nchannel * g_window_width);
-    delete[] tmp_pixels;
-}
-
 void screenshot_png(std::string outputdirectory, int current_frame, int file_width)
 {
     std::stringstream name;
     name << std::setfill('0');
     name << outputdirectory << "/screenshot_" << std::setw(file_width) << current_frame << ".png";
 
-    std::thread t(std::bind(screenshot_png_subprog, name.str().c_str()));
-    t.detach();
+	GLubyte* tmp_pixels = new GLubyte[g_window_height * g_window_width * g_nchannel];
+	const int strip = g_window_width * g_nchannel;
+	for (int h = 0; h < g_window_height; ++h) {
+		for (int w = 0; w < strip; ++w)
+			tmp_pixels[h * strip + w] = g_pixel_buffer[(g_window_height - 1 - h) * strip + w];
+	}
+	stbi_write_png(name.str().c_str(), g_window_width, g_window_height, g_nchannel, tmp_pixels, g_nchannel * g_window_width);
+	delete[] tmp_pixels;
+
 }
 
 void output()
