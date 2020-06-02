@@ -2625,7 +2625,7 @@ namespace strandsim
 		std::cout << "[Prepare Simulation Step]" << std::endl;
 		Timer timer("step", false);
 		step_prepare(m_dt);
-//#pragma omp parallel for
+#pragma omp parallel for
 		for (int i = 0; i < m_steppers.size();++i) {
 			m_steppers[i]->prepareStep(m_dt);
 		}
@@ -2653,7 +2653,7 @@ namespace strandsim
 		int k = 0;
 		for (k; k < m_params.m_maxNewtonIterations; ++k) {
 			timer.restart();
-//#pragma omp parallel for
+#pragma omp parallel for
 			for (int i = 0; i < m_steppers.size(); ++i) {
 				pass[i] = m_steppers[i]->performOneIteration();
 			}
@@ -2677,7 +2677,7 @@ namespace strandsim
 			if (m_params.m_solveCollision) {
 				if (m_params.m_useCTRodRodCollisions && k == 0) {
 					timer.restart();
-//#pragma omp parallel for 
+#pragma omp parallel for 
 					for (int i = 0; i < m_steppers.size(); ++i)
 					{
 						m_steppers[i]->rewind();
