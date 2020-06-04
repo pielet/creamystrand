@@ -322,7 +322,8 @@ private:
     std::vector<ElementProxy*> m_elementProxies; //!< List of all proxies that should be inserted in the BVH
     CollisionDetector* m_collisionDetector;        //!< BVH-based collision detector
 
-    std::vector<std::map<unsigned, unsigned> > m_collisionTimes;
+    std::vector<std::map<unsigned, unsigned> > m_selfCollisionTimes;
+	std::vector<std::map<unsigned, unsigned> > m_externalCollisionTimes;
     ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts (edge/edge)
     std::vector<ProximityCollisions> m_externalContacts;         //!< List of all contacts between movable hair and fixed edges
     //! Structure for storing collisions and forces, useful for drawaing and warm-starting solver

@@ -21,7 +21,7 @@
 
   <StrandParameters>
     <radius value="0.005"/>
-    <youngsModulus value="1e10"/>
+    <youngsModulus value="8e9"/>
     <poissonRatio value="0.36" />
     <collisionMultiplier value="1.0"/>
     <attachMultiplier value="1.0" />
@@ -45,10 +45,10 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="100"/>
+    <maxNewtonIterations value="50"/>
 
     <useQuasiNewton value="1"/>
-    <windowSize value="5"/>
+    <windowSize value="0"/>
 
     <useLineSearch value="1"/>
     <lineSearchAlpha value="0.03"/>
@@ -72,16 +72,11 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
-
-    <simulationManagerLimitedMemory value="1"/>
-
-    <energyWithBend value="1"/>
-    <energyWithTwist value="1"/>
 
     <airDrag value="0.0005"/> 
     <gaussSeidelIterations value="2"/>
@@ -89,7 +84,7 @@
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
-
+<!--
   <particle x="0.0 0.5 -10.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
   <particle x="0.0 0.5 -9.5" v="0.0 0.0 0.0" fixed="1" group="0"/>
   <particle x="0.0 0.5 -9.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -132,7 +127,11 @@
   <particle x="0.0 0.5 9.5" v="0.0 0.0 0.0" fixed="0"/>
 
   <hair params="0" start="0" count="40"/>
-
+-->
+  <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="-0.5" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
+    <fixed start="0" end="0" value="3"/>
+    <fixed start="1" end="1" value="1"/>
+  </hairobj>
 
   <script type="translate" x="0.0" y="0" z="-15" w="0" start="0.3" end="2.5" group="0"/>
   <!--<script type="translate" x="0" y="0" z="-10.0" w="0.0" start="1" end="2" group="1"/>-->

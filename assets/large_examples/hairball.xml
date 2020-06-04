@@ -21,7 +21,7 @@
 
   <StrandParameters>
     <radius value="0.005"/>
-    <youngsModulus value="1e10"/>
+    <youngsModulus value="8e9"/>
     <poissonRatio value="0.36" />
     <collisionMultiplier value="1.0"/>
     <attachMultiplier value="1.0" />
@@ -31,7 +31,7 @@
     <accumulateWithViscous value="1"/>
     <accumulateViscousOnlyForBendingModes value="0"/>
     <frictionAngle value="40.0"/>
-    <stretchMultiplier value="0.005"/>
+    <stretchMultiplier value="1e-2"/>
     <minBendingAngle value="45.0"/>
   </StrandParameters>
 
@@ -71,17 +71,11 @@
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
-
-    <simulationManagerLimitedMemory value="0"/>
-
-    <energyWithStretch value="1"/>
-    <energyWithBend value="1"/>
-    <energyWithTwist value="1"/>
 
     <airDrag value="0.0005"/> 
     <gaussSeidelIterations value="200"/>
@@ -94,10 +88,10 @@
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>
-<!--
-<checkpoint path="simulation_capture_\assets\large_examples\hairball_2020_06_02_19_03_56\checkpoint_00000000000000000135.bin">
+
+<checkpoint path="simulation_capture_\assets\large_examples\hairball_2020_06_02_23_12_57\checkpoint_00000000000000000135.bin">
 </checkpoint>
--->
+
   <script type="rotate" x="0" y="1" z="0.0" w="6.28" start="0.5" end="4.0" group="0"/>
   <script type="rotate" x="1" y="0" z="0.0" w="6.28" start="4.5" end="8.0" group="0"/>
 

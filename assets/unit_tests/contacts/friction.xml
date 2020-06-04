@@ -21,7 +21,7 @@
 
   <StrandParameters>
     <radius value="0.005"/>
-    <youngsModulus value="1e10"/>
+    <youngsModulus value="8e9"/>
     <poissonRatio value="0.36" />
     <collisionMultiplier value="1.0"/>
     <attachMultiplier value="1.0" />
@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="50"/>
+    <maxNewtonIterations value="10"/>
 
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>
@@ -56,14 +56,14 @@
 
     <useSoftAttachConstraints value="1"/>
 
-    <solveCollision value="0"/>
+    <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
 
     <statGathering value="1"/>
 
     <nonlinearIterations value="20"/>
-    <collisionSolverTolerace value="1e-6"/>
+    <collisionSolverTolerace value="1e-3"/>
     <logLevel value="5"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
