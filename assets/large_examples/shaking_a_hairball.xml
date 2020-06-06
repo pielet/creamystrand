@@ -55,14 +55,14 @@
 
   <SimulationParameters>
     <airDrag value="0.0003"/> 
-    <gaussSeidelIterations value="75"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/> 
     <maxNewtonIterations value="1000"/>
     <hairMeshFrictionCoefficient value="1.0"/>
     <numberOfThreads value="24"/>
     <percentCTRodRodCollisionsAccept value="100"/>
-    <pruneExternalCollisions value="1"/>
-    <pruneSelfCollisions value="1"/>
+    <pruneExternalCollisions value="0"/>
+    <pruneSelfCollisions value="0"/>
     <rodSubSteps value="1"/>
     <simulationManagerLimitedMemory value="0"/>
     <skipFlowFrictions value="1"/>
@@ -73,12 +73,14 @@
     <hairHairFrictionCoefficient value="0.16"/>
     <substeps value="1"/>
     <useApproxRodElasticFriction value="1"/>
-    <useCTRodRodCollisions value="0"/>
+    <useCTRodRodCollisions value="1"/>
     <useImpulseMethod value="0"/>
     <useLengthProjection value="0"/>
     <useNonlinearContacts value="0"/>
-    <useSoftAttachConstraints value="0"/>
+    <useSoftAttachConstraints value="1"/>
     <usePreFilterGeometry value="0"/>
+	<solveLiquids value="0"/>
+	<bogusAlgorithm value="gaussseidel"/>
   </SimulationParameters>
 
   <particle x="4.5504 3 2.50876" v="0.0 0.0 0.0" fixed="1"/>
@@ -43113,7 +43115,7 @@
   <distancefield usage="source" type="cylinder" cx="0.0" cy="16.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" radius="0.433" halflength="0.125" rw="0.0" corner="0.005" group="1">
     <emit start="0.0" end="1.0" evx="0." evy="-20." evz="0."/>
   </distancefield> -->
-  <distancefield usage="source" type="box" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" ex="21" ey="9.0" ez="21.0" rw="0.0" radius="0.125" group="2"/>
+  <!--<distancefield usage="source" type="box" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" ex="21" ey="9.0" ez="21.0" rw="0.0" radius="0.125" group="2-->
 
 
 <!--   <script type="translate" x="10.0" y="0.0" z="0.0" w="0.0" start="0.0" end="0.25" group="1"/>  
@@ -43124,7 +43126,7 @@
   <distancefield usage="solid" type="cylinder" cx="20.26" cy="-10.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="0.375" corner="0.125" halflength="10.25" group="2" sampled="0"/>   --> 
 <!--   <distancefield usage="solid" type="file" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" group="0" sampled="0" scale="12.0" dx="1.0" filename="assets/test_sphere.obj" surfflow="1" flowheight="0.0"/>    -->
   <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="6.0" group="0" sampled="0"/>   
-  <distancefield usage="solid" type="cylinder" cx="0.0" cy="16.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="20.875" corner="0.125" halflength="25.0" group="1" sampled="0" inverted="1"/> 
+  <!--<distancefield usage="solid" type="cylinder" cx="0.0" cy="16.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="20.875" corner="0.125" halflength="25.0" group="1" sampled="0" inverted="1"/> -->
 <!--   <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" radius="40.0" group="1" sampled="0" inverted="1"/>   
   <distancefield usage="source" type="box" cx="0.0" cy="-25.84722" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="43" ey="17.23148" ez="37.0787"/> -->
   <!-- <distancefield usage="source" type="box" cx="17.38" cy="-11.6916" cz="9.69154" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="1.0" ey="1.0" ez="1.0"/> -->

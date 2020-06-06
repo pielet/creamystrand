@@ -251,12 +251,12 @@ Scalar calcViewRadius( const Vec3d& simCenter )
 
 void centerObject()
 {
-    const Vec3d simCenter = calcSimCenter();
-    controller.setCenterMode( ViewController::CENTER_OBJECT );
-    controller.setViewCenter( simCenter );
+    //const Vec3d simCenter = calcSimCenter();
+    controller.setCenterMode( ViewController::CENTER_WORLD_ORIGIN );
+   // controller.setViewCenter( simCenter );
     
-    const Scalar radius = calcViewRadius( simCenter );
-    controller.setBoundingRadius( radius );
+   // const Scalar radius = calcViewRadius( simCenter );
+    controller.setBoundingRadius(73.1935);
 }
 
 void initCamera()
