@@ -93,8 +93,7 @@ bool VertexFaceCollision::analyse()
             m_meshDisplacement = m_u * df0 + m_v * df1 + m_w * df2;
             const Vec3x relativeDisplacement = ( 1 - m_time ) * ( dp - m_meshDisplacement );
 
-            m_offset = ( m_u * pf0 + m_v * pf1 + m_w * pf2 ) - m_meshDisplacement // orig point on mesh
-                    + dp;  // orig point on rod
+			m_offset = -dp - ((m_u * pf0 + m_v * pf1 + m_w * pf2) - m_meshDisplacement); // orig point on mesh
 
             const Scalar nDepl = relativeDisplacement.dot( m_normal ) ;
             if( !fnsign )
@@ -111,13 +110,19 @@ bool VertexFaceCollision::analyse()
             }
             m_normal = fnsign * m_normal;
             
-            postAnalyse( relativeDisplacement );
+            //postAnalyse( relativeDisplacement );
 
             return true;
         }
     }
     return false;
 
+}
+
+Vec3x VertexFaceCollision::offset() const
+{
+	const Scalar colRadius = m_firstStrand->collisionParameters().externalResponseRadius();
+	return (m_offset.dot(m_normal) - colRadius) * m_normal;
 }
 
 bool compare( const VertexFaceCollision* vf1, const VertexFaceCollision* vf2 )

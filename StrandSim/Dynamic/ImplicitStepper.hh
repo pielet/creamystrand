@@ -1,9 +1,7 @@
 #ifndef STRANDSIM_ImplicitStepper_HH
 #define STRANDSIM_ImplicitStepper_HH
 
-#if defined(_OPENMP)
-#include <omp.h>
-#endif
+#include <mutex>
 #include "../Core/Definitions.hh"
 #include "../Utils/LoggingTimer.hh"
 
@@ -75,16 +73,14 @@ namespace strandsim
 
 		void outputTiming() const;
 
+		std::mutex& getLock() { return m_lock; }
+
 		void accumulateCollisionImpulse(int vid, const Vec3x& r);
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
 		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
 
 		void commitVelocity();
-
-		void resetCollisionVelocities() { m_collisionVelocities = m_velocities; }
-		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
-		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
 
 		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
 		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }
@@ -100,9 +96,7 @@ namespace strandsim
 		VecXx flowComponents() const { return VecXx::Ones(m_velocities.size()); }	// for StrandRender::computeFlowQuads and ProblemStepper::dumpRods
 
 	protected:
-#if defined(_OPENMP)
-		omp_lock_t m_lock;
-#endif
+		std::mutex m_lock;
 
 		ElasticStrand& m_strand;
 		const SimulationParameters& m_params;
@@ -111,7 +105,6 @@ namespace strandsim
 
 		VecXx m_velocities;
 		VecXx m_collisionImpulse;
-		VecXx m_collisionVelocities;
 
 		StepperTiming m_timing;
 		Timer m_timer;

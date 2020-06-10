@@ -27,13 +27,15 @@ namespace strandsim
 
         int getSecondVertex() const { return m_secondVertex; }
 
+		const Vec3x& getFirstDirection() const { return m_firstDirection; }
         const Vec3x& getSecondDirection() const { return m_secondDirection; }
 
         Scalar getFirstAbscissa() const {  return m_firstAbscissa; }
-
         Scalar getSecondAbscissa() const { return m_secondAbscissa; }
 
         virtual bool analyse();
+
+		virtual Vec3x offset() const;
 
         friend bool compare(const EdgeEdgeCollision* ee1, const EdgeEdgeCollision* ee2);
 
@@ -42,6 +44,8 @@ namespace strandsim
 
         ElasticStrand* m_secondStrand;
         int m_secondVertex;
+
+		Vec3x m_firstDirection;
         Vec3x m_secondDirection;
 
         Scalar m_firstAbscissa;

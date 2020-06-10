@@ -33,7 +33,7 @@ using std::swap;
 
 namespace strandsim
 {
-    
+	
     /**
      * \brief Matrix representation of the cross product operator.
      */

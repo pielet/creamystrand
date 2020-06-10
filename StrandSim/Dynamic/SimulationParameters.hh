@@ -53,8 +53,6 @@ struct SimulationParameters
     bool m_pruneSelfCollisions ;
     double m_stochasticPruning ;
 
-    double m_collisionSolverTolerace;
-
     double m_airDrag ;
 
     bool m_energyWithStretch;
@@ -83,14 +81,7 @@ struct SimulationParameters
      * Linear Solver for one Newton step
      */
     double m_velocityDiffTolerance;
-    unsigned m_nonlinearIterations;
-    unsigned m_linearIterations;
-    ImplicitStepper::LinearSolverType m_linearSolverType;
 
-    Scalar m_relaxationFactor;
-
-    bool m_linearizebHat;
-    
     unsigned m_subSteps;
 
 	bogus::MecheFrictionProblem::Algorithm m_bogusAlgorithm;

@@ -58,6 +58,8 @@
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
+	
+	<useDeterministicSolver value="0"/>
 
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-3"/>

@@ -13,6 +13,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "../Utils/Distances.hh"
 #include "ProximityCollision.hh"
+#include "ElementProxy.hh"
 #include "../Dynamic/ImplicitStepper.hh"
 #include "../Dynamic/ImplicitStepper.hh"
 
@@ -91,15 +92,16 @@ namespace strandsim
         
         // This formula does almost four times too much multiplication, but if the coordinates are non-negative
         // it suffers in a minimal way from cancellation error.
-        return ( x0[0] * ( x1[1] * x3[2] + x3[1] * x2[2] + x2[1] * x1[2] )
-                + x1[0] * ( x2[1] * x3[2] + x3[1] * x0[2] + x0[1] * x2[2] )
-                + x2[0] * ( x3[1] * x1[2] + x1[1] * x0[2] + x0[1] * x3[2] )
-                + x3[0] * ( x1[1] * x2[2] + x2[1] * x0[2] + x0[1] * x1[2] ) )
-        
-        - ( x0[0] * ( x2[1] * x3[2] + x3[1] * x1[2] + x1[1] * x2[2] )
-           + x1[0] * ( x3[1] * x2[2] + x2[1] * x0[2] + x0[1] * x3[2] )
-           + x2[0] * ( x1[1] * x3[2] + x3[1] * x0[2] + x0[1] * x1[2] )
-           + x3[0] * ( x2[1] * x1[2] + x1[1] * x0[2] + x0[1] * x2[2] ) );
+        //return ( x0[0] * ( x1[1] * x3[2] + x3[1] * x2[2] + x2[1] * x1[2] )
+        //        + x1[0] * ( x2[1] * x3[2] + x3[1] * x0[2] + x0[1] * x2[2] )
+        //        + x2[0] * ( x3[1] * x1[2] + x1[1] * x0[2] + x0[1] * x3[2] )
+        //        + x3[0] * ( x1[1] * x2[2] + x2[1] * x0[2] + x0[1] * x1[2] ) )
+        //
+        //- ( x0[0] * ( x2[1] * x3[2] + x3[1] * x1[2] + x1[1] * x2[2] )
+        //   + x1[0] * ( x3[1] * x2[2] + x2[1] * x0[2] + x0[1] * x3[2] )
+        //   + x2[0] * ( x1[1] * x3[2] + x3[1] * x0[2] + x0[1] * x1[2] )
+        //   + x3[0] * ( x2[1] * x1[2] + x1[1] * x0[2] + x0[1] * x2[2] ) );
+		return (x1 - x0).dot((x2 - x0).cross(x3 - x0));
     }
     
     // All roots returned in interval [0,1]. Assumed geometry followed a linear
@@ -430,7 +432,6 @@ namespace strandsim
     {
         // return false when sP intersects with sQ || they lay in the same line
         // compute interpolote rate s, t, distance(d) and normal
-        // do_soc_solve = true when their distance < collision radius
 
         const CollisionParameters &cpP = sP->collisionParameters();
         const CollisionParameters &cpQ = sQ->collisionParameters();
@@ -480,10 +481,78 @@ namespace strandsim
         relative_vel = (us - vt).dot(depl);
         //const Scalar tangential_vel = sqrt(std::max(0., (us - vt).squaredNorm() - relative_vel * relative_vel));
 		
-        d = std::sqrt( sqDist );
+        d = std::sqrt( sqDist ) - BCRad;
         
         return sqDist < BCRad * BCRad;
     }
+
+	bool updateCollisionInfo(const ElasticStrand* sp1, const ElasticStrand* sp2, const int v1, const int v2, 
+		bool& valid, Vec3x& normal, Scalar& s, Scalar& t, Scalar& distance)
+	{
+		const Vec3x p0 = sp1->getVertex(v1);
+		const Vec3x p1 = sp1->getVertex(v1 + 1);
+		const Vec3x q0 = sp2->getVertex(v2);
+		const Vec3x q1 = sp2->getVertex(v2 + 1);
+
+		const Vec3x dp0 = sp1->dynamics().getDisplacement(v1);
+		const Vec3x dp1 = sp1->dynamics().getDisplacement(v1 + 1);
+		const Vec3x dq0 = sp2->dynamics().getDisplacement(v2);
+		const Vec3x dq1 = sp2->dynamics().getDisplacement(v2 + 1);
+
+		SquareDistSegmentToSegment<Vec3x, Scalar, Vec3x>(p0, p1, q0, q1, s, t);
+
+		assert(s > 0 && s < 1 && t > 0 && t < 1);
+
+		// delete collision if parallel
+		const Vec3x cp1 = (1 - s) * p0 + s * p1;
+		const Vec3x cp2 = (1 - t) * q0 + t * q1;
+		const Vec3x displacement = (cp1 - cp2).normalized();
+		if (displacement.dot((p1 - p0).normalized()) > COS_PARALLEL_ENOUGH
+			|| displacement.dot((q1 - q0).normalized()) > COS_PARALLEL_ENOUGH)
+			return false;
+
+		const Vec3x offset = (1 - s) * p0 + s * p1 - ((1 - t) * q0 + t * q1);	// 2->1
+		normal = (p1 - p0).cross(q1 - q0).normalized();
+
+		// whether current position valid
+		Scalar current_signed_volumn = (p1 - p0).dot((q0 - p0).cross(q1 - p0));
+		Scalar last_signed_volumn = ((p1 - dp1) - (p0 - dp0)).dot(((q0 - dq0) - (p0 - dp0)).cross((q1 - dq1) - (p0 - dp0)));
+
+		if (current_signed_volumn * last_signed_volumn < 0) valid = !valid;
+
+		// compute normal distance (with collision radius)
+		if ( (valid && offset.dot(normal) < 0) || (!valid && offset.dot(normal) > 0) ) normal = -normal;
+
+		Scalar col_radius = sp1->collisionParameters().selfResponseRadius() + sp2->collisionParameters().selfResponseRadius();
+		distance = offset.dot(normal) - col_radius;
+
+		return true;
+	}
     
+	bool updateCollisionInfo(const FaceProxy* fp, const ElasticStrand* sp, const int vtx, bool& valid, Vec3x& normal, Scalar& distance)
+	{
+		const Vec3x p0 = sp->getVertex(vtx);
+		const Vec3x p1 = fp->getVertex(0);
+		const Vec3x p2 = fp->getVertex(1);
+		const Vec3x p3 = fp->getVertex(2);
+
+		const Vec3x dp0 = sp->dynamics().getDisplacement(vtx);
+		const Vec3x dp1 = fp->getDisplacement(0);
+		const Vec3x dp2 = fp->getDisplacement(1);
+		const Vec3x dp3 = fp->getDisplacement(2);
+
+		normal = fp->getNormal().normalized();	// normal always point to valid 2->1
+		const Vec3x pfcol = ClosestPtPointTriangle(p0, p1, p2, p3);
+		const Vec3x offset = p0 - pfcol;
+
+		Scalar current_signed_volumn = (p1 - p0).dot((p2 - p0).cross(p3 - p0));
+		Scalar last_signed_volumn = ((p1 - dp1) - (p0 - dp0)).dot(((p2 - dp2) - (p0 - dp0)).cross((p3 - dp3) - (p0 - dp0)));
+		if (current_signed_volumn * last_signed_volumn < 0) valid = !valid;
+
+		Scalar col_radius = sp->collisionParameters().externalResponseRadius();
+		distance = offset.dot(normal) - col_radius;
+
+		return true;
+	}
 }
 

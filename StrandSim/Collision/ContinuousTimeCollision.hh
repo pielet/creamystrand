@@ -40,10 +40,6 @@ public:
     {
         return m_firstVertex;
     }
-    const Vec3x& getFirstDirection() const
-    {
-        return m_firstDirection;
-    }
 
     virtual bool notIn( const std::set<const ElasticStrand*>& alreadySeenStrands )
     {
@@ -60,8 +56,8 @@ public:
 
     Scalar time() const { return m_time ; }
     const Vec3x &normal() const { return m_normal ; }
+	Scalar distance() const { return m_offset.norm(); }
     virtual Vec3x offset() const;
-    Scalar distance() const { return m_offset.norm(); }
 
 //protected:
 public:
@@ -69,7 +65,6 @@ public:
 
     ElasticStrand* m_firstStrand;
     int m_firstVertex;
-    Vec3x m_firstDirection;
 
     Scalar m_time;
     Vec3x m_normal;
@@ -91,9 +86,14 @@ public:
         return m_s ;
     }
 
+	const Vec3x& direction() const
+	{
+		return m_direction;
+	}
 
 public: // FIXME please
     Scalar m_s;
+	Vec3x m_direction;
 };
 
 } /* namespace strandsim */

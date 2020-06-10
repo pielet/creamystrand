@@ -1537,7 +1537,7 @@ void XMLReader::loadStrandParameters( rapidxml::xml_node<>* node, const double& 
     for( nd = node->first_node("StrandParameters"); nd; nd = nd->next_sibling("StrandParameters") )
     {
         // default values:
-        double radius = 0.018;
+        double radius = 0.005;
         double YoungsModulus = 6.687e5;
         double shearModulus = 2.476e5;
         double density = 1.3;
@@ -1641,7 +1641,6 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_energyWithStretch = true;
 
     m_simulation_params.m_velocityDiffTolerance = 1e-6;
-    m_simulation_params.m_nonlinearIterations = 10;
     m_simulation_params.m_useQuasiNewton = true;
     m_simulation_params.m_windowSize = 5;
     m_simulation_params.m_useLineSearch = true;
@@ -1695,7 +1694,6 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "energyWithStretch", m_simulation_params.m_energyWithStretch);
 
     loadParam(nd, "velocityDiffTolerance", m_simulation_params.m_velocityDiffTolerance);
-    loadParam(nd, "nonlinearIterations", m_simulation_params.m_nonlinearIterations);
     loadParam(nd, "useQuasiNewton", m_simulation_params.m_useQuasiNewton);
     loadParam(nd, "windowSize", m_simulation_params.m_windowSize);
     loadParam(nd, "useLineSearch", m_simulation_params.m_useLineSearch);
@@ -1719,8 +1717,10 @@ void XMLReader::setSimulationParameters()
 
 void XMLReader::setRodCollisionParameters( CollisionParameters& param, const ElasticStrandParameters& strand_param )
 {
-    param.m_externalCollisionsRadius = 0.005;
-    param.m_selfCollisionsRadius = 0.005;
+    param.m_externalCollisionsRadius = 0.0055;
+    param.m_selfCollisionsRadius = 0.0055;
+	param.m_selfResponseRadius = 0.0055;
+	param.m_externalResponseRadius = 0.0055;
     param.m_constantCollisionRadius = true;
     param.m_maxNumCollisionsPerEdge = 6;
     param.m_impulseMaxNorm = 0.0;
@@ -1739,7 +1739,9 @@ void XMLReader::setRodCollisionParameters( CollisionParameters& param, const Ela
         return;
     
     loadParam(nd, "externalCollisionsRadius", param.m_externalCollisionsRadius);
+	loadParam(nd, "externalResponseRadius", param.m_externalResponseRadius);
     loadParam(nd, "selfCollisionsRadius", param.m_selfCollisionsRadius);
+	loadParam(nd, "selfResponseRadius", param.m_selfResponseRadius);
     loadParam(nd, "constantCollisionRadius", param.m_constantCollisionRadius);
     loadParam(nd, "maxNumCollisionsPerEdge", param.m_maxNumCollisionsPerEdge);
     loadParam(nd, "impulseMaxNorm", param.m_impulseMaxNorm);

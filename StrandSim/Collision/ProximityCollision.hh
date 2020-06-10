@@ -31,7 +31,7 @@ namespace strandsim
 
             Vec3x freeVel;
             Vec3x direction;
-            Mat3x invInertia;
+            Mat3x invInertia;	// compute by generateInverseInertia()
 
             Object() : globalIndex(0), vertex(0), abscissa(0) {}
 
@@ -48,18 +48,21 @@ namespace strandsim
         };
         
         ProximityCollision(): 
-            m_originalCTCollision( NULL ), mu(0.), distance(0.), relative_vel(0.), force(Vec3x::Zero())
+            m_originalCTCollision( NULL ), mu(0.), force(Vec3x::Zero()), solved(false), valid(true)
         {
         }
         
         ContinuousTimeCollision* m_originalCTCollision; // If the proximity collision was actually built from a continuous time collision, this keeps a pointer to the original in case we need it for impulse resolution
         
-        Vec3x normal;
+		Scalar mu;		// need external initialization
+		Scalar distance;	// need external initialization
+        Vec3x normal;		// need external initialization
         Vec3x force;
-        Scalar mu;
-        Scalar distance;
-        Scalar relative_vel;
-        Mat3x transformationMatrix ;
+		Vec3x offset;		// need external initialization
+        Mat3x transformationMatrix ;	// compute by generateTransformationMatrix()
+
+		bool solved;
+		bool valid;
         
         std::pair<Object, Object> objects;
         
@@ -77,6 +80,7 @@ namespace strandsim
             {
                 normal = -normal;
                 force = -force;
+				offset = -offset;
                 std::swap( objects.first, objects.second );
             }
         }
@@ -85,28 +89,47 @@ namespace strandsim
         {
             os << "Collision: strand edge " << objects.first.globalIndex << ' ' << objects.first.vertex
             << " vs. strand edge " << objects.second.globalIndex << ' ' << objects.second.vertex
-            << " N: " << normal << " dist: " << distance << "\n";
+            << " N: " << normal << "\n";
         }
         
         bool operator<( const ProximityCollision &rhs ) const
         {
-            
-            /* mine, subject to change but may create more failures, in which case CT is first thrown out since last to arrive... */
-            if( objects.first.vertex == rhs.objects.first.vertex ){
-                if ( objects.second.vertex == rhs.objects.second.vertex ){
-                    if ( distance == rhs.distance ){
-                        return normal.norm() < rhs.normal.norm();
-                    }
-                    else
-                        return distance < rhs.distance;
-                }
-                else
-                    return objects.second.vertex < rhs.objects.second.vertex;
-            }
-            else
-                return objects.first.vertex < rhs.objects.first.vertex;
-         
+			if (objects.first.globalIndex == rhs.objects.first.globalIndex) {
+				if (objects.second.globalIndex == rhs.objects.second.globalIndex) {
+					if (objects.first.vertex == rhs.objects.first.vertex) {
+						return objects.second.vertex < rhs.objects.second.vertex;
+					}
+					else
+						return objects.first.vertex < rhs.objects.first.vertex;
+				}
+				else
+					return objects.second.globalIndex < rhs.objects.second.globalIndex;
+			}
+			else
+				return objects.first.globalIndex < rhs.objects.first.globalIndex;
         }
+
+		bool operator== (const ProximityCollision & other) const
+		{
+			if (objects.first.globalIndex == other.objects.first.globalIndex
+				&& objects.first.vertex == other.objects.first.vertex
+				&& objects.second.globalIndex == other.objects.second.globalIndex
+				&& objects.second.vertex == other.objects.second.vertex)
+				return true;
+			else
+				return false;
+		}
+
+		struct Hasher
+		{
+			long operator()(const ProximityCollision& col) const
+			{
+				return std::hash<int>{}(col.objects.first.globalIndex) 
+					^ std::hash<int>{}(col.objects.first.vertex) 
+					^ std::hash<int>{}(col.objects.second.globalIndex) 
+					^ std::hash<int>{}(col.objects.second.vertex);
+			}
+		};
     };
     
     class ProximityCollisionDatabase

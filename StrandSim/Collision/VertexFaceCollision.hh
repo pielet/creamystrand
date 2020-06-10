@@ -28,6 +28,8 @@ namespace strandsim
         }
         
         virtual bool analyse();
+
+		virtual Vec3x offset() const;
         
         friend bool compare( const VertexFaceCollision* vf1, const VertexFaceCollision* vf2 );
         

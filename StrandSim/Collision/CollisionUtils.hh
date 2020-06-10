@@ -14,7 +14,7 @@
 
 namespace strandsim
 {
-    
+	class FaceProxy;
     class ElasticStrand;
     class StrandState;
     class ProximityCollisionDatabase;
@@ -46,6 +46,14 @@ namespace strandsim
     
     bool analyseRoughRodRodCollision( const ElasticStrand* sP, const ElasticStrand* sQ, const int iP, const int iQ,
                                       Vec3x &normalQtoP, Scalar &s, Scalar &t, Scalar &distance, Scalar& relative_vel );
+
+	/* Post update collision
+	 * return true if current position is valid
+	 * compute intercection point s t, normal direction and distance
+	 */
+	bool updateCollisionInfo(const ElasticStrand* sp1, const ElasticStrand* sp2, const int v1, const int v2,
+		bool& valid, Vec3x& normal, Scalar& s, Scalar& t, Scalar& distance);	// edge-edge
+	bool updateCollisionInfo(const FaceProxy* fp, const ElasticStrand* sp, const int vtx, bool& valid, Vec3x& normal, Scalar& distance);		// vertex-face
 }
 
 #endif

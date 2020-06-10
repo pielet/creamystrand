@@ -295,8 +295,11 @@ private:
     void pruneCollisions( const ProximityCollisions &origMutualCollisions,
             ProximityCollisions &mutualCollisions, const Scalar stochasticPruning );
 
+	//! updates collision info
+	void updateCollision(ProximityCollisions& collision);
+
     //! Updates collision times
-    void updateCollisionTimes(const ProximityCollisions& mutualContacts);
+    void countCollisionTimes(const ProximityCollisions& mutualContacts, bool mutual);
 
     //! solve individual collision in local coordinate
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
@@ -326,6 +329,7 @@ private:
 	std::vector<std::map<unsigned, unsigned> > m_externalCollisionTimes;
     ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts (edge/edge)
     std::vector<ProximityCollisions> m_externalContacts;         //!< List of all contacts between movable hair and fixed edges
+	std::unordered_set<ProximityCollision, ProximityCollision::Hasher> m_unsolvedCollisions;
     //! Structure for storing collisions and forces, useful for drawaing and warm-starting solver
     ProximityCollisionDatabase m_collisionDatabase;
     const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;

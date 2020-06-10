@@ -18,7 +18,7 @@
 namespace strandsim
 {
     
-    const unsigned ProximityCollisionDatabase::s_maxAge = 3 ;
+    const unsigned ProximityCollisionDatabase::s_maxAge = 1 ;
 
     void ProximityCollision::Object::generateInverseInertia(const Vec3x& normal)
     {

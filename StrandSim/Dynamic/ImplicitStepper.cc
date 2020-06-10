@@ -12,12 +12,9 @@ namespace strandsim
 		m_params(params),
 		m_velocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
 		m_collisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_collisionVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
 		m_timer(Timer("stepper", false))
 	{
-#if defined(_OPENMP)
-		omp_init_lock(&m_lock);
-#endif
+
 	}
 
 
@@ -28,6 +25,7 @@ namespace strandsim
 
 	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
 	{
+		//std::lock_guard<std::mutex> gaurd(m_lock);
 		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 

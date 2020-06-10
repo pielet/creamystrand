@@ -10,6 +10,7 @@
 #include "../Core/ElasticStrand.hh"
 #include "../Utils/Distances.hh"
 #include "CollisionUtils.hh"
+#include "../Utils/MathUtilities.hh"
 
 #include "../Utils/TextLog.hh"
 
@@ -94,6 +95,13 @@ namespace strandsim
 
         return false;
     }
+
+	Vec3x EdgeEdgeCollision::offset() const
+	{
+		Scalar colRadius = m_firstStrand->collisionParameters().selfResponseRadius()
+			+ m_secondStrand->collisionParameters().selfResponseRadius();
+		return (m_offset.dot(m_normal) - colRadius) * m_normal;
+	}
 
     bool compare(const EdgeEdgeCollision* ee1, const EdgeEdgeCollision* ee2)
     {
