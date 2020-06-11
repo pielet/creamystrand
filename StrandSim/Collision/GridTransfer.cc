@@ -9,35 +9,12 @@ namespace strandsim
 		m_grids.reserve(gridNum);
 	}
 
-	GridTransfer::GridTransfer(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper, Scalar gridSize, int gridNum) :
-		m_gridSize(gridSize), m_invGridSize(1. / gridSize)
-	{
-		m_grids.reserve(gridNum);
-		buildGrid(strand, stepper);
-	}
-
 	GridTransfer::~GridTransfer()
 	{
 
 	}
 
-	void GridTransfer::buildGrid(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper)
-	{
-		for (int sidx = 0; sidx < strand.size(); ++sidx)
-		{
-			for (int vidx = 0; vidx < strand[sidx]->getNumVertices(); ++vidx)
-			{
-				const Vec3x pos = strand[sidx]->getVertex(vidx);
-				const Vec3x vel = stepper[sidx]->getVelocity(vidx);
-
-				insertParticle(pos, vel);
-			}
-		}
-		
-		finalize();
-	}
-
-	void GridTransfer::insertParticle(const Vec3x& p, const Vec3x& vel)
+	void GridTransfer::insertParticle(const Vec3x& p, Scalar mass, const Vec3x& vel)
 	{
 		const Vec3x pos = p * m_invGridSize;
 
@@ -48,28 +25,22 @@ namespace strandsim
 		for (int i = min_i; i < min_i + 4; ++i) {
 			for (int j = min_j; j < min_j + 4; ++j) {
 				for (int k = min_k; k < min_k + 4; ++k) {
+					Scalar weight = getWeight(i, j, k, pos);
+					if (isSmall(weight)) continue;
+
 					auto grid_iter = m_grids.find(Grid(i, j, k));
 					if (grid_iter != m_grids.end()) {
-						grid_iter->second.second += getWeight(i, j, k, pos);
-						grid_iter->second.first += getWeight(i, j, k, pos) * vel;
+						grid_iter->second.first += weight * mass;
+						grid_iter->second.second += weight * mass * vel;
 					}
 					else {
 						GridMap::mapped_type g_value;
-						g_value.second = getWeight(i, j, k, pos);
-						if (isSmall(g_value.second)) continue;
-						g_value.first = g_value.second * vel;
+						g_value.first = weight * mass;
+						g_value.second = weight * mass * vel;
 						m_grids.insert(GridMap::value_type(Grid(i, j, k), g_value));
 					}
 				}
 			}
-		}
-	}
-
-	void GridTransfer::finalize()
-	{
-		for (auto iter = m_grids.begin(); iter != m_grids.end(); ++iter)
-		{
-			iter->second.first /= iter->second.second;
 		}
 	}
 
@@ -87,7 +58,7 @@ namespace strandsim
 				for (int k = min_k; k < min_k + 4; ++k) {
 					auto grid_iter = m_grids.find(Grid(i, j, k));
 					if (grid_iter != m_grids.end()) {
-						vel += getWeight(i, j, k, p) * grid_iter->second.first;
+						vel += getWeight(i, j, k, p) * (grid_iter->second.second / grid_iter->second.first);
 					}
 				}
 			}

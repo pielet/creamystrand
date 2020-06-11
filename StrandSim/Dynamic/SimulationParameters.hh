@@ -87,6 +87,7 @@ struct SimulationParameters
     ImplicitStepper::LinearSolverType m_linearSolverType;
 
     Scalar m_relaxationFactor;
+	unsigned m_postIteration;
 
     bool m_linearizebHat;
     

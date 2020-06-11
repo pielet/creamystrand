@@ -13,6 +13,7 @@ set( Sources
   Collision/TriangularMesh.cc
   Collision/VertexFaceCollision.cc
   Collision/EdgeEdgeCollision.cc
+  Collision/GridTransfer.cc
   Control/Capsule.cc
   Control/Icosphere.cc
   Control/ObjParser.cc
@@ -34,6 +35,8 @@ set( Sources
   Dynamic/DistanceFieldObject.cc
   Dynamic/DOFScriptingController.cc
   Dynamic/ImplicitStepper.cc
+  Dynamic/NewtonStepper.cc
+  Dynamic/QuasiNewtonStepper.cc
   Dynamic/MeshScriptingController.cc
   Dynamic/ScriptingController.cc
   Dynamic/StrandDynamicTraits.cc
@@ -82,6 +85,7 @@ set( Headers
   Collision/TriangularMesh.hh
   Collision/VertexFaceCollision.hh
   Collision/EdgeEdgeCollision.hh
+  Collision/GridTransfer.hh
   Control/Capsule.hh
   Control/Icosphere.hh
   Control/ObjParser.hh
@@ -97,7 +101,6 @@ set( Headers
   Core/ElasticStrandParameters.hh
   Core/ElasticStrandUtils.hh
   Core/LinearSolver.hh
-  Core/StepperBase.hh
   Core/StrandBase.hh
   Core/StrandState.hh
   Dependencies/BendingProducts.hh
@@ -111,6 +114,8 @@ set( Headers
   Dynamic/DistanceFieldObject.hh
   Dynamic/DOFScriptingController.hh
   Dynamic/ImplicitStepper.hh
+  Dynamic/NewtonStepper.hh
+  Dynamic/QuasiNewtonStepper.hh
   Dynamic/GeometricLevelGen.hh
   Dynamic/AlgebraicMultigrid.hh
   Dynamic/MeshScriptingController.hh

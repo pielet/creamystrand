@@ -86,6 +86,11 @@ namespace strandsim
         {
             return m_selfCollisionsRadius;
         }
+		
+		Scalar selfResponseRadius() const
+		{
+			return m_selfResponseRadius;
+		}
         
         Scalar collisionsRadius( CollisionType type, unsigned edgeIdx, unsigned numVertices, Scalar angle = 0. ) const
         {
@@ -160,6 +165,7 @@ namespace strandsim
         //private:
         Scalar m_externalCollisionsRadius;
         Scalar m_selfCollisionsRadius; // Made public for sheer lazines
+		Scalar m_selfResponseRadius;
         Scalar m_frictionCoefficient;
         Scalar m_meshFrictionCoefficient;
         Scalar m_ellipticalRadiiRatio;

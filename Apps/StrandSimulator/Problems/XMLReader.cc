@@ -1647,6 +1647,9 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_ls_alpha = 0.03;
     m_simulation_params.m_ls_beta = 0.5;
 
+	m_simulation_params.m_relaxationFactor = 1.0;
+	m_simulation_params.m_postIteration = 10;
+
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
     if(!m_scene_node)
@@ -1698,6 +1701,9 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "lineSearchAlpha", m_simulation_params.m_ls_alpha);
     loadParam(nd, "lineSearchBeta", m_simulation_params.m_ls_beta);
 
+	loadParam(nd, "relaxationFactor", m_simulation_params.m_relaxationFactor);
+	loadParam(nd, "postIteration", m_simulation_params.m_postIteration);
+
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))
 	{
@@ -1717,6 +1723,7 @@ void XMLReader::setRodCollisionParameters( CollisionParameters& param, const Ela
 {
     param.m_externalCollisionsRadius = 0.005;
     param.m_selfCollisionsRadius = 0.005;
+	param.m_selfResponseRadius = 0.0055;
     param.m_constantCollisionRadius = true;
     param.m_maxNumCollisionsPerEdge = 6;
     param.m_impulseMaxNorm = 0.0;
@@ -1736,6 +1743,7 @@ void XMLReader::setRodCollisionParameters( CollisionParameters& param, const Ela
     
     loadParam(nd, "externalCollisionsRadius", param.m_externalCollisionsRadius);
     loadParam(nd, "selfCollisionsRadius", param.m_selfCollisionsRadius);
+	loadParam(nd, "selfResponseRadius", param.m_selfResponseRadius);
     loadParam(nd, "constantCollisionRadius", param.m_constantCollisionRadius);
     loadParam(nd, "maxNumCollisionsPerEdge", param.m_maxNumCollisionsPerEdge);
     loadParam(nd, "impulseMaxNorm", param.m_impulseMaxNorm);

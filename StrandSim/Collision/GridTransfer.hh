@@ -8,17 +8,15 @@ namespace strandsim
 {
 	class ElasticStrand;
 	class ImplicitStepper;
+	struct ProximityCollision;
 
 	class GridTransfer
 	{
 	public:
 		GridTransfer(Scalar girdSize, int gridNum = 10);
-		GridTransfer(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper, Scalar gridSize, int gridNum = 10);
 		~GridTransfer();
 
-		void buildGrid(const std::vector<ElasticStrand*>& strand, const std::vector<ImplicitStepper*>& stepper);
-		void insertParticle(const Vec3x& pos, const Vec3x& vel);
-		void finalize();
+		void insertParticle(const Vec3x& pos, Scalar mass, const Vec3x& vel);
 		Vec3x getValue(const Vec3x& pos);
 		Scalar getWeight(const Vec3x& p1, const Vec3x& p2) const;
 		Scalar getWeight(Scalar distance) const;
@@ -58,7 +56,7 @@ namespace strandsim
 		Scalar getWeight(int i, int j, int k, const Vec3x& pos);
 		Scalar quadraticKernel(Scalar x) const;
 
-		typedef std::unordered_map<Grid, std::pair<Vec3x, Scalar>, typename Grid::Hasher, typename Grid::Comparer> GridMap;
+		typedef std::unordered_map<Grid, std::pair<Scalar, Vec3x>, typename Grid::Hasher, typename Grid::Comparer> GridMap;
 		GridMap m_grids;
 
 		Scalar m_gridSize;

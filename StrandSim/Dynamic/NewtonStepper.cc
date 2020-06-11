@@ -31,7 +31,6 @@ namespace strandsim
 		m_iteration = 0;
 
 		clearCollisionImpulse();
-		resetCollisionVelocities();
 
 		m_savedVelocities = m_velocities;
 		m_prevVelocities = m_velocities;
@@ -102,11 +101,6 @@ namespace strandsim
 		m_dynamics.getDisplacements() = displacements;
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
-	}
-
-	void NewtonStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
-	{
-		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 	
 	Scalar NewtonStepper::lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir)

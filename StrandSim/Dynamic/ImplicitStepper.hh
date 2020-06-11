@@ -26,7 +26,8 @@ namespace strandsim
 
 		virtual void rewind() = 0;
 
-		virtual void accumulateCollisionImpulse(int vid, const Vec3x& r) = 0;
+		void accumulateCollisionImpulse(int vid, const Vec3x& r);
+		void accmulateCollisionVelocities(int vid, const Vec3x& vel);
 
 		void commitVelocity();
 
@@ -47,8 +48,8 @@ namespace strandsim
 
 		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
 
-		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
-		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
+		VecXx& collisionVelocities() { return m_collisionVelocities; }
+		const VecXx& collisionVelocities() const { return m_collisionVelocities; }
 
 	protected:
 		omp_lock_t m_lock;
