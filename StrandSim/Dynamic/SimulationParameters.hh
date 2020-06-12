@@ -87,8 +87,6 @@ struct SimulationParameters
     unsigned m_linearIterations;
     ImplicitStepper::LinearSolverType m_linearSolverType;
 
-    Scalar m_relaxationFactor;
-
     bool m_linearizebHat;
     
     unsigned m_subSteps;
@@ -106,6 +104,9 @@ struct SimulationParameters
     bool m_useLineSearch;
     Scalar m_ls_alpha;
     Scalar m_ls_beta;
+
+    unsigned m_postProcessIterations;
+    Scalar m_relaxationFactor;
 };
 
 }

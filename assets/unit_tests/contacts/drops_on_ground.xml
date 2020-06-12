@@ -1,7 +1,7 @@
 <scene>
   <description text="A hair bundle drops on the other."/>
 
-  <duration time="2.5"/>
+  <duration time="3.0"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -45,7 +45,7 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="50"/>
+    <maxNewtonIterations value="20"/>
 
     <useQuasiNewton value="1"/>
     <windowSize value="0"/>
@@ -67,7 +67,7 @@
     <linearIterations value="100"/>
     <linearSolverType value="direct"/>
     <relaxationFactor value="2.0"/>
-    <hairMeshFrictionCoefficient value="0.3"/>
+    <hairMeshFrictionCoefficient value="0.1"/>
     <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
@@ -128,14 +128,13 @@
 
   <hair params="0" start="0" count="40"/>
 -->
-  <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="-0.5" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
-    <fixed start="0" end="0" value="3"/>
-    <fixed start="1" end="1" value="1"/>
+  <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="5.0" z="5.0" rx="0.0" ry="0.0" rz="1.0" rw="0.8">
+    <!--<fixed start="0" end="0" value="3"/>
+    <fixed start="1" end="1" value="1"/>-->
   </hairobj>
 
-  <script type="translate" x="0.0" y="0" z="-15" w="0" start="0.3" end="2.5" group="0"/>
-  <!--<script type="translate" x="0" y="0" z="-10.0" w="0.0" start="1" end="2" group="1"/>-->
+  <!--<script type="translate" x="0.0" y="0" z="-15" w="0" start="0.3" end="2.5" group="0"/>-->
 
   <distancefield usage="solid" type="cylinder" cx="0.0" cy="-4" cz="5" rx="0.0" ry="0.0" rz="0.0" rw="0.0" radius="10.0" corner="0.125" halflength="0.5" group="1"/>
-  <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>
+  <!--<distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>-->
 </scene>  

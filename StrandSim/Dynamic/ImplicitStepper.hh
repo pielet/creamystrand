@@ -77,14 +77,13 @@ namespace strandsim
 
 		void accumulateCollisionImpulse(int vid, const Vec3x& r);
 		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
-		const VecXx& getCollisionImpulse() const { return m_collisionImpulse; }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
 
 		void commitVelocity();
 
-		void resetCollisionVelocities() { m_collisionVelocities = m_velocities; }
-		Vec3x getCollisionVelocity(int vid) const { return m_collisionVelocities.segment<3>(4 * vid); }
-		void setCollisionVelocity(int vid, const Vec3x vel) { m_collisionVelocities.segment<3>(4 * vid) = vel; }
+		void accumulateCollisionVelocity(int vid, const Vec3x& vel);
+		void clearCollisionVelocity() { m_collisionVelocities.setZero(); }
+		const VecXx& collisionVelocities() const { return m_collisionVelocities; }
 
 		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
 		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }

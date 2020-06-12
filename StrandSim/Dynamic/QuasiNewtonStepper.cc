@@ -114,7 +114,6 @@ namespace strandsim
 		m_timing.lineSearch += m_timer.elapsed();
 		m_velocities += step_size * descent_dir;
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
-		resetCollisionVelocities();
 
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
 

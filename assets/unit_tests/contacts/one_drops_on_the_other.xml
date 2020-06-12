@@ -34,20 +34,21 @@
     <stretchMultiplier value="1e-2"/>
     <minBendingAngle value="45.0"/>
   </StrandParameters>
-
+ 
   <CollisionParameters>
     <constantCollisionRadius value="1"/>
     <externalCollisionsRadius value="0.0055"/>
-    <selfCollisionsRadius value="0.02"/>
+    <selfCollisionsRadius value="0.0055"/>
+    <responseRadius value="0.005"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
     <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="20"/>
+    <maxNewtonIterations value="5"/>
 
-    <useQuasiNewton value="1"/>
+    <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
     <useLineSearch value="1"/>
@@ -60,13 +61,15 @@
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
 
+    <postProcessIterations value="2"/>
+    <relaxationFactor value="0.5"/>
+
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="5"/>
+    <logLevel value="4"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <linearSolverType value="direct"/>
-    <relaxationFactor value="2.0"/>
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>

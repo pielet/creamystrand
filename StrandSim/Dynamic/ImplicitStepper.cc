@@ -31,6 +31,10 @@ namespace strandsim
 		m_collisionImpulse.segment<3>(4 * vid) += r;
 	}
 
+	void ImplicitStepper::accumulateCollisionVelocity(int vid, const Vec3x& vel)
+	{
+		m_collisionVelocities.segment<3>(4 * vid) += vel;
+	}
 	
 	void ImplicitStepper::commitVelocity() {
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt); 

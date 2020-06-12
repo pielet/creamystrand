@@ -724,7 +724,7 @@ namespace strandsim
 
 						mutualContact.normal = normal;
 						mutualContact.distance = d;
-						mutualContact.relative_vel = rel_vel;
+						//mutualContact.relative_vel = rel_vel;
 						mutualContact.mu = sqrt(cpP.frictionCoefficient(iP) * cpQ.frictionCoefficient(iQ));
 
 						mutualContact.objects.first.globalIndex = sP->getGlobalIndex();
@@ -2659,7 +2659,7 @@ namespace strandsim
 		int k = 0;
 		for (k; k < m_params.m_maxNewtonIterations; ++k) {
 			timer.restart();
-#pragma omp parallel for
+//#pragma omp parallel for
 			for (int i = 0; i < m_steppers.size(); ++i) {
 				pass[i] = m_steppers[i]->performOneIteration();
 			}
@@ -2681,7 +2681,7 @@ namespace strandsim
 			}
 
 			if (m_params.m_solveCollision) {
-				if (m_params.m_useCTRodRodCollisions && k == 0) {
+				if (m_params.m_useCTRodRodCollisions && m_statTotalContacts == 0) {
 					timer.restart();
 #pragma omp parallel for 
 					for (int i = 0; i < m_steppers.size(); ++i)
@@ -2709,6 +2709,11 @@ namespace strandsim
 		}
 
 		std::cout << "Total iteration number: " << k + 1 << std::endl;
+
+		std::cout << "[Post Processing]" << std::endl;
+		for (int i = 0; i < m_params.m_postProcessIterations; ++i) {
+			step_solveCollisions(true);
+		}
 
 		std::cout << "[Step Post Dynamics]" << std::endl;
 #pragma omp parallel for
@@ -2901,8 +2906,13 @@ namespace strandsim
 		std::vector<std::map<unsigned, unsigned> > tmp_selfCollisionTime(m_strands.size());
 		std::vector<std::map<unsigned, unsigned> > tmp_externalCollisionTime(m_strands.size());
 
+		//if (commitVelocities) {
+			for (int i = 0; i < m_steppers.size(); ++i)
+				m_steppers[i]->clearCollisionVelocity();
+		//}
+
 		for (int i = 0; i < m_mutualContacts.size(); ++i)
-		{
+		{ 
 			ProximityCollision& collision = m_mutualContacts[i];
 
 			int s1 = collision.objects.first.globalIndex;
@@ -2910,11 +2920,14 @@ namespace strandsim
 			int v1 = collision.objects.first.vertex;
 			int v2 = collision.objects.second.vertex;
 
-			if (m_selfCollisionTimes[s1].find(v1) == m_selfCollisionTimes[s1].end() || m_selfCollisionTimes[s2].find(v2) == m_selfCollisionTimes[s2].end())
+			if (collision.solved)
 				continue;
 
 			Scalar alpha_1 = collision.objects.first.abscissa;
 			Scalar alpha_2 = collision.objects.second.abscissa;
+
+			Scalar cr1 = m_strands[s1]->collisionParameters().responseRadius();
+			Scalar cr2 = m_strands[s2]->collisionParameters().responseRadius();
 
 			Scalar m1 = m_strands[s1]->getEdgeMass(v1) / m_selfCollisionTimes[s1][v1];
 			Scalar m2 = m_strands[s2]->getEdgeMass(v2) / m_selfCollisionTimes[s2][v2];
@@ -2934,17 +2947,20 @@ namespace strandsim
 			//const Vec3x r_world = solveOneCollision(cv2 - cv1, collision.normal, m1, m2, alpha_1, alpha_2);
 
 			const Mat3x K = collision.objects.first.invInertia / m1 + collision.objects.second.invInertia / m2;
-			const Vec3x r = solveOneCollision(K, cv2 - cv1, collision.normal, collision.mu);
+			const Vec3x r = solveOneCollision(K, cv2 - cv1 + (cr1 + cr2) / m_dt * collision.normal, collision.normal, collision.mu);
 
-			ContactStream(g_log, "") << "delta r: " << r;
+			ContactStream(g_log, "") << "delta r: " << r.norm();
 
 			collision.force += r;
 
-			accumulateImpulse(s1, v1, alpha_1, r, false);
-			accumulateImpulse(s2, v2, alpha_2, -r, false);
+			accumulateImpulse(s1, v1, alpha_1, r, commitVelocities);
+			accumulateImpulse(s2, v2, alpha_2, -r, commitVelocities);
 
 			// update collision time
-			if (!isSmall(r.squaredNorm())) {
+			if (isSmall(r.norm())) {
+				collision.solved = true;
+			}
+			else {
 				++tmp_selfCollisionTime[s1][v1];
 				++tmp_selfCollisionTime[s2][v2];
 			}
@@ -2958,22 +2974,33 @@ namespace strandsim
 				int vid = collision.objects.first.vertex;
 				Scalar alpha = collision.objects.first.abscissa;
 
-				if (m_externalCollisionTimes[sid].find(vid) == m_externalCollisionTimes[sid].end())
+				if (collision.solved)
 					continue;
 
 				if (isSmall(alpha))	// vertex-face
 				{
-					Vec3x v_world = m_steppers[sid]->getVelocity(vid) - collision.objects.second.freeVel;
-					Scalar mass = m_strands[sid]->getVertexMass(vid) / m_externalCollisionTimes[sid][vid];
-					Vec3x r_world = solveOneCollision(v_world, mass, collision.transformationMatrix, collision.mu);
+					Scalar m = m_strands[sid]->getVertexMass(vid);
+					Scalar m_prime = m / m_externalCollisionTimes[sid][vid];
+					Scalar col_radius = m_strands[sid]->collisionParameters().responseRadius();
+					Vec3x v_world = m_steppers[sid]->getVelocity(vid) - collision.objects.second.freeVel - 2 * col_radius / m_dt * collision.normal;
+					Vec3x r_world = solveOneCollision(v_world, m_prime, collision.transformationMatrix, collision.mu);
 
 					ContactStream(g_log, "") << "delta_r: " << r_world;
 
-					m_steppers[sid]->accumulateCollisionImpulse(vid, r_world);
+				//	if (commitVelocities) {
+						m_steppers[sid]->accumulateCollisionVelocity(vid, r_world / m);
+				//	}
+				//	else {
+						m_steppers[sid]->accumulateCollisionImpulse(vid, r_world);
+				//	}
 					collision.force += r_world;
 
-					if (!isSmall(r_world.squaredNorm()))
+					if (isSmall(r_world.norm())) {
+						collision.solved = true;
+					}
+					else {
 						++tmp_externalCollisionTime[sid][vid];
+					}
 				}
 				//else {
 				//	VecXx strand_vel = m_steppers[sid]->velocities();
@@ -2996,6 +3023,36 @@ namespace strandsim
 			m_selfCollisionTimes[i].swap(tmp_selfCollisionTime[i]);
 			m_externalCollisionTimes[i].swap(tmp_externalCollisionTime[i]);
 		}
+
+		//if (commitVelocities)
+		//{
+			for (int i = 0; i < m_steppers.size(); ++i) {
+				m_steppers[i]->velocities() += m_params.m_relaxationFactor * m_steppers[i]->collisionVelocities();
+			}
+		//}
+
+		//Scalar mutual_err = 0;
+		//for (int i = 0; i < m_mutualContacts.size(); ++i) {
+		//	const ProximityCollision& col = m_mutualContacts[i];
+
+		//	const int s1 = col.objects.first.globalIndex;
+		//	const int s2 = col.objects.second.globalIndex;
+		//	const int v1 = col.objects.first.vertex;
+		//	const int v2 = col.objects.second.vertex;
+		//	const Scalar a1 = col.objects.first.abscissa;
+		//	const Scalar a2 = col.objects.second.abscissa;
+
+		//	Vec3x v_ref = (1 - a1) * m_steppers[s1]->getVelocity(v1) + a1 * m_steppers[s1]->getVelocity(v1 + 1)
+		//		- ((1 - a2) * m_steppers[s2]->getVelocity(v2) + a2 * m_steppers[s2]->getVelocity(v2 + 1));
+		//	v_ref = col.transformationMatrix.transpose() * v_ref;
+		//	const Vec3x r = col.transformationMatrix.transpose() * col.force;
+
+		//	Vec3x s;
+		//	CoulombLaw law(1, &col.mu);
+		//	law.dualityCOV(0, v_ref, s);
+		//	mutual_err += law.eval(0, r, v_ref + s, 1.);
+		//}
+		//ContactStream(g_log, "") << "FB value: " << mutual_err;
 	}
 
 	// abandon
@@ -3037,7 +3094,7 @@ namespace strandsim
 		}
 	}
 
-	void StrandImplicitManager::accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel)
+	void StrandImplicitManager::accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool commitVelocity)
 	{
 		const Vec3x edge = m_strands[sid]->getEdgeVector(vid).normalized();
 		const Vec3x r_t = r - r.dot(edge) * edge;
@@ -3049,20 +3106,16 @@ namespace strandsim
 		const Vec3x delta_v1 = (r - 6 * (alpha - 0.5) * r_t) / m;
 		const Vec3x delta_v2 = (r + 6 * (alpha - 0.5) * r_t) / m;
 
-		m_steppers[sid]->accumulateCollisionImpulse(vid, delta_v1 * m1);
-		m_steppers[sid]->accumulateCollisionImpulse(vid + 1, delta_v2 * m2);
-
-		if (modifyFinalVel)
-		{
-			m_steppers[sid]->setVelocity(vid, m_steppers[sid]->getVelocity(vid) + delta_v1);
-			m_steppers[sid]->setVelocity(vid + 1, m_steppers[sid]->getVelocity(vid + 1) + delta_v2);
-			m_steppers[sid]->commitVelocity();
-		}
-		else
-		{
-			m_steppers[sid]->setCollisionVelocity(vid, m_steppers[sid]->getCollisionVelocity(vid) + delta_v1);
-			m_steppers[sid]->setCollisionVelocity(vid + 1, m_steppers[sid]->getCollisionVelocity(vid + 1) + delta_v2);
-		}
+		//if (commitVelocity)
+		//{
+			m_steppers[sid]->accumulateCollisionVelocity(vid, delta_v1);
+			m_steppers[sid]->accumulateCollisionVelocity(vid + 1, delta_v2);
+		//}
+		//else
+		//{
+			m_steppers[sid]->accumulateCollisionImpulse(vid, delta_v1 * m1);
+			m_steppers[sid]->accumulateCollisionImpulse(vid + 1, delta_v2 * m2);
+		//}
 	}
 
 	void StrandImplicitManager::step_postCollision()
@@ -3108,7 +3161,7 @@ namespace strandsim
 	{
 		// print collision error measured by FB function
 		Scalar mutual_err = 0;
-#pragma omp parallel for
+#pragma omp parallel for reduction(+:mutual_err)
 		for (int i = 0; i < m_mutualContacts.size(); ++i) {
 			const ProximityCollision& col = m_mutualContacts[i];
 
@@ -3132,7 +3185,7 @@ namespace strandsim
 		InfoStream(g_log, "Average mutual collision error") << mutual_err / m_mutualContacts.size();
 
 		Scalar external_err = 0;
-#pragma omp parallel for
+#pragma omp parallel for reduction(+:external_err)
 		for (int i = 0; i < m_externalContacts.size(); ++i)
 		{
 			for (int j = 0; j < m_externalContacts[i].size(); ++j) {

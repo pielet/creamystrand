@@ -51,6 +51,7 @@
 		<constantCollisionRadius value="1"/>
 		<externalCollisionsRadius value="0.005"/>
 		<selfCollisionsRadius value="0.005"/>
+		<responseRadius value="0.005"/>
 		<impulseMaxNorm value="0.0"/>
 		<maxNumCollisionsPerEdge value="6"/>
 		<reactsToSelfCollisions value="1"/>
@@ -84,6 +85,7 @@
 		<percentCTRodRodCollisionsAccept value="100"/>
 		<pruneExternalCollisions value="1"/>
 		<pruneSelfCollisions value="1"/>
+		<postProcessIterations value="0"/>
 		<relaxationFactor value="1.0"/>
 		<rodSubSteps value="1"/> 	<!-- substep when solving unconstraint nonlinear problem -->
 		<simulationManagerLimitedMemory value="0"/>  <!-- if false, save computed impulses of current collisions, which can be used as warm start in next step -->

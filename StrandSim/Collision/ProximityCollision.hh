@@ -48,17 +48,18 @@ namespace strandsim
         };
         
         ProximityCollision(): 
-            m_originalCTCollision( NULL ), mu(0.), distance(0.), relative_vel(0.), force(Vec3x::Zero())
+            m_originalCTCollision( NULL ), solved(false), mu(0.), distance(0.), force(Vec3x::Zero())
         {
         }
         
         ContinuousTimeCollision* m_originalCTCollision; // If the proximity collision was actually built from a continuous time collision, this keeps a pointer to the original in case we need it for impulse resolution
         
+        bool solved;
         Vec3x normal;
         Vec3x force;
         Scalar mu;
         Scalar distance;
-        Scalar relative_vel;
+
         Mat3x transformationMatrix ;
         
         std::pair<Object, Object> objects;
