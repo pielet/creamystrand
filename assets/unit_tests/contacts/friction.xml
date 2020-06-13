@@ -63,7 +63,7 @@
 
     <statGathering value="1"/>
 
-    <postProcessIterations value="30"/>
+    <postProcessIterations value="0"/>
     <relaxationFactor value="0.1"/>
 
     <nonlinearIterations value="20"/>

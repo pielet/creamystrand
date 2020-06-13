@@ -425,6 +425,17 @@ namespace strandsim
 			return;
 		}
 
+		std::unordered_set<ProximityCollision, ProximityCollision::Hasher> mutual_collision_set;
+		std::unordered_set<ProximityCollision, ProximityCollision::Hasher> external_collision_set;
+		for (int i = 0; i < m_mutualContacts.size(); ++i) {
+			mutual_collision_set.insert(m_mutualContacts[i]);
+		}
+		for (int i = 0; i < m_strands.size(); ++i) {
+			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
+				external_collision_set.insert(m_externalContacts[i][j]);
+			}
+		}
+
 		int nExt = 0;
 
 		for (auto collIt = collisionsList.begin(); collIt != collisionsList.end(); ++collIt)
@@ -485,6 +496,8 @@ namespace strandsim
 				collision.objects.second.freeVel.setZero();
 				collision.objects.second.direction = eeCollision->getSecondDirection();
 
+				if (mutual_collision_set.find(collision) != mutual_collision_set.end()) continue;
+
 				// if accept both: add to m_mutualContacts
 				// if only accept one: add to m_externalContacts
 
@@ -522,6 +535,11 @@ namespace strandsim
 
 					collision.objects.second.vertex = vfCollision->face()->uniqueId();
 					collision.objects.second.freeVel = vfCollision->meshVelocity(dt) + offset;
+
+					collision.objects.first.globalIndex = strIdx;
+					collision.objects.first.vertex = edgeIdx;
+
+					if (external_collision_set.find(collision) != external_collision_set.end()) continue;
 
 					if (addExternalContact(strIdx, edgeIdx, 0, Vec3x::Zero(), collision))
 					{
@@ -2681,7 +2699,7 @@ namespace strandsim
 			}
 
 			if (m_params.m_solveCollision) {
-				if (m_params.m_useCTRodRodCollisions && m_statTotalContacts == 0) {
+				if (m_params.m_useCTRodRodCollisions) {
 					timer.restart();
 #pragma omp parallel for 
 					for (int i = 0; i < m_steppers.size(); ++i)
@@ -2700,7 +2718,8 @@ namespace strandsim
 
 				if (m_statTotalContacts > 0) {
 					timer.restart();
-					step_solveCollisions(all_done || k == m_params.m_maxNewtonIterations - 1);
+					//step_solveCollisions(all_done || k == m_params.m_maxNewtonIterations - 1);
+					step_solveCollisions(false);
 					timings.solve += timer.elapsed();
 				}
 			}

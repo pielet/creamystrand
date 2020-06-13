@@ -108,6 +108,29 @@ namespace strandsim
                 return objects.first.vertex < rhs.objects.first.vertex;
          
         }
+
+        bool operator==(const ProximityCollision& other) const
+        {
+            if (objects.first.globalIndex == other.objects.first.globalIndex
+                && objects.first.vertex == other.objects.first.vertex
+                && objects.second.globalIndex == other.objects.second.globalIndex
+                && objects.second.vertex == other.objects.second.vertex)
+                return true;
+            else
+                return false;
+        }
+
+        struct Hasher
+        {
+            long operator()(const ProximityCollision& col) const
+            {
+                auto int_hasher = std::hash<int>();
+                return int_hasher(col.objects.first.globalIndex)
+                    ^ int_hasher(col.objects.first.vertex)
+                    ^ int_hasher(col.objects.second.globalIndex)
+                    ^ int_hasher(col.objects.second.vertex);
+            }
+        };
     };
     
     class ProximityCollisionDatabase
