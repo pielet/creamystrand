@@ -1,0 +1,243 @@
+Info (Contact): external: 0 mutual: 1
+avg. col step size: 10.2559
+Info (Contact): external: 0 mutual: 2
+avg. col step size: 6.88782
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 3.25755
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 2.39213
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.89097
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.38603
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.18987
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.02108
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.876326
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.752163
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.645657
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.554291
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.475907
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.408655
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.350951
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.301435
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.258943
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.222475
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.151963
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.208086
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.111528
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.112732
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.10525
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0943741
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0827364
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0715826
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0475765
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0606844
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0306906
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0362907
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0329247
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0294688
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0260747
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0143567
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.016439
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0212366
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00716816
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0064882
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00587252
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00531527
+
+[Step Dynamics]
+Info (Contact): external: 0 mutual: 2
+avg. col step size: 15.3107
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 8.46537
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 2.88617
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 1.90878
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 1.48059
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 1.14988
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.89381
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.694334
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.539653
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.419677
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.32665
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.256246
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.217812
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.185151
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.126128
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.168954
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0906794
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.090568
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0837276
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0743751
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0645947
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0553552
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0367008
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0459994
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.023331
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0271707
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0244174
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0216453
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0145204
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0133374
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0121564
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.0109992
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00988236
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00667792
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00608892
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00553519
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00501641
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00347315
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00422981
+Info (Contact): external: 0 mutual: 3
+avg. col step size: 0.00198112
+
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 14.2262
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 8.66901
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 2.4895
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.89705
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.4527
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 1.115
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.856859
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.659269
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.507522
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.390494
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.317056
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.268897
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.216905
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.175129
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.114659
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.147247
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0612889
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.065574
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0788708
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0617821
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0501984
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0380131
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.046084
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0221355
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0233975
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0278171
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0355593
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0108936
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00990631
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00900821
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00819152
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00744885
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00677351
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00615938
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00560093
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0050931
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00463131
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00421138
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.00382953
+Info (Contact): external: 0 mutual: 4
+avg. col step size: 0.0034823

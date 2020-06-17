@@ -21,6 +21,8 @@ namespace strandsim
 		virtual void postStep();
 		virtual void rewind();
 
+		virtual Scalar stepSize() { return m_alpha; }
+
 	protected:
 		Scalar evaluateObjectValue(const VecXx& v);
 		Scalar lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir);
@@ -31,8 +33,8 @@ namespace strandsim
 		VecXx m_prevVelocities;
 
 		int m_iteration;
-		Scalar m_last_E;
 		Scalar m_alpha;
+		Scalar m_stepSize;
 	};
 }
 

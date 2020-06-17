@@ -1623,13 +1623,13 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_useAdditionalExternalFailSafe = false;
     m_simulation_params.m_useImpulseMethod = false;
     m_simulation_params.m_maxNewtonIterations = 1000;
-    m_simulation_params.m_simulationManager_limitedMemory = false;
+    m_simulation_params.m_simulationManager_limitedMemory = true;
     m_simulation_params.m_gaussSeidelIterations = 75;
     m_simulation_params.m_gaussSeidelTolerance = 1e-4;
     m_simulation_params.m_pruneSelfCollisions = true;
     m_simulation_params.m_pruneExternalCollisions = true;
     m_simulation_params.m_stochasticPruning = 0.8;
-    m_simulation_params.m_useDeterministicSolver = true;
+    m_simulation_params.m_useDeterministicSolver = false;
     m_simulation_params.m_useSoftAttachConstraints = false;
     m_simulation_params.m_subSteps = 1;
     m_simulation_params.m_hairHairFrictionCoefficient = 0.3;

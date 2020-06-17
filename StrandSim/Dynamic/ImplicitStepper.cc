@@ -11,8 +11,8 @@ namespace strandsim
 		m_strand(strand),
 		m_params(params),
 		m_velocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_collisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
-		m_collisionVelocities(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_totalCollisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
+		m_deltaCollisionImpulse(VecXx::Zero(strand.getCurrentDegreesOfFreedom().rows())),
 		m_timer(Timer("stepper", false))
 	{
 #if defined(_OPENMP)
@@ -26,18 +26,20 @@ namespace strandsim
 
 	}
 
-	void ImplicitStepper::accumulateCollisionImpulse(int vid, const Vec3x& r)
+	void ImplicitStepper::accumulateDeltaCollisionImpulse(int vid, const Vec3x& r)
 	{
-		m_collisionImpulse.segment<3>(4 * vid) += r;
-	}
-
-	void ImplicitStepper::accumulateCollisionVelocity(int vid, const Vec3x& vel)
-	{
-		m_collisionVelocities.segment<3>(4 * vid) += vel;
+		m_deltaCollisionImpulse.segment<3>(4 * vid) += r;
 	}
 	
 	void ImplicitStepper::commitVelocity() {
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt); 
+	}
+
+	void ImplicitStepper::updateVelocities()
+	{
+		VecXx delta_v = VecXx::Zero(m_velocities.size());
+		m_directSolver.solve(delta_v, m_deltaCollisionImpulse);
+		m_velocities += delta_v;
 	}
 
 	Scalar ImplicitStepper::maxCollisionImpulseNorm(int& idx) const
@@ -47,7 +49,7 @@ namespace strandsim
 		const int num_verts = m_strand.getNumVertices();
 		for (int i = 0; i < num_verts; ++i)
 		{
-			const Scalar len = m_collisionImpulse.segment<3>(i * 4).norm();
+			const Scalar len = m_totalCollisionImpulse.segment<3>(i * 4).norm();
 			if (len > maxlen) {
 				maxlen = len;
 				idx = i;

@@ -39,19 +39,19 @@
     <constantCollisionRadius value="1"/>
     <externalCollisionsRadius value="0.0055"/>
     <selfCollisionsRadius value="0.0055"/>
-    <responseRadius value="0.0"/>
+    <responseRadius value="0.005"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
     <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="40"/>
+    <maxNewtonIterations value="30"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -64,7 +64,9 @@
     <statGathering value="1"/>
 
     <postProcessIterations value="0"/>
-    <relaxationFactor value="0.1"/>
+    <relaxationFactor value="1.0"/>
+
+    <useDeterministicSolver value="0"/>
 
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-3"/>
@@ -173,7 +175,6 @@
   <particle x="9.5 0.0 0.0" v="0.0 0.0 0.0" fixed="1" group="0"/>
 
   <hair params="0" start="0" count="40"/>
-
 <!--
   <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="-0.5" z="-0.5" rx="0.0" ry="1.0" rz="0.0" rw="0">
     <fixed start="0" end="0" value="3"/>
@@ -181,6 +182,7 @@
     <fixed start="39" end="39" value="1"/>
     <fixed start="40" end="40" value="3"/>
   </hairobj>-->
+-->
 <!--
 <checkpoint path="simulation_capture_\assets\unit_tests\contacts\friction_2020_05_29_21_27_19\checkpoint_00000000000000000147.bin">
 </checkpoint>-->

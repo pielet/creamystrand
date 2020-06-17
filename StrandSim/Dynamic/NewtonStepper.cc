@@ -42,8 +42,6 @@ namespace strandsim
 		m_dynamics.getScriptingController()->enforceVelocities(m_velocities, m_dt);
 
 		m_dynamics.computeViscousForceCoefficients(dt);  // used for updating dt (air draging force);
-
-		//m_last_E = evaluateObjectValue(m_velocities);
 	}
 
 	bool NewtonStepper::performOneIteration()
@@ -55,7 +53,7 @@ namespace strandsim
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces(m_params.m_energyWithStretch, m_params.m_energyWithTwist, m_params.m_energyWithBend);
-		gradient -= m_strand.getFutureTotalForces() * m_dt + m_collisionImpulse;
+		gradient -= m_strand.getFutureTotalForces() * m_dt + m_totalCollisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);  // fix points
 		m_timing.gradient += m_timer.elapsed();
 
@@ -71,11 +69,10 @@ namespace strandsim
 		// solve linear equation
 		VecXx descent_dir = VecXx::Zero(m_velocities.size());
 		m_timer.restart();
-		JacobianSolver directSolver;
-		directSolver.store(hessian);
+		m_directSolver.store(hessian);
 		m_timing.factorize += m_timer.elapsed();
 		m_timer.restart();
-		directSolver.solve(descent_dir, gradient);
+		m_directSolver.solve(descent_dir, gradient);
 		m_timing.solveLinear += m_timer.elapsed();
 		descent_dir = -descent_dir;
 
@@ -136,7 +133,6 @@ namespace strandsim
 
 			if (m_alpha < 1e-5)
 				m_alpha = 0;
-			m_last_E = next_obj_value;
 
 			return m_alpha;
 		}
@@ -156,7 +152,7 @@ namespace strandsim
 		Scalar g = m_strand.getFutureTotalEnergy();
 
 		// inertia term
-		VecXx u_t = m_dynamics.getExternalForce() * m_dt + m_collisionImpulse;
+		VecXx u_t = m_dynamics.getExternalForce() * m_dt + m_totalCollisionImpulse;
 		m_dynamics.multiplyByMassMatrixInverse(u_t);
 		u_t = v - (m_savedVelocities + u_t);
 		VecXx delta_v = u_t;

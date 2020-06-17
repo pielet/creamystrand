@@ -6,6 +6,7 @@
 #endif
 #include "../Core/Definitions.hh"
 #include "../Utils/LoggingTimer.hh"
+#include "../Utils/SymmetricBandMatrixSolver.hh"
 
 namespace strandsim
 {
@@ -71,19 +72,25 @@ namespace strandsim
 
 		virtual void rewind() = 0;
 
+		virtual Scalar stepSize() = 0;
+
 		const StepperTiming& getTiming() { return m_timing; }
 
 		void outputTiming() const;
 
-		void accumulateCollisionImpulse(int vid, const Vec3x& r);
-		void clearCollisionImpulse() { m_collisionImpulse.setZero(); }
+		//void accumulateCollisionImpulse(int vid, const Vec3x& r);
+		void clearCollisionImpulse() { m_totalCollisionImpulse.setZero(); }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
+		VecXx& totalCollisionImpulses() { return m_totalCollisionImpulse; }
+		const VecXx& totalCollisionImpulses() const { return m_totalCollisionImpulse; }
 
 		void commitVelocity();
 
-		void accumulateCollisionVelocity(int vid, const Vec3x& vel);
-		void clearCollisionVelocity() { m_collisionVelocities.setZero(); }
-		const VecXx& collisionVelocities() const { return m_collisionVelocities; }
+		void accumulateDeltaCollisionImpulse(int vid, const Vec3x& vel);
+		void clearDeltaCollisionImpulse() { m_deltaCollisionImpulse.setZero(); }
+		const VecXx& deltaCollisionImpulse() const { return m_deltaCollisionImpulse; }
+
+		void updateVelocities();
 
 		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
 		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }
@@ -109,8 +116,10 @@ namespace strandsim
 		Scalar m_dt;
 
 		VecXx m_velocities;
-		VecXx m_collisionImpulse;
-		VecXx m_collisionVelocities;
+		VecXx m_totalCollisionImpulse;
+		VecXx m_deltaCollisionImpulse;
+
+		JacobianSolver m_directSolver;
 
 		StepperTiming m_timing;
 		Timer m_timer;

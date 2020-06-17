@@ -91,10 +91,9 @@ bool VertexFaceCollision::analyse()
             assert( isSmall(m_u + m_v + m_w - 1.0) );
 
             m_meshDisplacement = m_u * df0 + m_v * df1 + m_w * df2;
-            const Vec3x relativeDisplacement = ( 1 - m_time ) * ( dp - m_meshDisplacement );
+            const Vec3x relativeDisplacement = (1 - m_time) * ( dp - m_meshDisplacement );
 
-            m_offset = ( m_u * pf0 + m_v * pf1 + m_w * pf2 ) - m_meshDisplacement // orig point on mesh
-                    + dp;  // orig point on rod
+            m_offset = -dp - (m_u * pf0 + m_v * pf1 + m_w * pf2 - m_meshDisplacement); // orig point on mesh
 
             const Scalar nDepl = relativeDisplacement.dot( m_normal ) ;
             if( !fnsign )

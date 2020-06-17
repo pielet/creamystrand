@@ -15,7 +15,7 @@
 
 namespace strandsim
 {
-    static const double PARALLEL_TOL = 1e-12;
+    static const double PARALLEL_TOL = 0.1;
 
     void EdgeEdgeCollision::print(std::ostream& os) const
     {
@@ -68,14 +68,15 @@ namespace strandsim
                                 + m_secondStrand->collisionParameters().selfCollisionsRadius(m_secondVertex);
             
             if (sqrt_dist < colRadius * colRadius) {    // collision happens
-                m_normal = ((pp1 - dp1) - (pp0 - dp0)).cross((pq1 - dq1) - (pq0 - -dq0));
-                double nnorm = m_normal.norm();
+                // m_normal = ((pp1 - dp1) - (pp0 - dp0)).cross((pq1 - dq1) - (pq0 - -dq0));
+                m_normal = (p1col - p0col).cross(q1col - q0col);
+                double nnorm = m_normal.norm() / (p1col - p0col).norm() / (q1col - q0col).norm();
 
-                if (nnorm * nnorm <= PARALLEL_TOL) {    // parallel -> pass
+                if (nnorm <= PARALLEL_TOL) {    // parallel -> pass
                     continue;
                 }
 
-                m_normal /= nnorm;
+                m_normal.normalize();
                 m_time = times[i];
 
                 m_firstDirection = (p1col - p0col).normalized();

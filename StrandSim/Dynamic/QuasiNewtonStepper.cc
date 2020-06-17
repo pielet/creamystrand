@@ -55,7 +55,7 @@ namespace strandsim
 		VecXx gradient = m_velocities - m_savedVelocities;
 		m_dynamics.multiplyByMassMatrix(gradient);
 		m_dynamics.computeFutureForces();
-		gradient -= m_dt * m_strand.getFutureTotalForces() + m_collisionImpulse;
+		gradient -= m_dt * m_strand.getFutureTotalForces() + m_totalCollisionImpulse;
 		m_dynamics.getScriptingController()->fixRHS(gradient);
 		m_timing.gradient += m_timer.elapsed();
 

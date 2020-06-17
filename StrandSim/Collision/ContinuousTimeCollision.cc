@@ -98,9 +98,4 @@ void ContinuousTimeCollision::postAnalyse( const Vec3x& relativeDisplacement )
     m_normalRelativeDisplacement -= EXTRA_RADIUS;
 }
 
-Vec3x ContinuousTimeCollision::offset() const
-{
-    return ( m_offset.dot( m_normal ) + EXTRA_RADIUS ) * m_normal;
-}
-
 } /* namespace strandsim */

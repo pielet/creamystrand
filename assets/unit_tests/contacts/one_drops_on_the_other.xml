@@ -51,7 +51,7 @@
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -61,8 +61,8 @@
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
 
-    <postProcessIterations value="2"/>
-    <relaxationFactor value="0.5"/>
+    <postProcessIterations value="5"/>
+    <relaxationFactor value="1"/>
 
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
@@ -82,9 +82,6 @@
     <bogusAlgorithm value="gaussseidel"/>
 
     <simulationManagerLimitedMemory value="1"/>
-
-    <energyWithBend value="1"/>
-    <energyWithTwist value="1"/>
 
     <airDrag value="0.0005"/> 
     <gaussSeidelIterations value="2"/>

@@ -29,9 +29,9 @@ namespace strandsim
             int vertex;
             Scalar abscissa;
 
-            Vec3x freeVel;
-            Vec3x direction;
-            Mat3x invInertia;
+            Vec3x freeVel;  // intialization outside
+            Vec3x direction;    // intialization outside
+            Mat3x invInertia;   // computed
 
             Object() : globalIndex(0), vertex(0), abscissa(0) {}
 
@@ -48,19 +48,19 @@ namespace strandsim
         };
         
         ProximityCollision(): 
-            m_originalCTCollision( NULL ), solved(false), mu(0.), distance(0.), force(Vec3x::Zero())
+            m_originalCTCollision( NULL ), solved(false), mu(0.), force(Vec3x::Zero())
         {
         }
         
         ContinuousTimeCollision* m_originalCTCollision; // If the proximity collision was actually built from a continuous time collision, this keeps a pointer to the original in case we need it for impulse resolution
         
         bool solved;
-        Vec3x normal;
+        Vec3x normal;   // intialization outside
         Vec3x force;
-        Scalar mu;
-        Scalar distance;
+        Scalar mu;      // intialization outside
+        Scalar distance;    // intialization outside
 
-        Mat3x transformationMatrix ;
+        Mat3x transformationMatrix ;    // computed
         
         std::pair<Object, Object> objects;
         
@@ -91,30 +91,32 @@ namespace strandsim
         
         bool operator<( const ProximityCollision &rhs ) const
         {
-            
-            /* mine, subject to change but may create more failures, in which case CT is first thrown out since last to arrive... */
-            if( objects.first.vertex == rhs.objects.first.vertex ){
-                if ( objects.second.vertex == rhs.objects.second.vertex ){
-                    if ( distance == rhs.distance ){
-                        return normal.norm() < rhs.normal.norm();
+            if( objects.first.globalIndex == rhs.objects.first.globalIndex ){
+                if ( objects.second.globalIndex == rhs.objects.second.globalIndex ){
+                    if ( objects.first.vertex == rhs.objects.first.vertex ){
+                        return objects.second.vertex < rhs.objects.second.vertex;
                     }
                     else
-                        return distance < rhs.distance;
+                        return objects.first.vertex < rhs.objects.first.vertex;
                 }
                 else
-                    return objects.second.vertex < rhs.objects.second.vertex;
+                    return objects.second.globalIndex < rhs.objects.second.globalIndex;
             }
             else
-                return objects.first.vertex < rhs.objects.first.vertex;
+                return objects.first.globalIndex < rhs.objects.first.globalIndex;
          
         }
 
         bool operator==(const ProximityCollision& other) const
         {
-            if (objects.first.globalIndex == other.objects.first.globalIndex
-                && objects.first.vertex == other.objects.first.vertex
-                && objects.second.globalIndex == other.objects.second.globalIndex
-                && objects.second.vertex == other.objects.second.vertex)
+            if ((objects.first.globalIndex == other.objects.first.globalIndex
+                    && objects.first.vertex == other.objects.first.vertex
+                    && objects.second.globalIndex == other.objects.second.globalIndex
+                    && objects.second.vertex == other.objects.second.vertex)
+                || (objects.first.globalIndex == other.objects.second.globalIndex
+                    && objects.first.vertex == other.objects.second.vertex
+                    && objects.second.globalIndex == other.objects.first.globalIndex
+                    && objects.second.vertex == other.objects.first.vertex))
                 return true;
             else
                 return false;

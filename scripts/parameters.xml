@@ -88,7 +88,7 @@
 		<postProcessIterations value="0"/>
 		<relaxationFactor value="1.0"/>
 		<rodSubSteps value="1"/> 	<!-- substep when solving unconstraint nonlinear problem -->
-		<simulationManagerLimitedMemory value="0"/>  <!-- if false, save computed impulses of current collisions, which can be used as warm start in next step -->
+		<simulationManagerLimitedMemory value="1"/>  <!-- if false, save computed impulses of current collisions, which can be used as warm start in next step -->
 		<skipFlowFrictions value="1"/>
 		<skipRodMeshCollisions value="0"/>  <!-- continuous collision detection and intersection test -->
 		<skipRodRodCollisions value="0"/>   <!-- hair-hair proximity test -->
@@ -100,7 +100,7 @@
 		<useAdditionalExternalFailSafe value="0"/>  <!-- redo collision resolve again without mutual collisions -->
 		<useApproxRodElasticFriction value="1"/>
 		<useCTRodRodCollisions value="0"/>
-		<useDeterministicSolver value="1"/>
+		<useDeterministicSolver value="0"/>
 		<useImpulseMethod value="0"/> 	<!-- explicit Euler (M = mass matrix) -->
 		<useLengthProjection value="1"/>  	<!-- Follow The Leader -->
 		<useNonlinearContacts value="0"/>   	<!-- use Newton Method to solve constraint motion equation after bogus solver (add additional impulse to rhs)-->

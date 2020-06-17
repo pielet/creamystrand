@@ -3,7 +3,6 @@
 
 #include "../Core/Definitions.hh"
 #include "NewtonStepper.hh"
-#include "../Utils/SymmetricBandMatrixSolver.hh"
 
 #include <deque>
 
@@ -27,8 +26,6 @@ namespace strandsim
 		int m_windowSize;
 		std::deque<VecXx> m_v_queue;
 		std::deque<VecXx> m_g_queue;
-
-		JacobianSolver m_directSolver;
 
 		VecXx m_last_v;
 		VecXx m_last_gradient;

@@ -326,6 +326,8 @@ private:
 	std::vector<std::map<unsigned, unsigned> > m_externalCollisionTimes;
     ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts (edge/edge)
     std::vector<ProximityCollisions> m_externalContacts;         //!< List of all contacts between movable hair and fixed edges
+    ProximityCollisions m_newMutualContacts;
+    std::vector<ProximityCollisions> m_newExternalContacts;
     //! Structure for storing collisions and forces, useful for drawaing and warm-starting solver
     ProximityCollisionDatabase m_collisionDatabase;
     const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;
