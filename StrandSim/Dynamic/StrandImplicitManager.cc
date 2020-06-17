@@ -1558,11 +1558,12 @@ namespace strandsim
 		if (m_params.m_statGathering == 2) {
 			for (int i = 0; i < (int)m_steppers.size(); i++)
 			{
-				int subidx = -1;
-				const Scalar Wi = m_steppers[i]->maxAdditionalImpulseNorm(subidx);
-
-				ContactStream(g_log, "") << "Impulse norm: " << Wi << " @ " << i << ", " << subidx;
-			}
+				for (int j = 0; j < m_strands[i]->getNumVertices(); ++j) {
+					Vec3x impulse = m_steppers[i]->additionalImpulses().segment<3>(4 * j);
+					if (impulse.norm() > 0)
+						ContactStream(g_log, "") << "Impulse norm: " << impulse.norm() << " @ " << i << ", " << j;
+				}
+			}		
 		}
 
 		//std::cout << "Max WI: " << (maxWI / m_dt) << " @ " << maxWI_idx << ", " << maxWI_subidx << std::endl;
@@ -1781,6 +1782,7 @@ namespace strandsim
 		const std::vector<ProximityCollision*>& colPointers, VecXx& vels, VecXx& worldImpulses, VecXx& impulses,
 		VecXu& startDofs, VecXu& nDofs, std::vector< Scalar >& newton_residuals, int total_num_substeps, int total_substep_id)
 	{
+		Timer tt("solver", false, "pose precess");
 		int iter = 0;
 		assert(globalIds.size() == startDofs.size());
 		assert(globalIds.size() == nDofs.size());
@@ -1963,6 +1965,8 @@ namespace strandsim
 			}
 		}
 
+		m_solverStat.m_poseProcessTime += tt.elapsed();
+
 		for (int i = 0; i < colPointers.size(); ++i)
 		{
 			if (!colPointers[i]) continue;
@@ -2030,7 +2034,7 @@ namespace strandsim
 
 		numNewtonIters = 0;
 
-		{
+		
 			VecXx vels;
 			VecXx impulses;
 			VecXx worldImpulses;
@@ -2049,14 +2053,11 @@ namespace strandsim
 				// update currentStates with FutureStates
 				// use FTL or if stretch energy is larger than threshold, set m_lastStepWasRejected = true
 				// update collision database
-				Timer tt("solver", false, "pose precess");
 				numNewtonIters = postProcessBogusFrictionProblem(updateVelocity, collisionGroup, mecheProblem, globalIds, colPointers, vels, worldImpulses, impulses, startDofs, nDofs, newtonResiduals, total_num_substeps, total_substep_id);
-				m_solverStat.m_poseProcessTime += tt.elapsed();
 			}
+		
 
-			m_solverStat.addStat(mecheProblem, collisionGroup);
-		}
-
+		Timer tt("solver", false, "pose precess");
 		/* If either the solver result was really bad or one strand was stretching,
 		 we trigger a hierarchy of failsafes.
 
@@ -2067,6 +2068,7 @@ namespace strandsim
 		 */
 
 		 // DK: failsafes here:
+
 		bool mustRetry = false;
 		for (int i = 0; i < globalIds.size(); ++i)
 		{
@@ -2125,6 +2127,9 @@ namespace strandsim
 			}
 
 		}
+
+		m_solverStat.m_poseProcessTime += tt.elapsed();
+		m_solverStat.addStat(mecheProblem, collisionGroup);
 
 		return res;
 	}
