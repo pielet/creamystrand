@@ -38,19 +38,23 @@
   <CollisionParameters>
     <constantCollisionRadius value="1"/>
     <externalCollisionsRadius value="0.0055"/>
-    <selfCollisionsRadius value="0.02"/>
+    <selfCollisionsRadius value="0.0055"/>
+    <responseRadius value="0.0"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
     <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="50"/>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="5"/>
+    <postProcessIterations value="0"/>
+    <relaxationFactor value="1"/>
 
-    <useQuasiNewton value="1"/>
-    <windowSize value="5"/>
+    <useQuasiNewton value="0"/>
+    <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -60,19 +64,19 @@
     <useCTRodRodCollisions value="1"/>
     <velocityDiffTolerance value="1e-6"/>
 
+    <logLevel value="4"/>
+    <statGathering value="2"/>
+
     <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
-    <logLevel value="4"/>
     <linearizebHat value="1"/>
     <linearIterations value="100"/>
     <linearSolverType value="direct"/>
-    <relaxationFactor value="2.0"/>
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="0"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
@@ -80,11 +84,8 @@
 
     <simulationManagerLimitedMemory value="1"/>
 
-    <energyWithBend value="1"/>
-    <energyWithTwist value="1"/>
-
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="2"/>
+    <gaussSeidelIterations value="1"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>

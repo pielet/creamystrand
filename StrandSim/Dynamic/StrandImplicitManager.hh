@@ -288,6 +288,9 @@ private:
     //! Setup the local frame for one contact and calls computeDeformationGradient() for each object
     void setupDeformationBasis( ProximityCollision &collision ) const;
 
+    //! Warm-starts collision force
+    void collisionWarmStarting(ProximityCollision& collision, bool isMutual);
+
     //! Discards mesh/hair collisions that are unlikely to be activated
     void pruneExternalCollisions( std::vector<ProximityCollisions>& contacts );
 
@@ -302,6 +305,8 @@ private:
     Vec3x solveOneCollision(const Vec3x& vel, Scalar mass, const Mat3x& R, Scalar mu);
     //! Rigid body impulse solver
     Vec3x solveOneCollision(const Mat3x& K, const Vec3x& relative_vel, const Vec3x& normal, Scalar mu);
+    //! Point impulse solver
+    Vec3x solveOneCollision(const Vec3x& reletive_vel, Scalar m1, Scalar m2, const Vec3x& normal, Scalar mu);
     //! Accumulates impulse
     void accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool modifyFinalVel);
 
@@ -326,8 +331,6 @@ private:
 	std::vector<std::map<unsigned, unsigned> > m_externalCollisionTimes;
     ProximityCollisions m_mutualContacts;           //!< List of all mutual contacts (edge/edge)
     std::vector<ProximityCollisions> m_externalContacts;         //!< List of all contacts between movable hair and fixed edges
-    ProximityCollisions m_newMutualContacts;
-    std::vector<ProximityCollisions> m_newExternalContacts;
     //! Structure for storing collisions and forces, useful for drawaing and warm-starting solver
     ProximityCollisionDatabase m_collisionDatabase;
     const std::map<std::pair<int, int>, std::set< std::pair<int, int> > >& m_collision_free;

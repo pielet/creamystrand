@@ -105,6 +105,7 @@ struct SimulationParameters
     Scalar m_ls_alpha;
     Scalar m_ls_beta;
 
+    unsigned m_innerIterations;
     unsigned m_postProcessIterations;
     Scalar m_relaxationFactor;
 };

@@ -18,7 +18,7 @@
 namespace strandsim
 {
     
-    const unsigned ProximityCollisionDatabase::s_maxAge = 3 ;
+    const unsigned ProximityCollisionDatabase::s_maxAge = 2 ;
 
     void ProximityCollision::Object::generateInverseInertia(const Vec3x& normal)
     {
@@ -91,7 +91,7 @@ namespace strandsim
             const Records& records = tableIt->second ;
             
             auto recordIt = records.find( key ) ;
-            if( recordIt != records.end() && !recordIt->second.firstTime )
+            if( recordIt != records.end() )
             {
 #pragma omp atomic
                 ++ m_nFound ;
@@ -209,7 +209,7 @@ namespace strandsim
 						++recordIt;
 					}
 					else {
-						records.erase(recordIt++);
+						records.erase(recordIt++); 
 						++numErased;
 					}
 				}
@@ -219,7 +219,7 @@ namespace strandsim
         DebugStream( g_log, "") << " Col database: " << numErased << " erased, " << numRemaining << " remaining " ;
         if( m_nQueries )
         {
-            DebugStream( g_log, "") << " At last step: " << m_nQueries<< " queries, " << m_nFound << " found ( " << (( 100.f *  m_nFound) / m_nQueries )<< " % ) " ;
+            InfoStream( g_log, "") << " At last step: " << m_nQueries<< " queries, " << m_nFound << " found ( " << (( 100.f *  m_nFound) / m_nQueries )<< " % ) " ;
         }
         
         m_nQueries = m_nFound = 0;

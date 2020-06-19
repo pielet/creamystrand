@@ -46,7 +46,12 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="30"/>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="3"/>
+    <postProcessIterations value="0"/>
+
+    <simulationManagerLimitedMemory value="0"/>
+    <relaxationFactor value="0.5"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
@@ -59,23 +64,16 @@
 
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
+
     <velocityDiffTolerance value="1e-6"/>
+    <collisionSolverTolerace value="1e-6"/>
 
-    <statGathering value="1"/>
-
-    <postProcessIterations value="0"/>
-    <relaxationFactor value="1.0"/>
-
-    <useDeterministicSolver value="0"/>
-
-    <nonlinearIterations value="20"/>
-    <collisionSolverTolerace value="1e-3"/>
     <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <linearIterations value="100"/>
-    <linearSolverType value="direct"/>
+    <statGathering value="0"/>
+
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
+
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
@@ -85,7 +83,7 @@
     <bogusAlgorithm value="gaussseidel"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="2"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>

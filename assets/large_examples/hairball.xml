@@ -39,17 +39,24 @@
     <constantCollisionRadius value="1"/>
     <externalCollisionsRadius value="0.0055"/>
     <selfCollisionsRadius value="0.0055"/>
+    <responseRadius value="0.005"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
+    <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="50"/>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="5"/>
+    <postProcessIterations value="0"/>
 
-    <useQuasiNewton value="1"/>
+    <simulationManagerLimitedMemory value="1"/>
+    <relaxationFactor value="0.5"/>
+
+    <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -57,40 +64,35 @@
 
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
-    <velocityDiffTolerance value="1e-6"/>
 
-    <nonlinearIterations value="20"/>
-    <collisionSolverTolerace value="1e-3"/>
-    <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <linearIterations value="100"/>
-    <linearSolverType value="direct"/>
-    <relaxationFactor value="2.0"/>
+    <velocityDiffTolerance value="1e-6"/>
+    <collisionSolverTolerace value="1e-6"/>
+
+    <logLevel value="4"/>
+    <statGathering value="0"/>
+
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
+
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="200"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
 
-  <hairobj filename="assets/hair_ball_1k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
+  <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>
-
-<checkpoint path="ours_hairball\checkpoint_00000000000000001379.bin">
-</checkpoint>
 
   <script type="rotate" x="0" y="1" z="0.0" w="6.28" start="0.5" end="4.0" group="0"/>
   <script type="rotate" x="1" y="0" z="0.0" w="6.28" start="4.5" end="8.0" group="0"/>

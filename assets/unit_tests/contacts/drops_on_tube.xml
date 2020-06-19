@@ -38,19 +38,24 @@
     <constantCollisionRadius value="1"/>
     <externalCollisionsRadius value="0.0055"/>
     <selfCollisionsRadius value="0.0055"/>
-    <responseRadius value="0.0055"/>
+    <responseRadius value="0.001"/>
     <impulseMaxNorm value="0"/>
     <maxNumCollisionsPerEdge value="6"/>
     <fakeLayering value="0"/>
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="5"/>
+    <maxNewtonIterations value="3"/>
+    <innerIterations value="3"/>
+    <postProcessIterations value="0"/>
+
+    <simulationManagerLimitedMemory value="0"/>
+    <relaxationFactor value="0.8"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -58,30 +63,26 @@
 
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
+
     <velocityDiffTolerance value="1e-6"/>
-
-    <postProcessIterations value="10"/>
-    <relaxationFactor value="1"/>
-
-    <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
+
     <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <linearIterations value="100"/>
-    <linearSolverType value="direct"/>
+    <statGathering value="0"/>
+
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
+
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="2"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
@@ -130,14 +131,14 @@
 
   <hair params="0" start="0" count="40"/>
 -->
-
   <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="0.3" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="1.5707963268">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>
+
   <!--<script type="translate" x="0.0" y="0" z="5.0" w="0" start="0" end="1.0" group="0"/>-->
 
   <distancefield usage="solid" type="cylinder" cx="0.0" cy="-0.5" cz="0.0" rx="0.0" ry="0.0" rz="1.0" rw="1.5708" radius="0.5" corner="0.0" halflength="5.0" group="1"/>
-  <!--<distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>-->
+  <distancefield usage="terminator" type="box" cx="0.0" cy="2.5" cz="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0" ex="20.0" ey="20.0" ez="20.0" radius="0.0" group="2" inverted="1"/>
 
 </scene>  

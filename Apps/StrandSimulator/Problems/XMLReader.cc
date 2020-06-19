@@ -1648,8 +1648,11 @@ void XMLReader::setSimulationParameters()
     m_simulation_params.m_ls_alpha = 0.03;
     m_simulation_params.m_ls_beta = 0.5;
 
+    m_simulation_params.m_innerIterations = 1;
     m_simulation_params.m_postProcessIterations = 0;
     m_simulation_params.m_relaxationFactor = 1.0;
+
+    m_simulation_params.m_collisionSolverTolerace = 1e-6;
 
 	m_simulation_params.m_bogusAlgorithm = bogus::MecheFrictionProblem::ProjectedGradient;
     
@@ -1705,8 +1708,11 @@ void XMLReader::setSimulationParameters()
     loadParam(nd, "lineSearchAlpha", m_simulation_params.m_ls_alpha);
     loadParam(nd, "lineSearchBeta", m_simulation_params.m_ls_beta);
 
+    loadParam(nd, "innerIterations", m_simulation_params.m_innerIterations);
     loadParam(nd, "postProcessIterations", m_simulation_params.m_postProcessIterations);
     loadParam(nd, "relaxationFactor", m_simulation_params.m_relaxationFactor);
+
+    loadParam(nd, "collisionSolverTolerace", m_simulation_params.m_collisionSolverTolerace);
 
 	rapidxml::xml_node<>* subnd;
 	if ((subnd = nd->first_node("bogusAlgorithm")))

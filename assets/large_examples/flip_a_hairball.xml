@@ -2,7 +2,7 @@
   <description text="A ball rises out of mud and flips its hairs to throw off the mud."/>
 
   <duration time="4.0"/>
-  <integrator type="linearized-implicit-euler" dt="0.01" criterion="1e-9" maxiters="1000"/>
+  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
   <simplegravity fx="0.0" fy="-981.0"/>
@@ -43,31 +43,48 @@
     <minBendingAngle value="45.0"/>
   </StrandParameters>
 
-  <CollisionParameters>
-    <constantCollisionRadius value="1"/>
-    <externalCollisionsRadius value="0.0055"/>
-    <selfCollisionsRadius value="0.0055"/>
-    <impulseMaxNorm value="0"/>
-    <maxNumCollisionsPerEdge value="6"/>
-  </CollisionParameters>
-
   <SimulationParameters>
-    <airDrag value="0.0003"/> 
-    <gaussSeidelIterations value="1000"/>
-    <gaussSeidelTolerance value="1e-06"/> 
-    <maxNewtonIterations value="1000"/>
-    <hairMeshFrictionCoefficient value="1.0"/>
-    <numberOfThreads value="24"/>
-    <percentCTRodRodCollisionsAccept value="100"/>
-    <pruneExternalCollisions value="1"/>
-    <pruneSelfCollisions value="1"/>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="10"/>
+    <postProcessIterations value="0"/>
+
     <simulationManagerLimitedMemory value="0"/>
-    <statGathering value="1"/>
-    <hairHairFrictionCoefficient value="0.3"/>
+    <relaxationFactor value="0.8"/>
+
+    <useQuasiNewton value="0"/>
+    <windowSize value="0"/>
+
+    <useLineSearch value="0"/>
+    <lineSearchAlpha value="0.03"/>
+    <lineSearchBeta value="0.5"/>
+
+    <useSoftAttachConstraints value="1"/>
+
+    <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
+
+    <velocityDiffTolerance value="1e-6"/>
+    <collisionSolverTolerace value="1e-6"/>
+
+    <logLevel value="5"/>
+    <statGathering value="0"/>
+
+    <hairMeshFrictionCoefficient value="0.3"/>
+    <hairHairFrictionCoefficient value="0.3"/>
+
+    <numberOfThreads value="24"/>
+    <pruneExternalCollisions value="0"/>
+    <pruneSelfCollisions value="0"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
+    <bogusAlgorithm value="gaussseidel"/>
+
+    <airDrag value="0.0005"/> 
+    <gaussSeidelIterations value="100"/>
+    <gaussSeidelTolerance value="1e-06"/>
+    <stochasticPruningFraction value="0.8"/>
+    <useLengthProjection value="0"/>
   </SimulationParameters>
 
   <particle x="4.5504 -3 2.50876" v="0.0 0.0 0.0" fixed="1"/>
@@ -46153,7 +46170,9 @@
  <script type="translate" x="0" y="16.0" z="0" w="0.0" start="0.3" end="0.55" group="0"/>
  <script type="rotate" x="0" y="0" z="1" w="3.14159265358" start="0.4" end="0.55" group="0"/>
  <script type="translate" x="0" y="8.0" z="0" w="0.0" start="2.0" end="2.4" group="0"/>
- 
+
+ <checkpoint path="simulation_capture_\assets\large_examples\flip_a_hairball_2020_06_17_22_06_51/checkpoint_00000000000000000098.bin">
+ </checkpoint>
 <!-- 
   <distancefield usage="source" type="cylinder" cx="0.0" cy="16.0" cz="0.0" rx="0.0" ry="1.0" rz="0.0" radius="0.433" halflength="0.125" rw="0.0" corner="0.005" group="1">
     <emit start="0.0" end="1.0" evx="0." evy="-20." evz="0."/>

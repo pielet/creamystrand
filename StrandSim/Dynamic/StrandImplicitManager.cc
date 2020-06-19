@@ -53,6 +53,7 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <chrono>
 #include <mutex>
 #include <condition_variable>
 
@@ -168,7 +169,6 @@ namespace strandsim
 		// Now that we have all the external forces in place, do reverse hairdo if needed
 
 		m_externalContacts.resize(m_strands.size());
-		m_newExternalContacts.resize(m_strands.size());
 		m_selfCollisionTimes.resize(m_strands.size());
 		m_externalCollisionTimes.resize(m_strands.size());
 
@@ -195,7 +195,7 @@ namespace strandsim
 
 	void StrandImplicitManager::execute(int total_num_substeps, int total_substep_id, const Scalar total_substep_dt)
 	{
-		//    InfoStream( g_log, "" ) << "Simulation time: " << getTime();
+		auto start = std::chrono::steady_clock::now();
 		m_dt = total_substep_dt;
 
 		m_timings.push_back(StepTimings());
@@ -208,27 +208,17 @@ namespace strandsim
 		step();
 		if (m_substep_callback) m_substep_callback->executeCallback();	// update drawing data
 
-		/*m_statTotalCollisions += m_statExternalContacts + m_statMutualCollisions;
-		InfoStream(g_log, "Contact")
-			<< "external: " << m_statExternalContacts
-			<< " mutual: " << m_statMutualCollisions
-			<< " total: " << m_statExternalContacts + m_statMutualCollisions
-			<< " overall: " << m_statTotalCollisions;*/
-
 		InfoStream(g_log, "Timing") << "Last frame (ms):";
 		print(m_timings.back());
 		InfoStream(g_log, "Timing") << "Average after " << m_timings.size() << " frames (ms):";
 		print(m_timings);
 
-		//if (m_params.m_statGathering)
-		//{
-		//	//printNewtonSolverBreakdownTiming<InfoStream>();
-		//	print<InfoStream>(m_cdTimings);
-		//	print<InfoStream>(m_solverStat);
-		//}
-
 		m_cdTimings.reset();
 		m_solverStat.reset();
+
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<double> elapsed_seconds = end - start;
+		std::cout << "elapsed time: " << elapsed_seconds.count() * 1000 << "ms\n";
 	}
 
 
@@ -492,7 +482,7 @@ namespace strandsim
 				if (acceptFirst && acceptSecond) { 
 					collision.swapIfNecessary();
 #pragma omp critical(mutualContact)
-					m_newMutualContacts.push_back(collision);
+					m_mutualContacts.push_back(collision);
 				}
 				else {
 					makeExternalContact(collision, acceptFirst);
@@ -572,9 +562,9 @@ namespace strandsim
 			return false;
 
 #pragma omp critical(externalContact)
-		m_newExternalContacts[strIdx].push_back(externalContact);
+		m_externalContacts[strIdx].push_back(externalContact);
 
-		ProximityCollision& collision = m_newExternalContacts[strIdx].back();
+		ProximityCollision& collision = m_externalContacts[strIdx].back();
 
 		collision.objects.first.globalIndex = strIdx;
 		collision.objects.first.vertex = edgeIdx;
@@ -746,8 +736,10 @@ namespace strandsim
 
 						if (acceptFirst && acceptSecond) {
 							mutualContact.swapIfNecessary();
+							if (std::find(m_mutualContacts.begin(), m_mutualContacts.end(), mutualContact) == m_mutualContacts.end()) {
 #pragma omp critical(mutualContact)
-							m_mutualContacts.push_back(mutualContact);
+								m_mutualContacts.push_back(mutualContact);
+							}
 						}
 						else {
 							makeExternalContact(mutualContact, acceptFirst);
@@ -801,7 +793,7 @@ namespace strandsim
 			+ t * velocities.segment<3>(4 * iQ + 4);
 
 #pragma omp critical(externalContact)
-		m_newExternalContacts[externalContact.objects.first.globalIndex].push_back(externalContact);
+		m_externalContacts[externalContact.objects.first.globalIndex].push_back(externalContact);
 	}
 
 	//void StrandImplicitManager::computeDeformationGradient(ProximityCollision::Object& object) const
@@ -849,6 +841,7 @@ namespace strandsim
 			m_meshScriptingControllers[i]->execute(true); // Advance the mesh; compute level set if we do rod/mesh penalties
 		}
 	}
+
 	/*
 	void StrandImplicitManager::redo_step_dynamics(int total_num_substeps, int total_substep_id, Scalar substepDt)
 	{
@@ -2661,7 +2654,7 @@ namespace strandsim
 		int k = 0;
 		for (k; k < m_params.m_maxNewtonIterations; ++k) {
 			timer.restart();
-//#pragma omp parallel for
+#pragma omp parallel for
 			for (int i = 0; i < m_steppers.size(); ++i) {
 				pass[i] = m_steppers[i]->performOneIteration();
 			}
@@ -2694,12 +2687,22 @@ namespace strandsim
 					timings.continousTimeCollisions += timer.elapsed();
 
 					timer.restart();
+#pragma omp parallel for
+					for (int i = 0; i < m_strands.size(); ++i) {
+						m_strands[i]->swapStates();
+					}
+					setupHairHairCollisions(m_dt);
+					timings.proximityCollisions += timer.elapsed();
+
+					timer.restart();
 					step_processCollisions();
 					timings.processCollisions += timer.elapsed();
 				}
 				if (m_statTotalContacts > 0) {
 					timer.restart();
-					step_solveCollisions(false);
+					for (int j = 0; j < m_params.m_innerIterations; ++j) {
+						step_solveCollisions(false);
+					}
 					timings.solve += timer.elapsed();
 				}
 				if (g_one_iter) {
@@ -2720,8 +2723,9 @@ namespace strandsim
 
 		std::cout << "Total iteration number: " << k + 1 << std::endl;
 
-		if (m_params.m_useCTRodRodCollisions) {
+		if (m_params.m_useCTRodRodCollisions && m_params.m_postProcessIterations > 0) {
 			timer.restart();
+			step_prepareCollision();
 #pragma omp parallel for 
 			for (int i = 0; i < m_steppers.size(); ++i)
 			{
@@ -2733,13 +2737,13 @@ namespace strandsim
 			timer.restart();
 			step_processCollisions();
 			timings.processCollisions += timer.elapsed();
-		}
 
-		timer.restart();
-		for (int j = 0; j < m_params.m_postProcessIterations; ++j) {
-			step_solveCollisions(false);
+			timer.restart();
+			for (int j = 0; j < m_params.m_postProcessIterations; ++j) {
+				step_solveCollisions(false);
+			}
+			timings.solve += timer.elapsed();
 		}
-		timings.solve += timer.elapsed();
 
 		step_postCollision();
 
@@ -2854,9 +2858,9 @@ namespace strandsim
 		m_collisionDetector->findCollisions(false, false, true, true);
 
 		// compact m_continuousTimeCollisions in ProximityCollision, and add these collisions to m_externalContacts
-		m_newMutualContacts.clear();
+		m_mutualContacts.clear();
 		for (int i = 0; i < m_strands.size(); ++i) {
-			m_newExternalContacts[i].clear();
+			m_externalContacts[i].clear();
 		}
 		doContinuousTimeDetection(m_dt);
 		// compact m_proximityCollisions in ProximityCollision, and add these collisions to m_externalContacts
@@ -2882,77 +2886,95 @@ namespace strandsim
 
 	void StrandImplicitManager::step_processCollisions()
 	{
-		/* prune and sort m_newMutualContacts and m_newExternalContacts
+		/* prune and sort m_mutualContacts and m_externalContacts
 		 * compute deformation basis
 		 * assamble collision problem
 		 */
 		 // ---------------- mutual ---------------------
-		if (m_newMutualContacts.size() > 0) {
-#pragma omp parallel for 
-			for (int i = 0; i < m_newMutualContacts.size(); ++i) {
-				m_newMutualContacts[i].generateInverseInertia();
-				m_newMutualContacts[i].generateTransformationMatrix();
-			}
+		ProximityCollisions mutualCollisions;
+		mutualCollisions.reserve(m_mutualContacts.size());
 
-			//std::unordered_set<ProximityCollision, ProximityCollision::Hasher> mutual_collision_set(m_newMutualContacts.begin(), m_newMutualContacts.end());
-			//for (ProximityCollision& col : m_mutualContacts) {
-			//	auto insert_info = mutual_collision_set.insert(col);
-			//	if (!insert_info.second) {
-			//		ProximityCollision newCol = *insert_info.first;
-			//		newCol.force = col.force;
-			//		mutual_collision_set.erase(insert_info.first);
-			//		mutual_collision_set.insert(newCol);
-			//	}
-			//}
-			//m_mutualContacts.assign(mutual_collision_set.begin(), mutual_collision_set.end());
-
-			m_mutualContacts.assign(m_newMutualContacts.begin(), m_newMutualContacts.end());
-			
-			for (int i = 0; i < m_strands.size(); ++i) {
-				m_selfCollisionTimes[i].clear();
-			}
-			updateCollisionTimes(m_mutualContacts);
-
-			if (m_params.m_pruneSelfCollisions) {
-				ProximityCollisions mutualCollisions;
-				mutualCollisions.reserve(m_mutualContacts.size());
-
-				pruneCollisions(m_mutualContacts, mutualCollisions, m_params.m_stochasticPruning);
-				m_mutualContacts.swap(mutualCollisions);
-			}
-			if (m_params.m_useDeterministicSolver) {
-				std::sort(m_mutualContacts.begin(), m_mutualContacts.end());
-			}
+		if (m_params.m_pruneSelfCollisions) {
+			pruneCollisions(m_mutualContacts, mutualCollisions, m_params.m_stochasticPruning);
+			m_mutualContacts.swap(mutualCollisions);
 		}
 
+		if (m_params.m_useDeterministicSolver) {
+			std::sort(m_mutualContacts.begin(), m_mutualContacts.end(), SortByTime());
+		}
+#pragma omp parallel for 
+		for (int i = 0; i < m_mutualContacts.size(); ++i) {
+			//m_mutualContacts[i].generateInverseInertia();
+			collisionWarmStarting(m_mutualContacts[i], true);
+			m_mutualContacts[i].generateTransformationMatrix();
+		}
+		updateCollisionTimes(m_mutualContacts);
+
 		// --------------- external ------------------
+		if (m_params.m_pruneExternalCollisions)
+		{
+			pruneExternalCollisions(m_externalContacts);
+		}
 		int nExt = 0;
 #pragma omp parallel for reduction(+: nExt)
-		for (int i = 0; i < (int)m_strands.size(); ++i) 
+		for (int i = 0; i < (int)m_strands.size(); ++i)
 		{
-			for (int j = 0; j < m_newExternalContacts[i].size(); ++j) {
-				m_newExternalContacts[i][j].generateTransformationMatrix();
-			}
-			for (int i = 0; i < m_strands.size(); ++i) {
-				m_externalCollisionTimes[i].clear();
-			}
-			updateCollisionTimes(m_newExternalContacts[i]);
-
-			m_externalContacts[i].assign(m_newExternalContacts[i].begin(), m_newExternalContacts[i].end());
-
 			if (m_params.m_useDeterministicSolver && !m_params.m_pruneExternalCollisions) {
 				std::sort(m_externalContacts[i].begin(), m_externalContacts[i].end());
 			}
-			nExt += m_externalContacts[i].size();
+			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
+				//m_externalContacts[i][j].generateInverseInertia();
+				collisionWarmStarting(m_externalContacts[i][j], false);
+				m_externalContacts[i][j].generateTransformationMatrix();
+				++nExt;
+			}
+			updateCollisionTimes(m_externalContacts[i]);
 		}
-		if (m_params.m_pruneExternalCollisions)
-		{
-			pruneExternalCollisions(m_newExternalContacts);
+
+
+#pragma omp parallel for
+		for (int i = 0; i < m_steppers.size(); ++i) {
+			m_steppers[i]->updateVelocities();
+			m_steppers[i]->totalCollisionImpulses() += m_steppers[i]->deltaCollisionImpulse();
+			m_steppers[i]->clearDeltaCollisionImpulse();
 		}
 
 		m_statTotalContacts = nExt + m_mutualContacts.size();
 
-		ContactStream(g_log, "Contact") << "external: " << nExt << " mutual: " << m_mutualContacts.size();
+		InfoStream(g_log, "Contact") << "external: " << nExt << " mutual: " << m_mutualContacts.size();
+	}
+
+	void StrandImplicitManager::collisionWarmStarting(ProximityCollision& collision, bool isMutual)
+	{
+		const ProximityCollision* oldCollision = m_collisionDatabase.find(collision);
+
+		if (oldCollision)
+		{
+			const Vec3x force = parallelTransport(oldCollision->force, oldCollision->normal, collision.normal);
+			collision.force = force * m_params.m_relaxationFactor;
+
+			if (isMutual) {
+				int s1 = collision.objects.first.globalIndex;
+				int s2 = collision.objects.second.globalIndex;
+				int v1 = collision.objects.first.vertex;
+				int v2 = collision.objects.second.vertex;
+
+				Scalar alpha_1 = collision.objects.first.abscissa;
+				Scalar alpha_2 = collision.objects.second.abscissa;
+
+				m_steppers[s1]->accumulateDeltaCollisionImpulse(v1, (1 - alpha_1) * collision.force);
+				m_steppers[s1]->accumulateDeltaCollisionImpulse(v1 + 1, alpha_1 * collision.force);
+				m_steppers[s2]->accumulateDeltaCollisionImpulse(v2, -(1 - alpha_2) * collision.force);
+				m_steppers[s2]->accumulateDeltaCollisionImpulse(v2 + 1, -alpha_2 * collision.force);
+			}
+			else {
+				int sid = collision.objects.first.globalIndex;
+				int vid = collision.objects.first.vertex;
+				Scalar alpha = collision.objects.first.abscissa;
+
+				m_steppers[sid]->accumulateDeltaCollisionImpulse(vid, collision.force);
+			}
+		}
 	}
 
 	void StrandImplicitManager::step_solveCollisions(bool commitVelocities)
@@ -2999,20 +3021,25 @@ namespace strandsim
 			const Vec3x cv1 = (1 - alpha_1) * m_steppers[s1]->getVelocity(v1) + alpha_1 * m_steppers[s1]->getVelocity(v1 + 1);
 			const Vec3x cv2 = (1 - alpha_2) * m_steppers[s2]->getVelocity(v2) + alpha_2 * m_steppers[s2]->getVelocity(v2 + 1);
 
-			const Mat3x K = collision.objects.first.invInertia / m1 + collision.objects.second.invInertia / m2;
-			Vec3x r = solveOneCollision(K, cv2 - cv1 - offset / m_dt * collision.normal, collision.normal, collision.mu);
+			//const Mat3x K = collision.objects.first.invInertia / m1 + collision.objects.second.invInertia / m2;
+			//Vec3x r = solveOneCollision(K, cv2 - cv1 - offset / m_dt * collision.normal, collision.normal, collision.mu);
 
-			ContactStream(g_log, "") << "delta_r: " << r.norm();
+			//accumulateImpulse(s1, v1, alpha_1, r, commitVelocities);
+			//accumulateImpulse(s2, v2, alpha_2, -r, commitVelocities);
 
-			if (commitVelocities) r *= m_params.m_relaxationFactor;
+			const Vec3x r = solveOneCollision(cv2 - cv1 - offset / m_dt * collision.normal, m1, m2, collision.normal, collision.mu);
+
+			m_steppers[s1]->accumulateDeltaCollisionImpulse(v1, (1 - alpha_1) * r);
+			m_steppers[s1]->accumulateDeltaCollisionImpulse(v1 + 1, alpha_1 * r);
+			m_steppers[s2]->accumulateDeltaCollisionImpulse(v2, -(1 - alpha_2) * r);
+			m_steppers[s2]->accumulateDeltaCollisionImpulse(v2 + 1, -alpha_2 * r); 
+
+			ContactStream(g_log, "") << "delta_r: " << r; 
 			
 			collision.force += r;
 
-			accumulateImpulse(s1, v1, alpha_1, r, commitVelocities);
-			accumulateImpulse(s2, v2, alpha_2, -r, commitVelocities);
-
 			// update collision time
-			if (isSmall(r.norm())) {
+			if (r.norm() < m_params.m_collisionSolverTolerace) {
 				collision.solved = true;
 			}
 			else {
@@ -3042,15 +3069,13 @@ namespace strandsim
 
 					Vec3x r = solveOneCollision(v_ref + offset / m_dt * collision.normal, m_prime, collision.transformationMatrix, collision.mu);
 
-					ContactStream(g_log, "") << "delta_r: " << r.norm();
-
-					if (commitVelocities) r *= m_params.m_relaxationFactor;
+					ContactStream(g_log, "") << "delta_r: " << r;
 
 					m_steppers[sid]->accumulateDeltaCollisionImpulse(vid, r);
 
 					collision.force += r;
 
-					if (isSmall(r.norm())) {
+					if (r.norm() < m_params.m_collisionSolverTolerace) {
 						collision.solved = true;
 					}
 					else {
@@ -3066,10 +3091,21 @@ namespace strandsim
 			m_externalCollisionTimes[i].swap(tmp_externalCollisionTime[i]);
 		}
 
+#pragma omp parallel for
 		for (int i = 0; i < m_steppers.size(); ++i) {
 			m_steppers[i]->updateVelocities();
 			m_steppers[i]->totalCollisionImpulses() += m_steppers[i]->deltaCollisionImpulse();
 			m_steppers[i]->clearDeltaCollisionImpulse();
+		}
+
+		if (m_params.m_statGathering == 2) {
+			for (int i = 0; i < m_strands.size(); ++i) {
+				for (int j = 0; j < m_strands[i]->getNumVertices(); ++j) {
+					Vec3x impulse = m_steppers[i]->totalCollisionImpulses().segment<3>(4 * j);
+					if (impulse.norm() > 0)
+						ContactStream(g_log, "") << "Impulse norm: " << impulse.norm() << " @ " << i << ", " << j;
+				}
+			}
 		}
 
 		//Scalar mutual_err = 0;
@@ -3135,6 +3171,23 @@ namespace strandsim
 		}
 	}
 
+	Vec3x StrandImplicitManager::solveOneCollision(const Vec3x& reletive_vel, Scalar m1, Scalar m2, const Vec3x& normal, Scalar mu)
+	{
+		const Vec3x r = (m1 * m2 / (m1 + m2)) * reletive_vel;
+		Scalar r_n = r.dot(normal);
+
+		if (r_n < 0) return Vec3x::Zero();
+
+		Vec3x r_t = r - r_n * normal;
+		if (r_t.norm() > mu* r_n) {
+			r_t *= mu * r_n / r_t.norm();
+			return r_t + r_n * normal;
+		}
+		else {
+			return r;
+		}
+	}
+
 	void StrandImplicitManager::accumulateImpulse(int sid, int vid, Scalar alpha, const Vec3x r, bool commitVelocity)
 	{
 		const Vec3x edge = m_strands[sid]->getEdgeVector(vid).normalized();
@@ -3166,7 +3219,12 @@ namespace strandsim
 			}
 		}
 
-		InfoStream(g_log, "Collision") << "external: " << m_statTotalContacts - m_mutualContacts.size() << " mutual: " << m_mutualContacts.size();
+		// update database
+		if (!m_params.m_simulationManager_limitedMemory) {
+			for (const auto cp : colPointers) {
+				m_collisionDatabase.insert(*cp);
+			}
+		}
 
 		// print impulse per collision
 		for (int i = 0; i < colPointers.size(); ++i) {
@@ -3175,11 +3233,16 @@ namespace strandsim
 				<< colPointers[i]->objects.second.globalIndex << ", " << colPointers[i]->objects.second.vertex << ")";
 		}
 
-		// print per strand max impulse norm
+		// print impulse norm in collision node
 		if (m_params.m_statGathering == 2) {
 			for (int i = 0; i < m_strands.size(); ++i) {
-				Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
-				ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
+				for (int j = 0; j < m_strands[i]->getNumVertices(); ++j) {
+					Vec3x impulse = m_steppers[i]->totalCollisionImpulses().segment<3>(4 * j);
+					if (impulse.norm() > 0)
+						ContactStream(g_log, "") << "Impulse norm: " << impulse.norm() << " @ " << i << ", " << j;
+				}
+				//Scalar max_impulse = m_steppers[i]->maxCollisionImpulseNorm(idx);
+				//ContactStream(g_log, "") << max_impulse << " @ " << i << " , " << idx;
 			}
 		}
 	}

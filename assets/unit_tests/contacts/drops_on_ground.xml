@@ -46,12 +46,17 @@
   </CollisionParameters>
 
   <SimulationParameters>
-    <maxNewtonIterations value="20"/>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="3"/>
+    <postProcessIterations value="0"/>
+
+    <simulationManagerLimitedMemory value="0"/>
+    <relaxationFactor value="0.8"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
 
-    <useLineSearch value="1"/>
+    <useLineSearch value="0"/>
     <lineSearchAlpha value="0.03"/>
     <lineSearchBeta value="0.5"/>
 
@@ -59,37 +64,31 @@
 
     <solveCollision value="1"/>
     <useCTRodRodCollisions value="1"/>
+
     <velocityDiffTolerance value="1e-6"/>
-
-    <postProcessIterations value="1"/>
-    <relaxationFactor value="1"/>
-
-    <useDeterministicSolver value="0"/>
-
-    <nonlinearIterations value="20"/>
     <collisionSolverTolerace value="1e-6"/>
+
     <logLevel value="5"/>
-    <linearizebHat value="1"/>
-    <linearIterations value="100"/>
-    <linearSolverType value="direct"/>
-    <hairMeshFrictionCoefficient value="0.1"/>
+    <statGathering value="0"/>
+
+    <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
+
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
     <pruneSelfCollisions value="0"/>
-    <statGathering value="1"/>
     <useImpulseMethod value="0"/>
     <useNonlinearContacts value="0"/>
     <solveLiquids value="0"/>
     <bogusAlgorithm value="gaussseidel"/>
 
     <airDrag value="0.0005"/> 
-    <gaussSeidelIterations value="2"/>
+    <gaussSeidelIterations value="100"/>
     <gaussSeidelTolerance value="1e-06"/>
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
-
+<!--
   <particle x="0.0 0.5 0.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 0.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 1.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -110,7 +109,7 @@
   <particle x="0.0 0.5 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 9.5" v="0.0 0.0 0.0" fixed="0"/>
-<!--
+
   <particle x="0.0 0.6 0.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.6 0.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.6 1.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -131,10 +130,10 @@
   <particle x="0.0 0.6 8.5" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.6 9.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.6 9.5" v="0.0 0.0 0.0" fixed="0"/>
--->
+
   <hair params="0" start="0" count="20"/>
-  <!--<hair params="0" start="20" count="20"/>-->
-<!--
+  <hair params="0" start="20" count="20"/>
+
   <particle x="0.0 0.5 2.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 4.0" v="0.0 0.0 0.0" fixed="0"/>
   <particle x="0.0 0.5 6.0" v="0.0 0.0 0.0" fixed="0"/>
@@ -145,10 +144,9 @@
 
   <hair params="0" start="0" count="3"/>
   <hair params="0" start="3" count="3"/>
-
+-->
   <hairobj filename="assets/strands.obj" params="0" group="0" x="0.0" y="5.0" z="5.0" rx="0.0" ry="0.0" rz="1.0" rw="0.8">
   </hairobj>
--->
 
   <!--<script type="translate" x="0.0" y="0" z="-15" w="0" start="0.3" end="2.5" group="0"/>-->
 

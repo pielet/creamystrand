@@ -86,7 +86,7 @@ namespace strandsim
         {
             os << "Collision: strand edge " << objects.first.globalIndex << ' ' << objects.first.vertex
             << " vs. strand edge " << objects.second.globalIndex << ' ' << objects.second.vertex
-            << " N: " << normal << " dist: " << distance << "\n";
+            << " N: " << normal << " force: " << force << "\n";
         }
         
         bool operator<( const ProximityCollision &rhs ) const
