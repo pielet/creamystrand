@@ -71,6 +71,7 @@ namespace strandsim
 		virtual void postStep() = 0;
 
 		virtual void rewind() = 0;
+		virtual void updateVelocities() = 0;
 
 		virtual Scalar stepSize() = 0;
 
@@ -89,8 +90,6 @@ namespace strandsim
 		void accumulateDeltaCollisionImpulse(int vid, const Vec3x& vel);
 		void clearDeltaCollisionImpulse() { m_deltaCollisionImpulse.setZero(); }
 		const VecXx& deltaCollisionImpulse() const { return m_deltaCollisionImpulse; }
-
-		void updateVelocities();
 
 		Vec3x getVelocity(int vid) { return m_velocities.segment<3>(4 * vid); }
 		void setVelocity(int vid, const Vec3x& vel) { m_velocities.segment<3>(4 * vid) = vel; }

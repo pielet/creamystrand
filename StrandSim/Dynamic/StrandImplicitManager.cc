@@ -449,8 +449,8 @@ namespace strandsim
 					}
 				}
 
-				bool acceptFirst = cpP.reactsToSelfCollisions() && (!(sP->isVertexFreezed(iP) || sP->isVertexGoaled(iP)) || (iP < sP->getNumVertices() - 2 && !(sP->isVertexFreezed(iP + 1) || sP->isVertexGoaled(iP + 1))));
-				bool acceptSecond = cpQ.reactsToSelfCollisions() && (!(sQ->isVertexFreezed(iQ) || sQ->isVertexGoaled(iQ)) || (iQ < sP->getNumVertices() - 2 && !(sQ->isVertexFreezed(iQ + 1) || sQ->isVertexGoaled(iQ + 1))));
+				bool acceptFirst = cpP.reactsToSelfCollisions() && (!sP->isVertexFreezed(iP) || (iP < sP->getNumVertices() - 1 && !sP->isVertexFreezed(iP + 1)));
+				bool acceptSecond = cpQ.reactsToSelfCollisions() && (!sQ->isVertexFreezed(iQ) || (iQ < sP->getNumVertices() - 1 && !sQ->isVertexFreezed(iQ + 1)));
 				
 				// && -> Discard collisions on root immunity length
 				// || -> make them as external objects
@@ -2686,13 +2686,13 @@ namespace strandsim
 					step_continousCollisionDetection();
 					timings.continousTimeCollisions += timer.elapsed();
 
-					timer.restart();
-#pragma omp parallel for
-					for (int i = 0; i < m_strands.size(); ++i) {
-						m_strands[i]->swapStates();
-					}
-					setupHairHairCollisions(m_dt);
-					timings.proximityCollisions += timer.elapsed();
+//					timer.restart();
+//#pragma omp parallel for
+//					for (int i = 0; i < m_strands.size(); ++i) {
+//						m_strands[i]->swapStates();
+//					}
+//					setupHairHairCollisions(m_dt);
+//					timings.proximityCollisions += timer.elapsed();
 
 					timer.restart();
 					step_processCollisions();
@@ -2704,17 +2704,6 @@ namespace strandsim
 						step_solveCollisions(false);
 					}
 					timings.solve += timer.elapsed();
-				}
-				if (g_one_iter) {
-					for (int i = 0; i < m_strands.size(); ++i)
-						m_steppers[i]->commitVelocity();
-					if (m_substep_callback) m_substep_callback->executeCallback();
-					{
-						std::unique_lock<std::mutex> lk(g_iter_mutex);
-						g_one_iter = false;
-					}
-					std::unique_lock<std::mutex> lk(g_iter_mutex);
-					g_cv.wait(lk, [] {return g_one_iter; });
 				}
 			}
 
@@ -2777,65 +2766,6 @@ namespace strandsim
 
 		m_statTotalContacts = 0;
 	}
-
-//	void StrandImplicitManager::step_vertexFaceCollisionDetection()
-//	{
-//#pragma omp parallel for
-//		for (int i = 0; i < m_strands.size(); ++i)
-//		{
-//			for (int vid = 0; vid < m_strands[i]->getNumVertices(); ++vid)
-//			{
-//				for (const auto& df : m_distanceFields)
-//				{
-//					Vec3x normal, freevel;
-//					if (df.vertexInSolid(m_strands[i]->getVertex(vid), normal, freevel))
-//					{
-//						ProximityCollision collision;
-//
-//						collision.normal = normal;
-//						collision.mu = sqrt(df.mesh_controller->getDefaultFrictionCoefficient() 
-//							* m_strands[i]->collisionParameters().frictionCoefficient(vid));
-//
-//						collision.objects.second.globalIndex = -1;
-//						collision.objects.second.vertex = -1;
-//						collision.objects.second.freeVel = freevel;
-//
-//						addExternalContact(i, vid, 0, collision);
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	void StrandImplicitManager::step_edgeFaceCollisionDetection()
-//	{
-//#pragma omp parallel for
-//		for (int i = 0; i < m_strands.size(); ++i)
-//		{
-//			for (int eid = 0; eid < m_strands[i]->getNumEdges(); ++eid)
-//			{
-//				for (const auto& df : m_distanceFields)
-//				{
-//					Vec3x normal, freevel;
-//					Scalar alpha;
-//					if (df.checkEdgeCollision(m_strands[i]->getVertex(eid), m_strands[i]->getVertex(eid + 1), normal, freevel, alpha))
-//					{
-//						ProximityCollision collision;
-//
-//						collision.normal = normal;
-//						collision.mu = sqrt(df.mesh_controller->getDefaultFrictionCoefficient()
-//							* m_strands[i]->collisionParameters().frictionCoefficient(eid));
-//
-//						collision.objects.second.globalIndex = -1;
-//						collision.objects.second.vertex = -1;
-//						collision.objects.second.freeVel = freevel;
-//
-//						addExternalContact(i, eid, alpha, collision);
-//					}
-//				}
-//			}
-//		}
-//	}
 	
 	void StrandImplicitManager::step_continousCollisionDetection()
 	{
@@ -2916,12 +2846,12 @@ namespace strandsim
 			pruneExternalCollisions(m_externalContacts);
 		}
 		int nExt = 0;
-#pragma omp parallel for reduction(+: nExt)
 		for (int i = 0; i < (int)m_strands.size(); ++i)
 		{
 			if (m_params.m_useDeterministicSolver && !m_params.m_pruneExternalCollisions) {
 				std::sort(m_externalContacts[i].begin(), m_externalContacts[i].end());
 			}
+#pragma omp parallel for reduction(+: nExt)
 			for (int j = 0; j < m_externalContacts[i].size(); ++j) {
 				//m_externalContacts[i][j].generateInverseInertia();
 				collisionWarmStarting(m_externalContacts[i][j], false);
@@ -2931,12 +2861,13 @@ namespace strandsim
 			updateCollisionTimes(m_externalContacts[i]);
 		}
 
-
+		if (!m_params.m_simulationManager_limitedMemory) {
 #pragma omp parallel for
-		for (int i = 0; i < m_steppers.size(); ++i) {
-			m_steppers[i]->updateVelocities();
-			m_steppers[i]->totalCollisionImpulses() += m_steppers[i]->deltaCollisionImpulse();
-			m_steppers[i]->clearDeltaCollisionImpulse();
+			for (int i = 0; i < m_steppers.size(); ++i) {
+				m_steppers[i]->updateVelocities();
+				m_steppers[i]->totalCollisionImpulses() += m_steppers[i]->deltaCollisionImpulse();
+				m_steppers[i]->clearDeltaCollisionImpulse();
+			}
 		}
 
 		m_statTotalContacts = nExt + m_mutualContacts.size();
@@ -2995,6 +2926,12 @@ namespace strandsim
 		//		}
 		//	}
 		//	std::cout << "avg. col step size: " << alpha / n_col_strand << std::endl;
+
+		for (int i = 0; i < m_steppers.size(); ++i) {
+			std::ostringstream oss;
+			oss << "strand " << i;
+			check_isnan(oss.str().c_str(), m_steppers[i]->velocities());
+		}
 
 		for (int i = 0; i < m_mutualContacts.size(); ++i)
 		{ 

@@ -50,8 +50,8 @@
     <innerIterations value="5"/>
     <postProcessIterations value="0"/>
 
-    <simulationManagerLimitedMemory value="1"/>
-    <relaxationFactor value="0.5"/>
+    <simulationManagerLimitedMemory value="0"/>
+    <relaxationFactor value="0.8"/>
 
     <useQuasiNewton value="0"/>
     <windowSize value="0"/>
@@ -66,9 +66,9 @@
     <useCTRodRodCollisions value="1"/>
 
     <velocityDiffTolerance value="1e-6"/>
-    <collisionSolverTolerace value="1e-6"/>
+    <collisionSolverTolerace value="1e-12"/>
 
-    <logLevel value="4"/>
+    <logLevel value="5"/>
     <statGathering value="0"/>
 
     <hairMeshFrictionCoefficient value="0.3"/>
@@ -88,6 +88,10 @@
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
+  <!--
+  <checkpoint path="simulation_capture_\assets\large_examples\hairball_2020_06_19_22_46_48\checkpoint_00000000000000000030.bin">
+  </checkpoint>
+  -->
 
   <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>

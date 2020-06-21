@@ -115,6 +115,14 @@ namespace strandsim
 		m_strand.setCurrentDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + displacements);
 		m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom());
 	}
+
+	void NewtonStepper::updateVelocities()
+	{
+		VecXx delta_v = VecXx::Zero(m_velocities.size());
+		m_dynamics.getScriptingController()->fixRHS(m_deltaCollisionImpulse);
+		m_directSolver.solve(delta_v, m_deltaCollisionImpulse);
+		m_velocities += delta_v;
+	}
 	
 	Scalar NewtonStepper::lineSearch(const VecXx& current_v, const VecXx& gradient_dir, const VecXx& descent_dir)
 	{

@@ -19,7 +19,9 @@ namespace strandsim
 		virtual void prepareStep(Scalar dt);
 		virtual bool performOneIteration();
 		virtual void postStep();
+
 		virtual void rewind();
+		virtual void updateVelocities();
 
 		virtual Scalar stepSize() { return m_alpha; }
 
