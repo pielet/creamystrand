@@ -138,6 +138,7 @@ namespace strandsim
 			else {
 				stepper = new NewtonStepper(*strand, m_params);
 			}
+			stepper->setGlobalIndex(i);
 			m_steppers.push_back(stepper);
 			strand->setStepper(stepper);
 
@@ -2654,11 +2655,14 @@ namespace strandsim
 		int k = 0;
 		for (k; k < m_params.m_maxNewtonIterations; ++k) {
 			timer.restart();
-#pragma omp parallel for
+			int n_nSPD = 0;
+#pragma omp parallel for reduction(+: n_nSPD)
 			for (int i = 0; i < m_steppers.size(); ++i) {
 				pass[i] = m_steppers[i]->performOneIteration();
+				if (m_steppers[i]->refusesMutualContacts()) ++n_nSPD;
 			}
 			timings.dynamics += timer.elapsed();
+			std::cout << "Not PD: " << n_nSPD << " / " << m_strands.size() << std::endl;
 
 			bool all_done = true;
 			for (bool p : pass) {
@@ -2685,14 +2689,6 @@ namespace strandsim
 					}
 					step_continousCollisionDetection();
 					timings.continousTimeCollisions += timer.elapsed();
-
-//					timer.restart();
-//#pragma omp parallel for
-//					for (int i = 0; i < m_strands.size(); ++i) {
-//						m_strands[i]->swapStates();
-//					}
-//					setupHairHairCollisions(m_dt);
-//					timings.proximityCollisions += timer.elapsed();
 
 					timer.restart();
 					step_processCollisions();
@@ -2927,12 +2923,6 @@ namespace strandsim
 		//	}
 		//	std::cout << "avg. col step size: " << alpha / n_col_strand << std::endl;
 
-		for (int i = 0; i < m_steppers.size(); ++i) {
-			std::ostringstream oss;
-			oss << "strand " << i;
-			check_isnan(oss.str().c_str(), m_steppers[i]->velocities());
-		}
-
 		for (int i = 0; i < m_mutualContacts.size(); ++i)
 		{ 
 			ProximityCollision& collision = m_mutualContacts[i];
@@ -3001,7 +2991,8 @@ namespace strandsim
 					Scalar m = m_strands[sid]->getVertexMass(vid);
 					Scalar m_prime = m / m_externalCollisionTimes[sid][vid];
 
-					Scalar offset = collision.distance - 2 * m_strands[sid]->collisionParameters().responseRadius();
+					//Scalar offset = collision.distance - 2 * m_strands[sid]->collisionParameters().responseRadius();
+					Scalar offset = collision.distance - 1e-3;
 					Vec3x v_ref = m_steppers[sid]->getVelocity(vid) - collision.objects.second.freeVel;
 
 					Vec3x r = solveOneCollision(v_ref + offset / m_dt * collision.normal, m_prime, collision.transformationMatrix, collision.mu);

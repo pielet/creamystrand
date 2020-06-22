@@ -1,7 +1,7 @@
 <scene>
   <description text="A moving hair ball"/>
            
-  <duration time="10.0"/>
+  <duration time="5.0"/>
   <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
   <collision type="continuous-time"/>
 
@@ -66,13 +66,16 @@
     <useCTRodRodCollisions value="1"/>
 
     <velocityDiffTolerance value="1e-6"/>
-    <collisionSolverTolerace value="1e-12"/>
+    <collisionSolverTolerace value="1e-6"/>
 
     <logLevel value="5"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
 
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
+	
+	<energyWithBend value="1"/>
+    <energyWithTwist value="1"/>
 
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
@@ -88,18 +91,17 @@
     <stochasticPruningFraction value="0.8"/>
     <useLengthProjection value="0"/>
   </SimulationParameters>
-  <!--
-  <checkpoint path="simulation_capture_\assets\large_examples\hairball_2020_06_19_22_46_48\checkpoint_00000000000000000030.bin">
+ <!--
+  <checkpoint path="simulation_capture_\assets\large_examples\hairball_2020_06_21_20_42_47\checkpoint_00000000000000000069.bin">
   </checkpoint>
-  -->
+-->
 
   <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>
 
-  <script type="rotate" x="0" y="1" z="0.0" w="6.28" start="0.5" end="4.0" group="0"/>
-  <script type="rotate" x="1" y="0" z="0.0" w="6.28" start="4.5" end="8.0" group="0"/>
+  <script type="rotate" x="1" y="0" z="0.0" w="12.56" start="0.5" end="4.5" group="0"/>
 
   <distancefield usage="solid" type="sphere" cx="0.0" cy="0.0" cz="0.0" rx="0.0" ry="0.0" rz="0.0" rw="0.0" radius="15.0" group="0"/>
 </scene>  

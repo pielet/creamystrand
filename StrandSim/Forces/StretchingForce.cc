@@ -83,11 +83,9 @@ void StretchingForce<ViscousT>::computeLocal( typename StretchingForce::LocalJac
 //    } else {
         const Vec3x& edge = geometry.m_tangents[ vtx ];
 
-        Mat3x M;
-        
-        M = ks
-        * ( ( 1.0 / restLength - 1.0 / length ) * Mat3x::Identity()
-           + 1.0 / length * ( edge * edge.transpose() ) );
+        Mat3x M = ks * (1.0 / length * (edge * edge.transpose()));
+        if (length > restLength)
+            M += ks * (1.0 / restLength - 1.0 / length) * Mat3x::Identity();
 
         localJ.block<3, 3>( 0, 0 ) = localJ.block<3, 3>( 3, 3 ) = -M;
         localJ.block<3, 3>( 0, 3 ) = localJ.block<3, 3>( 3, 0 ) = M;

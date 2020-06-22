@@ -4,6 +4,7 @@
 #include "DOFScriptingController.hh"
 #include "StrandDynamicTraits.hh"
 #include "../Utils/SymmetricBandMatrixSolver.hh"
+#include "../Utils/MathUtilities.hh"
 
 namespace strandsim
 {
@@ -70,6 +71,7 @@ namespace strandsim
 		VecXx descent_dir = VecXx::Zero(m_velocities.size());
 		m_timer.restart();
 		m_directSolver.store(hessian);
+		m_notSPD = m_directSolver.notSPD();
 		m_timing.factorize += m_timer.elapsed();
 		m_timer.restart();
 		m_directSolver.solve(descent_dir, gradient);

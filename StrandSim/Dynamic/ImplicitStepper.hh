@@ -79,6 +79,9 @@ namespace strandsim
 
 		void outputTiming() const;
 
+		void setGlobalIndex(int idx) { m_globalIndex = idx; }
+		int getGlobalIndex() const { m_globalIndex; }
+
 		//void accumulateCollisionImpulse(int vid, const Vec3x& r);
 		void clearCollisionImpulse() { m_totalCollisionImpulse.setZero(); }
 		Scalar maxCollisionImpulseNorm(int& idx) const;
@@ -108,7 +111,7 @@ namespace strandsim
 #if defined(_OPENMP)
 		omp_lock_t m_lock;
 #endif
-
+		int m_globalIndex;
 		ElasticStrand& m_strand;
 		const SimulationParameters& m_params;
 		
