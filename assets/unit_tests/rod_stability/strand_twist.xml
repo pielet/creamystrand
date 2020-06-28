@@ -1,0 +1,150 @@
+<scene>
+  <description text="A moving vertex collides with a stationary one of the same size and mass. The first vertex should stop moving, and the second one should begin moving in the same direction and at the same speed as the first one did."/>
+
+  <duration time="5.0"/>
+  <integrator type="linearized-implicit-euler" dt="0.001" criterion="1e-9" maxiters="1000"/>
+  <collision type="continuous-time"/>
+
+  <simplegravity fx="0.0" fy="-981.0"/>
+
+  <bucketinfo size="2.0" numcells="4"/>
+
+  <liquidinfo>
+    <viscosity value="8.9e-3"/>
+    <surfTensionCoeff value="20.6"/>
+    <affineStretchDamping value="0.1"/>
+    <affineRotateDamping value="0.1"/>
+    <velocityDamping value="0.004"/>
+    <liquidBulkModulus value="2e10"/>
+    <liquidDensity value="1.22"/>
+    <implicitElasticity value="1"/>
+    <liquidBoundaryFriction value="0.99"/>
+    <shearPcgCriterion value="1e-6"/>
+    <liquidShearModulus value="10000"/>
+    <flowBehaviorIndex value="0.8175"/>
+    <flowConsistencyIndex value="1.259"/>
+    <plasticYieldStress value="30.6"/>
+    <plasticWeakenStrain value="10.0"/>
+    <particleCellMultiplier value="0.25"/>
+  </liquidinfo>
+
+  <StrandParameters>
+    <radius value="0.005"/>
+    <youngsModulus value="8e9"/>
+    <poissonRatio value="0.1" />
+    <collisionMultiplier value="1.0"/>
+    <attachMultiplier value="1.0" />
+    <density value="1.32" /> 
+    <viscosity value="3.727e8" />
+    <baseRotation value="0.0"/>
+    <accumulateWithViscous value="1"/>
+    <accumulateViscousOnlyForBendingModes value="0"/>
+    <frictionAngle value="40.0"/>
+    <stretchMultiplier value="1e-2"/>
+  </StrandParameters>
+
+  <CollisionParameters>
+    <constantCollisionRadius value="1"/>
+    <externalCollisionsRadius value="0.0055"/>
+    <selfCollisionsRadius value="0.0055"/>
+    <responseRadius value="0.005"/>
+    <impulseMaxNorm value="0"/>
+    <maxNumCollisionsPerEdge value="6"/>
+    <fakeLayering value="0"/>
+  </CollisionParameters>
+
+  <SimulationParameters>
+    <maxNewtonIterations value="5"/>
+    <innerIterations value="5"/>
+    <postProcessIterations value="0"/>
+
+    <simulationManagerLimitedMemory value="1"/>
+    <relaxationFactor value="0.5"/>
+
+    <useQuasiNewton value="0"/>
+    <windowSize value="0"/>
+
+    <useLineSearch value="0"/>
+    <lineSearchAlpha value="0.03"/>
+    <lineSearchBeta value="0.5"/>
+
+    <useSoftAttachConstraints value="1"/>
+
+    <solveCollision value="1"/>
+    <useCTRodRodCollisions value="1"/>
+
+    <velocityDiffTolerance value="1e-6"/>
+    <collisionSolverTolerace value="1e-6"/>
+
+    <logLevel value="5"/>
+    <statGathering value="0"/>
+
+    <hairMeshFrictionCoefficient value="0.3"/>
+    <hairHairFrictionCoefficient value="0.3"/>
+
+    <energyWithBend value="1"/>
+
+    <numberOfThreads value="24"/>
+    <pruneExternalCollisions value="0"/>
+    <pruneSelfCollisions value="0"/>
+    <useImpulseMethod value="0"/>
+    <useNonlinearContacts value="0"/>
+    <solveLiquids value="0"/>
+    <bogusAlgorithm value="gaussseidel"/>
+
+    <airDrag value="0.0005"/> 
+    <gaussSeidelIterations value="100"/>
+    <gaussSeidelTolerance value="1e-06"/>
+    <stochasticPruningFraction value="0.8"/>
+    <useLengthProjection value="0"/>
+  </SimulationParameters>
+
+  <particle x="0.0 0.0 -9.75" v="0.0 0.0 0.0" fixed="3" group="0"/>
+  <particle x="0.0 0.0 -9.25" v="0.0 0.0 0.0" fixed="1" group="0"/>
+  <particle x="0.0 0.0 -8.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -8.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -7.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -7.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -6.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -6.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -5.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -5.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -4.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -4.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -3.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -3.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -2.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -2.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -1.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -1.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -0.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 -0.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 0.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 0.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 1.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 1.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 2.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 2.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 3.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 3.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 4.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 4.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 5.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 5.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 6.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 6.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 7.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 7.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 8.25" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 8.75" v="0.0 0.0 0.0" fixed="0"/>
+  <particle x="0.0 0.0 9.25" v="0.0 0.0 0.0" fixed="1" group="1"/>
+  <particle x="0.0 0.0 9.75" v="0.0 0.0 0.0" fixed="3" group="1"/>
+
+  <hair params="0" start="0" count="40"/>
+
+  <script type="twist" theta="30" start="0.1" end="5.0" group="0"/>
+  <script type="twist" theta="-30" start="0.1" end="1.0" group="1"/>
+
+  <script type="translate" x="0.0" y="0.0" z="3" start="0.1" end="1.0" group="0"/>
+  <script type="translate" x="0.0" y="0.0" z="-3" start="0.1" end="1.0" group="1"/>
+</scene>

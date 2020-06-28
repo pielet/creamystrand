@@ -47,10 +47,10 @@
 
   <SimulationParameters>
     <maxNewtonIterations value="5"/>
-    <innerIterations value="5"/>
-    <postProcessIterations value="0"/>
+    <innerIterations value="0"/>
+    <postProcessIterations value="25"/>
 
-    <simulationManagerLimitedMemory value="0"/>
+    <simulationManagerLimitedMemory value="1"/>
     <relaxationFactor value="0.8"/>
 
     <useQuasiNewton value="0"/>
@@ -73,9 +73,6 @@
 
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>
-	
-	<energyWithBend value="1"/>
-    <energyWithTwist value="1"/>
 
     <numberOfThreads value="24"/>
     <pruneExternalCollisions value="0"/>
@@ -96,7 +93,7 @@
   </checkpoint>
 -->
 
-  <hairobj filename="assets/hair_ball_10k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
+  <hairobj filename="assets/hair_ball_1k.obj" params="0" group="0" x="0.0" y="0.0" z="0.0" rx="0.0" ry="1.0" rz="0.0" rw="0.0">
     <fixed start="0" end="0" value="3"/>
     <fixed start="1" end="1" value="1"/>
   </hairobj>

@@ -67,6 +67,7 @@ struct Script
         SCALE,
         SWIRL,
         SWITCH,
+		TWIST,
 		
 		TYPE_COUNT
 	};
@@ -85,6 +86,7 @@ struct Script
 	int group_index;
 	Vec4x v;
 	Vec3x origin;
+	double theta;
 	double start;
 	double end;
 	double ease_start;
@@ -159,6 +161,7 @@ protected:
 	void apply_local_rotation(int group_idx, const Eigen::Quaternion<double>& rot);
 	void apply_translation(int group_idx, const Vec3x& t);
     void apply_switch(int group_idx, unsigned mask);
+	void apply_twist(int group_idx, double delta_theta);
 
 	void loadSimpleGravityForces( rapidxml::xml_node<>* node );
     

@@ -2218,11 +2218,12 @@ void XMLReader::loadScripts( rapidxml::xml_node<>* node)
         if( typend )
         {
             std::string handlertype(typend->value());
-            if(handlertype == "rotate") scr.type = Script::ROTATE;
-            else if(handlertype == "translate") scr.type = Script::TRANSLATE;
-            else if(handlertype == "swirl") scr.type = Script::SWIRL;
-            else if(handlertype == "scale") scr.type = Script::SCALE;
-            else if(handlertype == "switch") scr.type = Script::SWITCH;
+            if (handlertype == "rotate") scr.type = Script::ROTATE;
+            else if (handlertype == "translate") scr.type = Script::TRANSLATE;
+            else if (handlertype == "swirl") scr.type = Script::SWIRL;
+            else if (handlertype == "scale") scr.type = Script::SCALE;
+            else if (handlertype == "switch") scr.type = Script::SWITCH;
+            else if (handlertype == "twist") scr.type = Script::TWIST;
             else
             {
                 std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSER:" << outputmod::endred << " Invalid script 'type' attribute specified. Exiting." << std::endl;
@@ -2316,6 +2317,17 @@ void XMLReader::loadScripts( rapidxml::xml_node<>* node)
                 exit(1);
             }
             scr.transform_with_origin = true;
+        }
+
+        scr.theta = 0;
+        if (nd->first_attribute("theta"))
+        {
+            std::string attribute(nd->first_attribute("theta")->value());
+            if (!stringutils::extractFromString(attribute, scr.theta))
+            {
+                std::cerr << outputmod::startred << "ERROR IN XMLSCENEPARSER:" << outputmod::endred << " Failed to parse value of theta attribute for script. Value must be double. Exiting." << std::endl;
+                exit(1);
+            }
         }
         
         scr.switch_mask = 0;
@@ -3242,6 +3254,17 @@ void XMLReader::apply_switch(int group_idx, unsigned mask)
     }
 }
 
+void XMLReader::apply_twist(int group_idx, double delta_theta)
+{
+    const std::vector< std::pair<int, int> >& group = m_groups[group_idx];
+    for (const std::pair<int, int>& p : group) {
+        RodData* rd = m_rodDatum[p.first];
+
+        double theta = rd->getDofController().getThetaGoal(p.second);
+        rd->getDofController().setThetaGoal(p.second, theta + delta_theta);
+    }
+}
+
 void XMLReader::projectConstraint(const std::vector<ImplicitStepper*>& steppers)
 {
 }
@@ -3387,6 +3410,14 @@ void Script::stepScript( const double& dt, const double& current_time )
                 Vec3x vec = rot_dir_vec - dir_vec;
                 trans += vec;
                 m_scene->apply_translation( group_index, vec );
+                break;
+            }
+            case Script::TWIST:
+            {
+                v(3) = theta;
+                double delta_theta = getNextVelocity(dt, current_time) * dt;
+                m_scene->apply_twist(group_index, delta_theta);
+
                 break;
             }
             default:

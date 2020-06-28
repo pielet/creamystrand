@@ -32,25 +32,12 @@ Scalar FixingForce<ViscousT>::localEnergy( const ElasticStrand& strand, StrandSt
     if (strand.isVertexGoaled(vtx))
     {
         const Scalar kf = ViscousT::kf(strand, vtx);
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-
-        if (ViscousT::isViscous()) {
-            energy += 0.5 * kf * ilen * (geometry.getVertex(vtx) - strand.getVertex(vtx)).squaredNorm();
-        }
-        else {
-            energy += 0.5 * kf * ilen * (geometry.getVertex(vtx) - strand.getGoalVertex(vtx)).squaredNorm();
-        }
+        energy += 0.5 * kf * (geometry.getVertex(vtx) - strand.getGoalVertex(vtx)).squaredNorm();
     }
 
     if (vtx < strand.getNumVertices() - 1 && strand.isThetaGoaled(vtx)) {
         const Scalar kf = ViscousT::kf(strand, vtx);
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-        if (ViscousT::isViscous()) {
-            energy += 0.5 * kf * ilen * square(geometry.getTheta(vtx) - strand.getTheta(vtx));
-        }
-        else {
-            energy += 0.5 * kf * ilen * square(geometry.getTheta(vtx) - strand.getGoalTheta(vtx));
-        }
+        energy += 0.5 * kf * square(geometry.getTheta(vtx) - strand.getGoalTheta(vtx));
     }
  
 
@@ -71,24 +58,12 @@ void FixingForce<ViscousT>::computeLocal( typename FixingForce::LocalForceType& 
     
     if(strand.isVertexGoaled(vtx)) {
         const Scalar ks = ViscousT::kf( strand, vtx );
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-        
-        if(ViscousT::isViscous()) {
-            localF.segment<3>(0) = -ks * ilen * (geometry.getVertex(vtx) - strand.getVertex(vtx));
-        } else {
-            localF.segment<3>(0) = -ks * ilen * (geometry.getVertex(vtx) - strand.getGoalVertex(vtx));
-        }
+        localF.segment<3>(0) = -ks * (geometry.getVertex(vtx) - strand.getGoalVertex(vtx));
     }
     
     if(vtx < strand.getNumVertices() - 1 && strand.isThetaGoaled(vtx)) {
         const Scalar kt = ViscousT::kt( strand, vtx ) * strand.getParameters().getFixingMultiplier();
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-        
-        if(ViscousT::isViscous()) {
-            localF(3) = -kt * ilen * (geometry.getTheta(vtx) - strand.getTheta(vtx));
-        } else {
-            localF(3) = -kt * ilen * (geometry.getTheta(vtx) - strand.getGoalTheta(vtx));
-        }
+        localF(3) = -kt * (geometry.getTheta(vtx) - strand.getGoalTheta(vtx));
     }
 }
 
@@ -100,16 +75,12 @@ void FixingForce<ViscousT>::computeLocal( typename FixingForce::LocalJacobianTyp
     
     if(strand.isVertexGoaled(vtx)) {
         const Scalar ks = ViscousT::kf( strand, vtx );
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-
-        localJ.block<3, 3>(0, 0) = -ks * ilen * Mat3x::Identity();
+        localJ.block<3, 3>(0, 0) = -ks * Mat3x::Identity();
     }
     
     if(vtx < strand.getNumVertices() - 1 && strand.isThetaGoaled(vtx)) {
         const Scalar kt = ViscousT::kt( strand, vtx ) * strand.getParameters().getFixingMultiplier();
-        const Scalar ilen = 1.;//strand.m_invVoronoiLengths[vtx];
-        
-        localJ(3, 3) = -kt * ilen;
+        localJ(3, 3) = -kt;
     }
 }
 

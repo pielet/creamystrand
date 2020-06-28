@@ -35,11 +35,11 @@ namespace strandsim
 	m_selected( false ), //
 	m_simulated( true ), //
 	m_immune( false ), m_drawStrand( true ), m_drawFlow( true ),//
-	m_drawRootMaterial( false ), //
-	m_drawAnchors( false ), //
+	m_drawRootMaterial( true ), //
+	m_drawAnchors( true ), //
 	m_drawMode( LINES ), // QUADS_SHADED ), //QUADS_SHADED), //LINES ), //
 	m_drawForce(NONE), //
-	m_drawnVolume( NO_VOLUME ), //
+	m_drawnVolume(NO_VOLUME), //
 	m_geometryChanged( true ), //
 	m_flowChanged( true ),
 	m_colorChanged( true ), //
@@ -736,24 +736,27 @@ namespace strandsim
 		
 		Scalar r = 1.0;
 		
-		const Vec3f& v0 = Vec3f::Map( &m_currentVertices[0] );
-		const Vec3f& v1 = Vec3f::Map( &m_currentVertices[3] );
-		const Vec3f &tangent = ( v1 - v0 ).normalized();
-		const Vec3f &normal = Vec3f::Map( &m_currentMaterialFrames[0] );
-		
-		const Vec3f x = ( v0 + v1 ) * 0.5;
-		//    if (m_scaleToRadius) r = m_rod.radiusA(eh);
-		
-		OpenGL::color( color1 );
-		const Vec3f& y1 = x + r * normal;
-		glVertex3fv( x.data() );
-		glVertex3fv( y1.data() );
-		
-		OpenGL::color( color2 );
-		
-		const Vec3f& y2 = x + r * ( tangent.cross( normal ) );
-		glVertex3fv( x.data() );
-		glVertex3fv( y2.data() );
+		int n_vert = m_currentVertices.size() / 3;
+		for (int i = 0; i < n_vert - 1; ++i) {
+			const Vec3f& v0 = Vec3f::Map(&m_currentVertices[3 * i]);
+			const Vec3f& v1 = Vec3f::Map(&m_currentVertices[3 * i + 3]);
+			const Vec3f& tangent = (v1 - v0).normalized();
+			const Vec3f& normal = Vec3f::Map(&m_currentMaterialFrames[3 * i]);
+
+			const Vec3f x = (v0 + v1) * 0.5;
+			//    if (m_scaleToRadius) r = m_rod.radiusA(eh);
+
+			OpenGL::color(color1);
+			const Vec3f& y1 = x + r * normal;
+			glVertex3fv(x.data());
+			glVertex3fv(y1.data());
+
+			OpenGL::color(color2);
+
+			const Vec3f& y2 = x + r * (tangent.cross(normal));
+			glVertex3fv(x.data());
+			glVertex3fv(y2.data());
+		}
 		
 		glEnd();
 	}

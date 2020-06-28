@@ -47,13 +47,13 @@
 
   <SimulationParameters>
     <maxNewtonIterations value="5"/>
-    <innerIterations value="3"/>
+    <innerIterations value="5"/>
     <postProcessIterations value="0"/>
 
-    <simulationManagerLimitedMemory value="0"/>
+    <simulationManagerLimitedMemory value="1"/>
     <relaxationFactor value="0.5"/>
 
-    <useQuasiNewton value="0"/>
+    <useQuasiNewton value="1"/>
     <windowSize value="0"/>
 
     <useLineSearch value="0"/>
@@ -69,7 +69,7 @@
     <collisionSolverTolerace value="1e-6"/>
 
     <logLevel value="5"/>
-    <statGathering value="0"/>
+    <statGathering value="1"/>
 
     <hairMeshFrictionCoefficient value="0.3"/>
     <hairHairFrictionCoefficient value="0.3"/>

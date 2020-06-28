@@ -29,6 +29,8 @@ namespace strandsim
 
 		VecXx m_last_v;
 		VecXx m_last_gradient;
+
+		JacobianMatrixType m_bendTwistHessian;
 	};
 }
 

@@ -5,6 +5,7 @@
 #include "StrandDynamicTraits.hh"
 #include "../Utils/SymmetricBandMatrixSolver.hh"
 #include "../Utils/MathUtilities.hh"
+#include <fstream>>
 
 namespace strandsim
 {
@@ -72,6 +73,21 @@ namespace strandsim
 		m_timer.restart();
 		m_directSolver.store(hessian);
 		m_notSPD = m_directSolver.notSPD();
+		//if (m_notSPD) {
+		//	std::cout << "OUTPUT MATRIX\n";
+
+		//	m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		//	m_dynamics.computeFutureJacobian(true, false, false);
+		//	std::cout << "Stretch:\n" << m_strand.getFutureTotalJacobian() << std::endl;
+
+		//	m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		//	m_dynamics.computeFutureJacobian(false, true, false);
+		//	std::cout << "Twisting:\n" << m_strand.getFutureTotalJacobian() << std::endl;
+
+		//	m_strand.setFutureDegreesOfFreedom(m_strand.getSavedDegreesOfFreedom() + m_velocities * m_dt);
+		//	m_dynamics.computeFutureJacobian(false, false, true);
+		//	std::cout << "Bending:\n" << m_strand.getFutureTotalJacobian() << std::endl;
+		//}
 		m_timing.factorize += m_timer.elapsed();
 		m_timer.restart();
 		m_directSolver.solve(descent_dir, gradient);
